@@ -39,6 +39,10 @@ def _taxon_key(external_id: str, scientific_name: str) -> str:
     return f"taxon-v2-colxr:{sha256(request.encode()).hexdigest()}"
 
 
+class DemoCacheMissError(Exception):
+    """Raised in read-only demo mode when an external provider lookup misses local cache."""
+
+
 async def _payload(
     database: Session,
     provider: GbifBotanicalProvider,
@@ -48,9 +52,15 @@ async def _payload(
     *,
     force: bool = False,
     allow_stale_on_error: bool = False,
+    cache_only: bool = False,
 ) -> tuple[dict[str, object], datetime, bool, bool, str | None]:
     cached = database.get(ExternalProviderCache, (provider.provider_id, resource_key))
     now = utc_now()
+    if cache_only:
+        if cached is None:
+            raise DemoCacheMissError()
+        stale = cached.fetched_at < now - timedelta(seconds=ttl_seconds)
+        return cached.payload, cached.fetched_at, True, stale, None
     if (
         cached is not None
         and not force
@@ -83,6 +93,8 @@ async def search_taxa(
     provider: GbifBotanicalProvider,
     query: str,
     ttl_seconds: int,
+    *,
+    cache_only: bool = False,
 ) -> TaxonSearchResponse:
     payload, fetched_at, from_cache, stale, provider_error = await _payload(
         database,
@@ -91,6 +103,7 @@ async def search_taxa(
         lambda: provider.search_payload(query),
         ttl_seconds,
         allow_stale_on_error=True,
+        cache_only=cache_only,
     )
     candidates = provider.normalize_search(payload)
     return TaxonSearchResponse(

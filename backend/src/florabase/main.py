@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -7,11 +8,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from florabase import __version__
 from florabase.api.router import api_router
 from florabase.attachments.storage import AttachmentStorage
+from florabase.auth.demo_readonly import (
+    DEMO_STARTUP_WARNING,
+    DemoReadOnlyMiddleware,
+    verify_demo_marker,
+)
 from florabase.auth.http_safety import AuthSafetyMiddleware
 from florabase.core.config import Environment, get_settings
 from florabase.core.cors import NativeAppCorsMiddleware
 from florabase.core.logging import configure_logging
 from florabase.reference_setup.runner import ReferenceSetupCoordinator
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -20,6 +28,9 @@ async def lifespan(application: FastAPI) -> AsyncIterator[None]:
     settings = settings_provider()
     configure_logging(settings)
     AttachmentStorage.from_settings(settings)
+    if settings.demo_readonly:
+        verify_demo_marker(settings.attachment_storage_root)
+        logger.warning(DEMO_STARTUP_WARNING)
     coordinator = ReferenceSetupCoordinator(settings)
     application.state.reference_setup = coordinator
     coordinator.start()
@@ -50,6 +61,8 @@ def create_app() -> FastAPI:
             allow_headers=["Content-Type", "X-CSRF-Token"],
         )
     application.add_middleware(NativeAppCorsMiddleware)
+    if settings.demo_readonly:
+        application.add_middleware(DemoReadOnlyMiddleware)
     application.include_router(api_router)
     return application
 

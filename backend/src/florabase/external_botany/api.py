@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 from sqlalchemy.orm import Session
 
+from florabase.auth.demo_readonly import demo_external_lookup_disabled_error
 from florabase.auth.dependencies import (
     AuthenticatedActor,
     require_authenticated_actor,
@@ -29,6 +30,7 @@ from florabase.external_botany.schemas import (
     TaxonSearchResponse,
 )
 from florabase.external_botany.service import (
+    DemoCacheMissError,
     confirm_link,
     get_link,
     link_response,
@@ -111,8 +113,14 @@ async def search(
         )
     try:
         return await search_taxa(
-            database, provider, normalized_query, settings.botanical_cache_ttl_seconds
+            database,
+            provider,
+            normalized_query,
+            settings.botanical_cache_ttl_seconds,
+            cache_only=settings.demo_readonly,
         )
+    except DemoCacheMissError as error:
+        raise demo_external_lookup_disabled_error() from error
     except ProviderError as error:
         raise _provider_http_error(error) from error
 
@@ -216,8 +224,14 @@ async def occurrence_summary(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session, scope="function")],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
+    settings: Annotated[Settings | None, Depends(get_settings)] = None,
 ) -> OccurrenceMapSummary:
     link = _require_occurrence_link(database, botanical_identity_id)
+    if settings is not None and settings.demo_readonly:
+        evidence = occurrence_cache.read(database, link)
+        if evidence.summary is not None:
+            return evidence.summary
+        raise demo_external_lookup_disabled_error()
     try:
         return await occurrence_map_summary(provider, link)
     except ProviderError as error:
@@ -252,9 +266,10 @@ async def occurrence_tile(
             detail={"code": "invalid_map_tile", "message": "Map tile coordinates are invalid"},
         )
     link = _require_occurrence_link(database, botanical_identity_id)
+    effective_local_only = local_only or settings.demo_readonly
     try:
         if generation is None:
-            if local_only:
+            if effective_local_only:
                 raise HTTPException(status_code=404, detail={"code": "occurrence_tile_not_cached"})
             tile = await provider.occurrence_tile(link.external_id, z, x, y)
         else:
@@ -265,7 +280,7 @@ async def occurrence_tile(
             hit = storage.read(contract_key(link.external_id), generation, z, x, y)
             if hit is not None:
                 tile = hit[0]
-            elif local_only:
+            elif effective_local_only:
                 raise HTTPException(status_code=404, detail={"code": "occurrence_tile_not_cached"})
             else:
                 tile = await occurrence_cache.fetch_tile(

@@ -8433,6 +8433,11 @@ export interface components {
         SessionResponse: {
             /** Canonical Origin */
             canonical_origin: string | null;
+            /**
+             * Demo Readonly
+             * @default false
+             */
+            demo_readonly: boolean;
             /** Display Name */
             display_name: string | null;
             /** Login Name */

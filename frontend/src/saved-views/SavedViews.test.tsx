@@ -457,6 +457,7 @@ test("logout-failed blocks SavedViews CSRF mutations and suspends background rea
         display_name: "Owner",
         owner: true,
         canonical_origin: "http://localhost:15174",
+        demo_readonly: false,
       },
       csrfToken: "stale-logout-csrf",
       message: "Sign out failed.",

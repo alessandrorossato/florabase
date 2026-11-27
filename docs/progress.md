@@ -1,5 +1,41 @@
 # Engineering progress
 
+## 2026-11-27 — Opt-in public read-only demo mode & guided tour (`DEMO-001`, realigned on `7b667a4` + review fixes)
+
+- On `feat/demo-001-readonly-tour` realigned on `origin/main` `7b667a4` (post Batch 14b, writer
+  `antigravity-demo-001`). No database migration and zero impact on standard production
+  authentication (`FLORABASE_DEMO_READONLY` defaults to `false`, `G-SEC`/`ENG-03` public allowlist
+  and `MOBILE-003` `runtime_config` preserved).
+- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) in `core/config.py` and
+  single-source `uvicorn_workers_from_environment` (`FLORABASE_WORKERS` `1..8`, default `1`) in
+  `db/release_schema.py`; added `auth/demo_readonly.py` with explicit non-symlink startup marker
+  verification (`verify_demo_marker` requiring `.florabase-demo-readonly.marker` in both
+  `release_schema serve` and FastAPI `lifespan`, logging `PUBLIC READ-ONLY DEMO: no login required`),
+  `DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
+  `demo_read_only` (`Cache-Control: no-store`), transient in-memory `resolve_demo_actor` (zero
+  `auth_sessions` DB writes), neutral `Demo visitor` session response (`owner: false`,
+  `login_name: ""`), empty `GET /api/v1/auth/device-sessions`, cache-only `external_botany` GETs
+  (`external-taxa/search`, `occurrence-map/summary`, `occurrence-map/tiles` making zero outbound
+  GBIF calls and zero cache writes on miss), public demo thumbnail cache headers without
+  `Vary: Cookie`, and `"demo-readonly"` capability in `GET /api/v1/system/info`. Regenerated
+  `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- Frontend: skipped `POST /api/v1/auth/csrf` in `auth/AuthProvider.tsx` when `session.demo_readonly`
+  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; updated
+  `shell/WorkbenchShell.tsx` to display `Demo visitor (read-only)` and hide Sign out, `Record`,
+  `+ New`, saved-view removal and owner-only Settings links (`Account`, `Media`, `Import / Export`);
+  lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only in demo mode, rendering the
+  semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
+  guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
+  `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
+- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
+  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
+  linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
+  `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
+  [evidence.md](archive/DEMO-001/evidence.md).
+- Checks: `make api-generate` / `make api-check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
+  focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
+  `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
+
 ## 2026-11-27 — MOBILE-004 Android local Schedule reminders (PWA preserved)
 
 - On `feat/mobile-004-notifications` from `origin/main` `c83d8163` (`v0.1.0-beta.10`, writer

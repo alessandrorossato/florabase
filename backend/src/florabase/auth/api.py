@@ -7,6 +7,10 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StrictStr
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
+from florabase.auth.demo_readonly import (
+    DEMO_VISITOR_DISPLAY_NAME,
+    EPHEMERAL_DEMO_SESSION_ID,
+)
 from florabase.auth.dependencies import (
     BEARER_CHALLENGE,
     AuthenticatedActor,
@@ -129,6 +133,7 @@ class SessionResponse(BaseModel):
     display_name: str | None
     owner: bool
     canonical_origin: str | None
+    demo_readonly: bool = False
 
 
 class LogoutResponse(BaseModel):
@@ -231,9 +236,12 @@ def list_device_sessions(
     response: Response,
     actor: SessionActor,
     database: Database,
+    settings: Annotated[Settings | None, Depends(get_settings)] = None,
 ) -> DeviceSessionListResponse:
-    rows = list_active_device_sessions(database, actor.user_id)
     response.headers["Cache-Control"] = "no-store"
+    if settings is not None and settings.demo_readonly:
+        return DeviceSessionListResponse(items=[])
+    rows = list_active_device_sessions(database, actor.user_id)
     return DeviceSessionListResponse(
         items=[
             DeviceSessionItem(
@@ -361,12 +369,22 @@ def change_owner_password(
 @router.get("/session", response_model=SessionResponse, operation_id="getSession")
 def get_session(response: Response, actor: SessionActor, settings: AuthSettings) -> SessionResponse:
     response.headers["Cache-Control"] = "no-store"
+    if settings.demo_readonly:
+        return SessionResponse(
+            user_id=str(EPHEMERAL_DEMO_SESSION_ID),
+            login_name="",
+            display_name=DEMO_VISITOR_DISPLAY_NAME,
+            owner=False,
+            canonical_origin=settings.canonical_origin,
+            demo_readonly=True,
+        )
     return SessionResponse(
         user_id=str(actor.user_id),
         login_name=actor.login_name,
         display_name=actor.display_name,
         owner=actor.owner,
         canonical_origin=settings.canonical_origin,
+        demo_readonly=False,
     )
 
 
