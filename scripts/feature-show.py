@@ -70,8 +70,11 @@ def main(argv: list[str] | None = None) -> int:
         if not query:
             print("feature lookup: ID is required", file=sys.stderr)
             return 2
-        exact = [entry for entry in features if entry.get("id") == query]
-        matches = exact or [entry for entry in features if str(entry.get("id", "")).startswith(query)]
+        query_lower = query.lower()
+        exact = [entry for entry in features if str(entry.get("id", "")).lower() == query_lower]
+        matches = exact or [
+            entry for entry in features if str(entry.get("id", "")).lower().startswith(query_lower)
+        ]
         if not matches:
             print(f"feature lookup: no feature matching '{query}'", file=sys.stderr)
             return 1

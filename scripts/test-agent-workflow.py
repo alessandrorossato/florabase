@@ -579,6 +579,46 @@ class AgentWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(workflow_environment.WorkflowError, "progress conflict"):
             feature_batch.additive_progress(Repository(self.primary), tips[0], edited)
 
+    def test_batch_additive_progress_preserves_incoming_deep_edit_and_refuses_both_deep(
+        self,
+    ) -> None:
+        (self.primary / "docs").mkdir()
+        heading = "# Engineering progress\n\n"
+        common = "## Entry 0\n\n- Line 1\n- Line 2\n- Link: [guide](old.md)\n"
+        progress = self.primary / "docs/progress.md"
+        progress.write_text(heading + common)
+        self.git(self.primary, "add", ".")
+        self.git(self.primary, "commit", "-m", "seed progress")
+
+        # Integration branch (ours): pure top prepend below shared heading.
+        self.git(self.primary, "checkout", "-q", "-b", "progress-ours", "main")
+        progress.write_text(heading + "## Entry ours\n\n" + common)
+        self.git(self.primary, "commit", "-qam", "ours prepend")
+        ours = self.git(self.primary, "rev-parse", "HEAD")
+
+        # Incoming source (theirs): top prepend + deep link rewrite below the 3-line anchor.
+        self.git(self.primary, "checkout", "-q", "-b", "progress-theirs", "main")
+        theirs_body = common.replace("old.md", "operate/new.md")
+        progress.write_text(heading + "## Entry theirs\n\n" + theirs_body)
+        self.git(self.primary, "commit", "-qam", "theirs prepend and deep link rewrite")
+        theirs = self.git(self.primary, "rev-parse", "HEAD")
+
+        self.git(self.primary, "checkout", "-q", "main")
+        self.assertEqual(
+            feature_batch.additive_progress(Repository(self.primary), ours, theirs),
+            (heading + "## Entry ours\n\n## Entry theirs\n\n" + theirs_body).encode(),
+        )
+
+        # Negative: when both sides edit text deeper than the top, refusal is still raised.
+        self.git(self.primary, "checkout", "-q", "-b", "progress-ours-deep", "main")
+        ours_deep_body = common.replace("- Line 2", "- Line 2 edited")
+        progress.write_text(heading + "## Entry ours\n\n" + ours_deep_body)
+        self.git(self.primary, "commit", "-qam", "ours deep edit")
+        ours_deep = self.git(self.primary, "rev-parse", "HEAD")
+        self.git(self.primary, "checkout", "-q", "main")
+        with self.assertRaisesRegex(workflow_environment.WorkflowError, "progress conflict"):
+            feature_batch.additive_progress(Repository(self.primary), ours_deep, theirs)
+
     def advance_main(self) -> str:
         seed = self.root / "seed"
         if not seed.exists():

@@ -55,3 +55,9 @@ Running `git grep -n -E 'docs/(<all 55 moved filenames>)'` excluding `docs/`, `C
 - `docs/development-workflow.md` → `docs/develop/workflow/review-and-uat.md`: `UAT-INSTANCE-002` edits `## UAT instances (parallel, per worktree)`.
 - `docs/ui-contract.md` → `docs/develop/ui-contract.md`: `UI-POLISH-006` edits `docs/ui-contract.md` (kept whole, pure `git mv` in Commit 1).
 - `backend/openapi.json` & `frontend/src/api/schema.d.ts`: 1-line docstring update from `backend/src/florabase/events/schemas.py` (`docs/features/activity/phenology.md`); if `DEMO-001` also updates OpenAPI, resolve by running `make api-generate`.
+
+## 5. Fix Round (M1 Batch Merge & Case-Insensitive Lookup)
+
+- **M1 reproduction**: `d7dc7e59` rewrote 7 links deeper in `docs/progress.md` in addition to prepending at the top. Merging `common=c83d816`, `ours=common + prepended sibling milestone`, `theirs=d7dc7e59` failed in `scripts/feature_batch.py` (`_additive_progress()`), which previously only handled deep edits on `ours` when `theirs` was a pure top prepend.
+- **M1 fix**: added the symmetric branch in `_additive_progress()` when `ours` is a pure top prepend (`ours.endswith(common)` and `ours.count(common) == 1`) and `theirs` carries deep edits below the 3-line anchor, preserving the refusal when both sides edit deeper than the top. Verified against the exact `c83d816` / `d7dc7e59` reproduction (`merged=103,267 B`) and covered by `test_batch_additive_progress_preserves_incoming_deep_edit_and_refuses_both_deep` in `scripts/test-agent-workflow.py`.
+- **Nit**: `scripts/feature-show.py` now matches IDs and prefixes case-insensitively (`make feature-show ID=docs-005` finds `DOCS-005`), covered in `scripts/test-check-features.py`.

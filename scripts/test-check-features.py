@@ -414,6 +414,15 @@ class FeatureShowTest(unittest.TestCase):
         self.assertIn("MOBILE-002 [in_progress | post-1.0 | P1 | mobile]", prefix.stdout)
         self.assertNotIn("DOCS-001", prefix.stdout)
 
+        exact_ci = self.run_lookup(doc, man, "--show", "docs-001")
+        self.assertEqual(exact_ci.returncode, 0, exact_ci.stderr)
+        self.assertIn("DOCS-001 [verified | baseline | P1 | documentation]", exact_ci.stdout)
+
+        prefix_ci = self.run_lookup(doc, man, "--show", "mobile-")
+        self.assertEqual(prefix_ci.returncode, 0, prefix_ci.stderr)
+        self.assertIn("MOBILE-001 [implemented | post-1.0 | P1 | mobile]", prefix_ci.stdout)
+        self.assertIn("MOBILE-002 [in_progress | post-1.0 | P1 | mobile]", prefix_ci.stdout)
+
         missing = self.run_lookup(doc, man, "--show", "NOPE-999")
         self.assertEqual(missing.returncode, 1)
         self.assertIn("no feature matching 'NOPE-999'", missing.stderr)
