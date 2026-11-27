@@ -49,6 +49,14 @@ ADAPTIVE_FG_SIZES: dict[str, int] = {
     "xxxhdpi": 432,
 }
 
+NOTIFICATION_ICON_SIZES: dict[str, int] = {
+    "mdpi": 24,
+    "hdpi": 36,
+    "xhdpi": 48,
+    "xxhdpi": 72,
+    "xxxhdpi": 96,
+}
+
 SPLASH_SIZES: dict[str, tuple[int, int]] = {
     "drawable": (480, 320),
     "drawable-port-mdpi": (320, 480),
@@ -119,6 +127,26 @@ def _render_legacy_launcher(
     return out
 
 
+def _render_notification_small_icon(transparent_emblem: Image.Image, size: int) -> Image.Image:
+    # Android status-bar small icons must be pure white silhouette on transparent
+    # alpha (tinted by Android using iconColor). Inset slightly (~88%) inside the
+    # 24dp bounding box so edges stay crisp across launcher/status-bar densities.
+    alpha = transparent_emblem.convert("RGBA").getchannel("A")
+    bbox = alpha.getbbox()
+    cropped_alpha = alpha.crop(bbox) if bbox is not None else alpha
+    max_side = max(1, round(size * 0.88))
+    scale = min(max_side / cropped_alpha.width, max_side / cropped_alpha.height)
+    target_w = max(1, round(cropped_alpha.width * scale))
+    target_h = max(1, round(cropped_alpha.height * scale))
+    resized_alpha = cropped_alpha.resize((target_w, target_h), RESAMPLE)
+    canvas_alpha = Image.new("L", (size, size), 0)
+    offset_x = (size - target_w) // 2
+    offset_y = (size - target_h) // 2
+    canvas_alpha.paste(resized_alpha, (offset_x, offset_y))
+    white = Image.new("L", (size, size), 255)
+    return Image.merge("RGBA", (white, white, white, canvas_alpha))
+
+
 def _render_splash(maskable_icon: Image.Image, width: int, height: int) -> Image.Image:
     canvas = Image.new("RGBA", (width, height), (*THEME_RGB, 255))
     badge_size = max(72, round(min(width, height) * 0.34))
@@ -165,6 +193,14 @@ def generate_assets(root: Path = ROOT, res_dir: Path = DEFAULT_RES_DIR) -> list[
         fg = mipmap_dir / "ic_launcher_foreground.png"
         _save_deterministic_png(_render_adaptive_foreground(transparent_emblem, size), fg)
         written.append(fg)
+
+    for density, size in NOTIFICATION_ICON_SIZES.items():
+        drawable_dir = res_dir / f"drawable-{density}"
+        small_icon = drawable_dir / "ic_stat_florabase.png"
+        _save_deterministic_png(
+            _render_notification_small_icon(transparent_emblem, size), small_icon
+        )
+        written.append(small_icon)
 
     for folder, (width, height) in SPLASH_SIZES.items():
         splash = res_dir / folder / "splash.png"
