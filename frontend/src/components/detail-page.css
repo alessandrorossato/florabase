@@ -242,13 +242,287 @@
   }
 }
 
-/* UI-POLISH-005: one record mask for every collection detail. The breadcrumb is the way
-   back, as on Seed lots; the list-level "Back" and "New" bar stays on the directory. */
-.app-content
-  :is(.sowings-workspace, .plants-workspace):has(.collection-detail)
-  .workspace-context-actions {
-  display: none;
-}
+/* UI-POLISH-006: one record mask, unified tab state, unified two-column overview grid,
+   one-line descendants summary, and uniform child-record cards. */
 .app-content .ui-detail-page .detail-header--specimen .detail-actions {
   justify-content: flex-start;
+}
+
+/* Item 7: one consistent underline active style on DetailTabs; never fill active tab. */
+.app-content .ui-detail-page .detail-tabs .detail-tab {
+  background: transparent;
+  color: var(--text-muted);
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+}
+.app-content .ui-detail-page .detail-tabs .detail-tab:hover {
+  background: transparent;
+  color: var(--text);
+}
+.app-content .ui-detail-page .detail-tabs .detail-tab[aria-selected="true"] {
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
+.app-content .ui-detail-page .detail-tabs .detail-tab:focus {
+  outline: none;
+}
+.app-content .ui-detail-page .detail-tabs .detail-tab:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--primary));
+  outline-offset: -2px;
+  border-radius: var(--radius-small) var(--radius-small) 0 0;
+}
+
+/* Item 9: one Overview grid — left = facts sections, right = Almanac. */
+.app-content .ui-detail-page .record-overview {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+}
+@container (min-width: 44rem) {
+  .app-content .ui-detail-page .record-overview {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+}
+.app-content .ui-detail-page .record-overview__facts,
+.app-content .ui-detail-page .record-overview__almanac {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+}
+.app-content .ui-detail-page .record-overview__facts > section,
+.app-content .ui-detail-page .record-overview__facts > div > section,
+.app-content .ui-detail-page .record-overview__almanac > .record-timeline {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .ui-detail-page .record-overview :is(h3, h4) {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-3);
+}
+.app-content .ui-detail-page .record-overview__facts dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.app-content .ui-detail-page .record-overview__facts dl > div {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.7fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  border: 0;
+}
+.app-content .ui-detail-page .record-overview__facts dt {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.app-content .ui-detail-page .record-overview__facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .record-overview__facts p {
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .record-overview__facts p:last-child {
+  margin-bottom: 0;
+}
+
+/* Item 11: one-line descendants count summary in Overview. */
+.app-content .ui-detail-page .record-descendants__line {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text);
+}
+.app-content .ui-detail-page .record-descendants__sep {
+  color: var(--text-muted);
+}
+
+/* Item 18: uniform child-record cards (Sowings, Rooting attempts, Offspring). */
+.app-content .ui-detail-page .record-child-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-content .ui-detail-page .record-child-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .record-child-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.app-content .ui-detail-page .record-child-card__kind {
+  color: var(--text-muted);
+  font: var(--type-eyebrow);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.app-content .ui-detail-page .record-child-card__title {
+  font: var(--type-strong);
+  color: var(--primary);
+}
+.app-content .ui-detail-page .record-child-card__meta {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.app-content .ui-detail-page .record-child-card__meta p {
+  margin: 0;
+}
+.app-content .ui-detail-page .record-child-card__actions {
+  margin-top: var(--space-2);
+}
+
+/* Item 19: compact Harvest materials & stored inventory table. */
+.app-content .ui-detail-page .harvest-materials-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.app-content .ui-detail-page .harvest-materials-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-small);
+}
+.app-content .ui-detail-page .harvest-materials-table th,
+.app-content .ui-detail-page .harvest-materials-table td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+  text-align: start;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.app-content .ui-detail-page .harvest-materials-table th {
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.app-content .ui-detail-page .harvest-materials-table td:last-child,
+.app-content .ui-detail-page .harvest-materials-table th:last-child {
+  padding-inline-end: 0;
+  text-align: end;
+  white-space: nowrap;
+}
+.app-content .ui-detail-page .harvest-materials-table .overflow-trigger {
+  white-space: nowrap;
+}
+.app-content .ui-detail-page .harvest-materials-table__data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.app-content .ui-detail-page .harvest-materials-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-2);
+}
+.app-content .ui-detail-page .harvest-materials-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--control-height-compact);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: var(--type-small);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.app-content .ui-detail-page .harvest-materials-link:hover {
+  color: var(--primary-hover, var(--text));
+}
+.app-content .ui-detail-page .harvest-materials-panels {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* UI-POLISH-006 B2: key facts strip under the action bar, same for every record type. */
+.app-content .ui-detail-page .detail-key-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-8);
+  margin: 0;
+  padding: 0;
+}
+.app-content .ui-detail-page .detail-header > .detail-key-facts {
+  grid-column: 1 / -1;
+}
+.app-content .ui-detail-page .detail-key-facts > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.app-content .ui-detail-page .detail-key-facts dd {
+  order: 0;
+  margin: 0;
+  color: var(--text);
+  font-size: 1.375rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.app-content .ui-detail-page .detail-key-facts dd.detail-key-facts__unknown {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.app-content .ui-detail-page .detail-key-facts dt {
+  order: 1;
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* B2: a tab's count badge, so empty tabs read as empty before they are opened. */
+.app-content .ui-detail-page .detail-tabs .detail-tab__count {
+  display: inline-block;
+  min-inline-size: 1.5em;
+  margin-inline-start: var(--space-2);
+  padding: 0 0.4em;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border-radius: 999px;
+  font-size: 0.8125em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: center;
 }

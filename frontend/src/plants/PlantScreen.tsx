@@ -54,9 +54,20 @@ import { CreationReversal } from "../propagation/CreationReversal";
 import { PotOnLauncher } from "../propagation/PotOnDialog";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { RecordTimeline } from "../timeline/RecordTimeline";
+import { RecordAlmanac } from "../timeline/RecordAlmanac";
 import { JournalScope } from "../events/JournalScope";
+import { JournalEntryCount } from "../events/JournalEntryCount";
+import { useJournalEntryCount } from "../events/useJournalEntryCount";
+import { usePhotoCount } from "../photos/usePhotoCount";
+import { harvestsHref } from "./plantDescendants";
+import { daysLabel, daysSince } from "../components/keyFactValues";
 import { LineageStrip } from "../lineage/LineageStrip";
+import {
+  ancestryKinds,
+  descendantCounts,
+  descendantSummaryLabel,
+  useDirectDescendants,
+} from "../lineage/useRecordedLineage";
 import {
   PlantEntryDateField,
   PlantEssentialsFields,
@@ -68,6 +79,7 @@ import {
   activeCsrfToken,
   isExpectedAuthCancellation,
   isPresentationRetainedState,
+  requestJson,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
@@ -79,6 +91,8 @@ import {
   DetailContext,
   DetailHeader,
   DetailTabs,
+  RecordDescendants,
+  RecordOverview,
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
@@ -363,14 +377,45 @@ function sowingChoice(sowing: SowingResponse): string {
   return `${sowing.seed_lot.botanical_identity_display_label}${label}${lot} · ${sowing.lifecycle}`;
 }
 
+/** Plant record tabs; inside JournalScope so the Journal count shares the Journal request. */
+function PlantDetailTabs({
+  target,
+  id,
+  photoCount,
+  selected,
+  onSelect,
+}: {
+  target: "plant" | "group";
+  id: string;
+  photoCount: number | null;
+  selected: string;
+  onSelect: (next: string) => void;
+}) {
+  const journalCount = useJournalEntryCount(target, id);
+  return (
+    <DetailTabs
+      tabs={[
+        { id: "overview", label: "Overview" },
+        { id: "events", label: "Journal", count: journalCount },
+        { id: "photos", label: "Photos", count: photoCount },
+        { id: "lineage", label: "Lineage" },
+      ]}
+      selected={selected}
+      onSelect={onSelect}
+    />
+  );
+}
+
 function Detail({
   record,
   locations,
   headingRef,
   onEventTargetRefresh,
   onEdit,
+  onReturnToList,
   onPrimaryChanged,
   primaryActions,
+  potOnAction,
   extractedPlants,
   initialTab,
   reversalAction,
@@ -382,8 +427,10 @@ function Detail({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onEventTargetRefresh: () => Promise<void>;
   onEdit: (trigger: HTMLButtonElement) => void;
+  onReturnToList?: () => void;
   onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
   primaryActions?: ReactNode;
+  potOnAction?: ReactNode;
   extractedPlants: PlantResponse[];
   initialTab?: string;
   reversalAction?: ReactNode;
@@ -391,14 +438,81 @@ function Detail({
   moreTrigger: RefObject<HTMLButtonElement | null>;
 }) {
   const recordName = useRecordName();
+  const auth = useAuth();
+  const { capability, sessionExpired } = auth;
+  const authorized =
+    auth.state.status === "authenticated" && capability.isAuthorized();
 
   const value = record.value;
+  const [harvestCounts, setHarvestCounts] = useState<{
+    key: string;
+    harvests: number;
+    singleHarvestId: string | null;
+  } | null>(null);
+  const offspringKey = `${record.kind}:${value.id}:${value.updated_at}`;
+  useEffect(() => {
+    if (!authorized) return;
+    const controller = new AbortController();
+    const harvestParam =
+      record.kind === "plant" ? "plant_id" : "plant_group_id";
+    void requestJson<{ id?: string }[]>(
+      `/api/v1/harvests?${harvestParam}=${encodeURIComponent(value.id)}`,
+      { capability, signal: controller.signal },
+    )
+      .then((harvestsData) => {
+        if (controller.signal.aborted) return;
+        const harvestList = Array.isArray(harvestsData) ? harvestsData : [];
+        setHarvestCounts({
+          key: offspringKey,
+          harvests: harvestList.length,
+          singleHarvestId:
+            harvestList.length === 1 && typeof harvestList[0]?.id === "string"
+              ? harvestList[0].id
+              : null,
+        });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [
+    authorized,
+    capability,
+    offspringKey,
+    record.kind,
+    sessionExpired,
+    value.id,
+  ]);
+  // Recorded descendants come from the same children endpoint as the lineage strip, so the
+  // Overview line and the strip always count the same records.
+  // One read, shared with the lineage strip below, so both always show the same counts.
+  const [descendants] = useDirectDescendants(
+    ancestryKinds[record.kind === "plant" ? "plants" : "plant-groups"],
+    value.id,
+    value.updated_at,
+  );
+  const descendantKinds =
+    descendants.status !== "ready"
+      ? []
+      : descendants.value.items.length < descendants.value.total
+        ? null
+        : descendantCounts(descendants.value);
+  const counts = harvestCounts?.key === offspringKey ? harvestCounts : null;
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
   const allowedTabs = ["overview", "events", "photos", "lineage"];
   const tabOf = (value?: string) =>
     value && allowedTabs.includes(value) ? value : "overview";
   const [tab, setTab] = useState(() => tabOf(initialTab));
+  const photoCount = usePhotoCount(
+    record.kind === "plant" ? "plant" : "plant_group",
+    value.id,
+    tab,
+  );
   // Follow later route changes on the same mounted record (a link or Record sheet action to
   // ?tab=lineage while this record is open); useState only reads the first value. Edit
   // routes are handled by the edit workspace and leave the selected section alone.
@@ -539,7 +653,24 @@ function Detail({
         <Breadcrumbs
           items={[
             { label: "Collection", href: "#/dashboard" },
-            { label: "Plants", href: "#/plants" },
+            {
+              label: "Plants",
+              href: "#/plants",
+              onClick: onReturnToList
+                ? (event) => {
+                    if (
+                      !event.metaKey &&
+                      !event.ctrlKey &&
+                      !event.shiftKey &&
+                      !event.altKey &&
+                      event.button === 0
+                    ) {
+                      event.preventDefault();
+                      onReturnToList();
+                    }
+                  }
+                : undefined,
+            },
             {
               label: recordName(
                 value,
@@ -552,8 +683,56 @@ function Detail({
         />
         <DetailHeader
           headingRef={headingRef}
+          keyFacts={
+            record.kind === "plant"
+              ? [
+                  {
+                    label: "in collection",
+                    value: (() => {
+                      const days = daysSince(value.collection_entry_date);
+                      if (days !== null) return daysLabel(days);
+                      return value.collection_entry_date
+                        ? `since ${dateLabel(value.collection_entry_date)}`
+                        : "Date not recorded";
+                    })(),
+                  },
+                  {
+                    label: "journal entries",
+                    value: <JournalEntryCount target="plant" id={value.id} />,
+                  },
+                  {
+                    label: "harvests",
+                    value: counts ? String(counts.harvests) : "…",
+                  },
+                ]
+              : [
+                  {
+                    label: "plants",
+                    value: quantityLabel(record) ?? "Quantity unknown",
+                  },
+                  {
+                    label: "extracted",
+                    value: String(extractedPlants.length),
+                  },
+                  {
+                    label: "journal entries",
+                    value: <JournalEntryCount target="group" id={value.id} />,
+                  },
+                  {
+                    label: "harvests",
+                    value: counts ? String(counts.harvests) : "…",
+                  },
+                ]
+          }
           plate={
-            <SpecimenPlate>
+            <SpecimenPlate
+              addPhoto={{
+                href: `#/${route}/${value.id}?tab=photos`,
+                onSelect: () => {
+                  setTab("photos");
+                },
+              }}
+            >
               <RecordVisual
                 photo={value.primary_photo}
                 showSource
@@ -598,10 +777,12 @@ function Detail({
               current={
                 record.kind === "plant" ? "This Plant" : "This Plant group"
               }
-              fullHref={
-                tab === "lineage"
-                  ? undefined
-                  : `#/${route}/${value.id}?tab=lineage`
+              fullHref={`#/${route}/${value.id}?tab=lineage`}
+              onLineageTab={tab === "lineage"}
+              descendantsSummary={
+                descendants.status === "ready"
+                  ? descendantSummaryLabel(descendants.value)
+                  : null
               }
               onFull={() => {
                 setTab("lineage");
@@ -609,38 +790,39 @@ function Detail({
             />
           }
           primaryActions={
-            <>
-              {record.kind === "plant" && (
-                <a
-                  className="button-link"
-                  data-collection-return="harvest"
-                  href={`#/harvests?action=create&sourceType=plant&source=${value.id}`}
-                >
-                  Record harvest
-                </a>
-              )}
-              {value.lifecycle === "active" && (
-                <>
-                  {primaryActions}
-                  <a
-                    className="button-link button--secondary"
-                    href={`#/cuttings/new?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}&identity=${value.botanical_identity_id}`}
-                  >
-                    Take cuttings
-                  </a>
-                </>
-              )}
-            </>
-          }
-          secondaryActions={
-            record.kind === "group" && (
+            record.kind === "plant" ? (
               <a
-                className="button-link button--secondary"
+                className="button-link"
                 data-collection-return="harvest"
-                href={`#/harvests?action=create&sourceType=plant_group&source=${value.id}`}
+                href={`#/harvests?action=create&sourceType=plant&source=${value.id}`}
               >
                 Record harvest
               </a>
+            ) : value.lifecycle === "active" ? (
+              primaryActions
+            ) : undefined
+          }
+          secondaryActions={
+            record.kind === "plant" ? (
+              value.lifecycle === "active" ? (
+                <a
+                  className="button-link button--secondary"
+                  href={`#/cuttings/new?sourceType=plant&source=${value.id}&identity=${value.botanical_identity_id}`}
+                >
+                  Take cuttings
+                </a>
+              ) : undefined
+            ) : (
+              <>
+                {value.lifecycle === "active" && potOnAction}
+                <a
+                  className="button-link button--secondary"
+                  data-collection-return="harvest"
+                  href={`#/harvests?action=create&sourceType=plant_group&source=${value.id}`}
+                >
+                  Record harvest
+                </a>
+              </>
             )
           }
           editLabel={`Edit ${record.kind === "plant" ? "Plant" : "Plant group"}`}
@@ -658,13 +840,10 @@ function Detail({
             )
           }
         />
-        <DetailTabs
-          tabs={[
-            { id: "overview", label: "Overview" },
-            { id: "events", label: "Journal" },
-            { id: "photos", label: "Photos" },
-            { id: "lineage", label: "Lineage" },
-          ]}
+        <PlantDetailTabs
+          target={record.kind}
+          id={value.id}
+          photoCount={photoCount}
           selected={tab}
           onSelect={(next) => {
             setTab(next);
@@ -678,83 +857,110 @@ function Detail({
         {tab === "overview" && (
           <div
             id="panel-overview"
-            className="detail-tab-panel overview-grid plant-overview collection-overview"
+            className="detail-tab-panel"
             role="tabpanel"
             aria-labelledby="tab-overview"
           >
-            <section
-              className="plant-fact-group plant-fact-group--wide"
-              aria-labelledby="plant-cuttings-title"
-            >
-              <h4 id="plant-cuttings-title">Vegetative offspring</h4>
-              <a
-                href={`#/cuttings?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`}
-              >
-                View cuttings from this specimen
-              </a>
-            </section>
-            {record.kind === "group" && (
-              <section
-                className="plant-fact-group"
-                aria-labelledby="group-extracted-title"
-              >
-                <h4 id="group-extracted-title">Extracted Plants</h4>
-                {extractedPlants.length ? (
-                  <>
-                    <p>
-                      {extractedPlants.length} extracted{" "}
-                      {extractedPlants.length === 1 ? "Plant" : "Plants"} ·
-                      historical extractions
-                    </p>
-                    <ul className="plant-related-list">
-                      {extractedPlants.slice(0, 3).map((plant) => (
-                        <li key={plant.id}>
-                          <a href={`#/plants/${plant.id}`}>
-                            {recordName(plant, "Unlabelled plant")}
-                          </a>
-                          <span>{plant.botanical_identity.display_label}</span>
-                          <span>{plantLifecycleLabels[plant.lifecycle]}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p>
-                      <a
-                        href={`#/${route}/${value.id}?tab=lineage`}
-                        onClick={() => {
-                          setTab("lineage");
-                        }}
-                      >
-                        View lineage →
-                      </a>
-                    </p>
-                  </>
-                ) : (
-                  <DetailEmptyState>No extracted plants.</DetailEmptyState>
-                )}
-              </section>
-            )}
-            <RecordTimeline
-              className="collection-overview-wide"
-              kind={record.kind === "plant" ? "plant" : "plant_group"}
-              id={value.id}
-              current={value.lifecycle === "active"}
-              journal={{
-                target: record.kind,
-                href: `#/${route}/${value.id}?tab=events`,
-                onOpen: () => {
-                  setTab("events");
-                },
-              }}
+            <RecordOverview
+              facts={
+                <>
+                  <RecordDescendants
+                    headingId="plant-descendants-title"
+                    // A failed children read only drops those counts; the Lineage
+                    // tab reports the failure and offers a retry.
+                    loading={descendants.status === "loading" && !counts}
+                    items={[
+                      // A group's extracted Plants come from its recorded extractions
+                      // (retained and reintegrated ones included), not only the first
+                      // page of children.
+                      ...(record.kind === "group"
+                        ? [
+                            {
+                              label: `${String(extractedPlants.length)} ${extractedPlants.length === 1 ? "extracted plant" : "extracted plants"}`,
+                              href: `#/${route}/${value.id}?tab=lineage`,
+                              onClick: () => {
+                                setTab("lineage");
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(descendantKinds === null &&
+                      descendants.status === "ready"
+                        ? [
+                            {
+                              label: `${String(descendants.value.total)} recorded from this`,
+                              href: `#/${route}/${value.id}?tab=lineage`,
+                              onClick: () => {
+                                setTab("lineage");
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(descendantKinds
+                        ? descendantKinds
+                            .filter(
+                              ({ kind }) =>
+                                record.kind !== "group" || kind !== "plant",
+                            )
+                            .map(({ kind, label }) => ({
+                              label,
+                              href:
+                                kind === "vegetative_lot"
+                                  ? `#/cuttings?sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`
+                                  : `#/${route}/${value.id}?tab=lineage`,
+                              onClick:
+                                kind === "vegetative_lot"
+                                  ? undefined
+                                  : () => {
+                                      setTab("lineage");
+                                    },
+                            }))
+                        : []),
+                      ...(counts
+                        ? [
+                            {
+                              label: `${String(counts.harvests)} ${counts.harvests === 1 ? "harvest" : "harvests"}`,
+                              // No filtered Harvest list exists: one harvest opens directly,
+                              // several open the identity's Harvests, none is plain text.
+                              href: harvestsHref(
+                                counts,
+                                value.botanical_identity_id,
+                              ),
+                            },
+                          ]
+                        : []),
+                    ]}
+                    lineageHref={`#/${route}/${value.id}?tab=lineage`}
+                    onOpenLineage={() => {
+                      setTab("lineage");
+                    }}
+                  />
+                  {value.notes && (
+                    <section
+                      className="plant-fact-group"
+                      aria-labelledby="plant-notes-title"
+                    >
+                      <h4 id="plant-notes-title">Notes</h4>
+                      <p className="preserve-lines">{value.notes}</p>
+                    </section>
+                  )}
+                </>
+              }
+              almanac={
+                <RecordAlmanac
+                  kind={record.kind === "plant" ? "plant" : "plant_group"}
+                  id={value.id}
+                  current={value.lifecycle === "active"}
+                  journal={{
+                    target: record.kind,
+                    href: `#/${route}/${value.id}?tab=events`,
+                    onOpen: () => {
+                      setTab("events");
+                    },
+                  }}
+                />
+              }
             />
-            {value.notes && (
-              <section
-                className="plant-fact-group plant-fact-group--wide"
-                aria-labelledby="plant-notes-title"
-              >
-                <h4 id="plant-notes-title">Notes</h4>
-                <p className="preserve-lines">{value.notes}</p>
-              </section>
-            )}
           </div>
         )}
         {tab === "events" && (
@@ -2735,6 +2941,14 @@ export function PlantScreen({
           {selected.kind === "plant" ? "Transfer" : "Transfer group"}
         </button>
       )}
+      {selected.kind === "group" && selected.value.lifecycle === "active" && (
+        <a
+          className="button-link button--secondary"
+          href={`#/cuttings/new?sourceType=plant_group&source=${selected.value.id}&identity=${selected.value.botanical_identity_id}`}
+        >
+          Take cuttings
+        </a>
+      )}
       <ActionLink
         icon="print"
         className="button-link button--secondary"
@@ -2761,41 +2975,8 @@ export function PlantScreen({
             aria-hidden={edit.modal || undefined}
           >
             <WorkspaceIntro
-              contextActions={
-                mobileDetail &&
-                !editing && (
-                  <button
-                    type="button"
-                    className="plant-back button--secondary"
-                    onClick={returnToList}
-                  >
-                    ← Back to Plants
-                  </button>
-                )
-              }
               contextOnly={mobileDetail || (editing && !edit.modal)}
               {...plantPage}
-              actions={
-                mobileDetail
-                  ? !editing && (
-                      <ActionButton
-                        icon="add"
-                        type="button"
-                        ref={creationTriggerRef}
-                        data-collection-return="create"
-                        aria-expanded={creationExpanded}
-                        aria-controls="new-plant-panel"
-                        disabled={references.identities.length === 0}
-                        onClick={() => {
-                          if (creationExpanded) focusCreation();
-                          else startCreate();
-                        }}
-                      >
-                        New plant or group
-                      </ActionButton>
-                    )
-                  : undefined
-              }
               tools={
                 !(mobileDetail || (editing && !edit.modal)) && (
                   <DirectoryTools
@@ -3287,66 +3468,66 @@ export function PlantScreen({
                           onEdit={(trigger) => {
                             startEdit(selected, trigger);
                           }}
+                          onReturnToList={returnToList}
                           primaryActions={
-                            <>
-                              {selected.kind === "group" &&
-                                selected.value.lifecycle === "active" && (
-                                  <button
-                                    ref={extractionTrigger}
-                                    data-collection-return="extract"
-                                    type="button"
-                                    onClick={() => {
-                                      startExtraction(selected.value);
-                                    }}
-                                  >
-                                    Extract plant
-                                  </button>
-                                )}
-                              {selected.kind === "group" && (
-                                <PotOnLauncher
-                                  source={{
+                            selected.kind === "group" &&
+                            selected.value.lifecycle === "active" ? (
+                              <button
+                                ref={extractionTrigger}
+                                data-collection-return="extract"
+                                type="button"
+                                onClick={() => {
+                                  startExtraction(selected.value);
+                                }}
+                              >
+                                Extract plant
+                              </button>
+                            ) : undefined
+                          }
+                          potOnAction={
+                            selected.kind === "group" ? (
+                              <PotOnLauncher
+                                source={{
+                                  kind: "group",
+                                  group: selected.value,
+                                }}
+                                identities={references.identities}
+                                locations={references.locations}
+                                fallbackFocusTo={detailHeading}
+                                onGroupUpdated={(updatedGroup, created) => {
+                                  const authoritative: PlantRecord = {
                                     kind: "group",
-                                    group: selected.value,
-                                  }}
-                                  identities={references.identities}
-                                  locations={references.locations}
-                                  fallbackFocusTo={detailHeading}
-                                  onGroupUpdated={(updatedGroup, created) => {
-                                    const authoritative: PlantRecord = {
-                                      kind: "group",
-                                      value: updatedGroup,
-                                    };
-                                    setDetail({
-                                      status: "ready",
-                                      record: authoritative,
-                                    });
-                                    setCollection((current) =>
-                                      current.status === "ready"
-                                        ? {
-                                            ...current,
-                                            records: [
-                                              ...created.map(
-                                                (plant): PlantRecord => ({
-                                                  kind: "plant",
-                                                  value: plant,
-                                                }),
-                                              ),
-                                              ...current.records.map(
-                                                (record) =>
-                                                  recordKey(record) ===
-                                                  recordKey(authoritative)
-                                                    ? authoritative
-                                                    : record,
-                                              ),
-                                            ],
-                                          }
-                                        : current,
-                                    );
-                                    setReversalRevision((value) => value + 1);
-                                  }}
-                                />
-                              )}
-                            </>
+                                    value: updatedGroup,
+                                  };
+                                  setDetail({
+                                    status: "ready",
+                                    record: authoritative,
+                                  });
+                                  setCollection((current) =>
+                                    current.status === "ready"
+                                      ? {
+                                          ...current,
+                                          records: [
+                                            ...created.map(
+                                              (plant): PlantRecord => ({
+                                                kind: "plant",
+                                                value: plant,
+                                              }),
+                                            ),
+                                            ...current.records.map((record) =>
+                                              recordKey(record) ===
+                                              recordKey(authoritative)
+                                                ? authoritative
+                                                : record,
+                                            ),
+                                          ],
+                                        }
+                                      : current,
+                                  );
+                                  setReversalRevision((value) => value + 1);
+                                }}
+                              />
+                            ) : undefined
                           }
                           moreActions={maintenanceActions}
                           moreTrigger={recordMoreTrigger}

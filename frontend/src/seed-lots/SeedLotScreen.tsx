@@ -61,7 +61,7 @@ import {
 } from "../orders/purchaseApi";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { RecordTimeline } from "../timeline/RecordTimeline";
+import { RecordAlmanac } from "../timeline/RecordAlmanac";
 import { LineageStrip } from "../lineage/LineageStrip";
 import "./seed-refinement.css";
 
@@ -82,11 +82,13 @@ import {
 } from "../botanical-identities/api";
 import {
   Breadcrumbs,
-  CollectionCard,
   DetailContext,
   DetailHeader,
   DetailPage,
   DetailTabs,
+  RecordChildCard,
+  RecordDescendants,
+  RecordOverview,
   WorkspaceIntro,
   DetailLoading,
   SpecimenLabel,
@@ -117,6 +119,7 @@ import {
 } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
+import { usePhotoCount } from "../photos/usePhotoCount";
 import type { PrimaryPhoto } from "../photos/api";
 import {
   listProvenanceSites,
@@ -279,8 +282,12 @@ function payloadFrom(form: FormState): SeedLotCreate {
 
 function quantityLabel(lot: SeedLotResponse): string {
   if (!lot.quantity) return "Quantity unknown";
-  const unit = lot.quantity.kind === "seed_count" ? "seeds" : lot.quantity.unit;
-  return `${lot.quantity.is_approximate ? "About " : ""}${lot.quantity.value} ${unit ?? ""}`;
+  const unit = (
+    lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "")
+  ).trim();
+  const value = lot.quantity.value.trim();
+  const prefix = lot.quantity.is_approximate ? "About " : "";
+  return unit ? `${prefix}${value} ${unit}` : `${prefix}${value}`;
 }
 
 function inventoryLabel(lot: SeedLotResponse): string {
@@ -313,58 +320,48 @@ function ContextDialog({
   );
 }
 
-function RelatedSowings({ seedLotId }: { seedLotId: string }) {
-  const auth = useAuth();
-  const { capability, sessionExpired } = auth;
-  const authorized =
-    auth.state.status === "authenticated" && capability.isAuthorized();
-  const recordName = useRecordName();
+const sowingLifecycleLabels: Record<string, string> = {
+  active: "Active",
+  completed: "Completed",
+  abandoned: "Abandoned",
+  failed: "Failed",
+  reversed: "Reversed",
+};
 
-  const [sowings, setSowings] = useState<SowingResponse[] | null>(null);
-  useEffect(() => {
-    if (!authorized) return;
-    const controller = new AbortController();
-    void listSowings(capability, controller.signal)
-      .then((items) => {
-        setSowings(
-          items.filter(({ seed_lot_id }) => seed_lot_id === seedLotId),
-        );
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted || isExpectedAuthCancellation(error))
-          return;
-        if (error instanceof ApiError && error.status === 401) sessionExpired();
-        else setSowings([]);
-      });
-    return () => {
-      controller.abort();
-    };
-  }, [seedLotId, authorized, capability, sessionExpired]);
+function RelatedSowings({ sowings }: { sowings: SowingResponse[] | null }) {
+  const recordName = useRecordName();
   if (sowings === null) return <p role="status">Loading Sowings…</p>;
   if (!sowings.length)
     return <DetailEmptyState>No sowings yet.</DetailEmptyState>;
   return (
-    <div className="card-grid">
+    <div className="record-child-grid">
       {sowings.map((sowing) => (
-        <CollectionCard
+        <RecordChildCard
           key={sowing.id}
-          eyebrow={sowing.lifecycle}
+          kind="Sowing"
           href={`#/sowings/${sowing.id}`}
           title={recordName(sowing, "Unlabelled Sowing")}
-        >
-          <p>{dateLabel(sowing.sowing_date)}</p>
-          <p>
-            {sowing.quantity
-              ? `${sowing.quantity.is_approximate ? "~" : ""}${sowing.quantity.value} ${sowing.quantity.kind === "seed_count" ? "seeds used" : `${sowing.quantity.unit ?? "weight"} used`}`
-              : "Quantity used not recorded"}
-          </p>
-          <p>
-            {sowing.germinated_count === null
-              ? "Germination not recorded"
-              : `${String(sowing.germinated_count)} germinated`}
-          </p>
-          <p>{sowing.location?.display_path ?? "Location not recorded"}</p>
-        </CollectionCard>
+          status={sowing.lifecycle}
+          statusLabel={
+            sowingLifecycleLabels[sowing.lifecycle] ?? sowing.lifecycle
+          }
+          meta={
+            <>
+              <p>{dateLabel(sowing.sowing_date)}</p>
+              <p>
+                {sowing.quantity
+                  ? `${sowing.quantity.is_approximate ? "~" : ""}${sowing.quantity.value} ${sowing.quantity.kind === "seed_count" ? "seeds used" : `${sowing.quantity.unit ?? "weight"} used`}`
+                  : "Quantity used not recorded"}
+              </p>
+              <p>
+                {sowing.germinated_count === null
+                  ? "Germination not recorded"
+                  : `${String(sowing.germinated_count)} germinated`}
+              </p>
+              <p>{sowing.location?.display_path ?? "Location not recorded"}</p>
+            </>
+          }
+        />
       ))}
     </div>
   );
@@ -393,6 +390,36 @@ function Detail({
   const authorized =
     auth.state.status === "authenticated" && capability.isAuthorized();
   const [transaction, setTransaction] = useState<OrderDetail | null>(null);
+  const [relatedSowings, setRelatedSowings] = useState<{
+    lotId: string;
+    items: SowingResponse[];
+  } | null>(null);
+  useEffect(() => {
+    if (!authorized) return;
+    const controller = new AbortController();
+    void listSowings(capability, controller.signal)
+      .then((items) => {
+        if (!controller.signal.aborted) {
+          setRelatedSowings({
+            lotId: lot.id,
+            items: Array.isArray(items)
+              ? items.filter(({ seed_lot_id }) => seed_lot_id === lot.id)
+              : [],
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(error))
+          return;
+        if (error instanceof ApiError && error.status === 401) sessionExpired();
+        else setRelatedSowings({ lotId: lot.id, items: [] });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [lot.id, lot.updated_at, authorized, capability, sessionExpired]);
+  const sowingsForLot =
+    relatedSowings?.lotId === lot.id ? relatedSowings.items : null;
   useEffect(() => {
     if (!lot.order_id || !authorized) return;
     const controller = new AbortController();
@@ -418,6 +445,7 @@ function Detail({
       ? value
       : "overview";
   const [tab, setTab] = useState(() => tabOf(initialTab));
+  const photoCount = usePhotoCount("seed_lot", lot.id, tab);
   // Follow later route changes on the same mounted record (a link or Record sheet action to
   // ?tab=lineage while this record is open); useState only reads the first value. Edit
   // routes are handled by the edit workspace and leave the selected section alone.
@@ -466,7 +494,14 @@ function Detail({
         }
         headingRef={headingRef}
         plate={
-          <SpecimenPlate>
+          <SpecimenPlate
+            addPhoto={{
+              href: `#/seeds/${lot.id}?tab=photos`,
+              onSelect: () => {
+                setTab("photos");
+              },
+            }}
+          >
             <RecordVisual
               photo={lot.primary_photo}
               showSource
@@ -478,6 +513,22 @@ function Detail({
         }
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}
+        keyFacts={[
+          {
+            label: inventoryLabel(lot).toLowerCase(),
+            value: quantityLabel(lot),
+          },
+          {
+            label: sowingsForLot?.length === 1 ? "sowing" : "sowings",
+            value: sowingsForLot ? String(sowingsForLot.length) : "…",
+          },
+          {
+            label: "viable until",
+            value: lot.expected_viability_until
+              ? dateLabel(lot.expected_viability_until)
+              : "Not recorded",
+          },
+        ]}
         secondary={
           <a href={`#/identities/${lot.botanical_identity.id}`}>
             <BotanicalName
@@ -498,9 +549,8 @@ function Detail({
             kind="seed-lots"
             id={lot.id}
             current="This Seed lot"
-            fullHref={
-              tab === "lineage" ? undefined : `#/seeds/${lot.id}?tab=lineage`
-            }
+            fullHref={`#/seeds/${lot.id}?tab=lineage`}
+            onLineageTab={tab === "lineage"}
             onFull={() => {
               setTab("lineage");
             }}
@@ -516,9 +566,7 @@ function Detail({
             </a>
           ) : undefined
         }
-        editLabel="Edit seed lot"
-        onEdit={onEdit}
-        overflow={
+        secondaryActions={
           <ActionLink
             icon="print"
             className="button-link button--secondary"
@@ -527,6 +575,8 @@ function Detail({
             Print label
           </ActionLink>
         }
+        editLabel="Edit seed lot"
+        onEdit={onEdit}
       />
       {lot.lifecycle !== "active" && (
         <div className="contextual-actions">
@@ -539,8 +589,12 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "sowings", label: "Sowings" },
-          { id: "photos", label: "Photos" },
+          {
+            id: "sowings",
+            label: "Sowings",
+            count: sowingsForLot?.length ?? null,
+          },
+          { id: "photos", label: "Photos", count: photoCount },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
@@ -560,131 +614,176 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <div className="seed-overview-main seed-summary-sections">
-            <section
-              className="seed-fact-group"
-              aria-labelledby="seed-overview-acquisition"
-            >
-              <h4 id="seed-overview-acquisition">Acquisition</h4>
-              <p className="seed-fact-lead">
-                {sourceLabels[lot.source_kind]}
-                {lot.source_detail ? ` — ${lot.source_detail}` : ""}
-              </p>
-              <p>
-                {summarySupplier ? (
-                  <a href={`#/suppliers/${summarySupplier.id}`}>
-                    {summarySupplier.name}
-                  </a>
-                ) : (
-                  "Supplier not recorded"
-                )}
-              </p>
-              {lot.order_id && (
-                <small className="field-help">
-                  {linkedTransaction?.supplier
-                    ? "From linked Order"
-                    : linkedTransaction
-                      ? "Recorded on this seed lot; Order Supplier not recorded"
-                      : "Recorded on this seed lot"}
-                </small>
-              )}
-              <p className="seed-secondary-fact">
-                Order:{" "}
-                {lot.order ? (
-                  <a href={`#/orders/${lot.order.id}`}>
-                    {lot.order.order_reference ?? "Purchase order"}
-                  </a>
-                ) : (
-                  "Not linked"
-                )}
-              </p>
-            </section>
-            <section
-              className="seed-fact-group seed-origin"
-              aria-labelledby="seed-overview-source"
-            >
-              <h4 id="seed-overview-source">Origin</h4>
-              <p className="seed-fact-lead">
-                {lot.provenance_site ? (
-                  <a href={`#/geography/${lot.provenance_site.id}`}>
-                    {lot.provenance_site.geographic_place_path
-                      ? `${lot.provenance_site.geographic_place_path} → `
-                      : ""}
-                    {lot.provenance_site.name}
-                  </a>
-                ) : (
-                  "Provenance site not recorded"
-                )}
-              </p>
-              <p>
-                {lot.material_provenance ? (
-                  <a href={`#/geography?place=${lot.material_provenance.id}`}>
-                    {lot.material_provenance.display_path}
-                  </a>
-                ) : (
-                  "Material provenance not recorded"
-                )}
-              </p>
-            </section>
-            <section
-              className="seed-fact-group seed-dates"
-              aria-labelledby="seed-overview-dates"
-            >
-              <h4 id="seed-overview-dates">Dates &amp; condition</h4>
-              <dl>
-                <div>
-                  <dt>Acquired</dt>
-                  <dd>{dateLabel(lot.acquisition_date)}</dd>
-                </div>
-                <div>
-                  <dt>Harvested</dt>
-                  <dd>{dateLabel(lot.harvest_date)}</dd>
-                </div>
-                <div>
-                  <dt>Expected viability</dt>
-                  <dd>{dateLabel(lot.expected_viability_until)}</dd>
-                </div>
-              </dl>
-            </section>
-            <RecordTimeline
-              kind="seed_lot"
-              id={lot.id}
-              current={lot.lifecycle === "active"}
-              recordedElsewhere={
-                <>
-                  Seed lots have no Journal. Sowings started from this lot are
-                  listed under{" "}
-                  <a
-                    href={`#/seeds/${lot.id}?tab=sowings`}
-                    onClick={() => {
-                      setTab("sowings");
-                    }}
-                  >
-                    Sowings
-                  </a>
-                  .
-                </>
-              }
-            />
-            {lot.harvest_conversion_id && (
-              <div className="seed-overview-conversion">
-                <ConversionHistory
-                  kind="seed_lot_id"
-                  id={lot.id}
-                  onChanged={onConversionChanged}
+          <RecordOverview
+            facts={
+              <>
+                <section
+                  className="seed-fact-group"
+                  aria-labelledby="seed-overview-acquisition"
+                >
+                  <h4 id="seed-overview-acquisition">Acquisition</h4>
+                  <p className="seed-fact-lead">
+                    {sourceLabels[lot.source_kind]}
+                    {lot.source_detail ? ` — ${lot.source_detail}` : ""}
+                  </p>
+                  <p>
+                    {summarySupplier ? (
+                      <a href={`#/suppliers/${summarySupplier.id}`}>
+                        {summarySupplier.name}
+                      </a>
+                    ) : (
+                      "Supplier not recorded"
+                    )}
+                  </p>
+                  {lot.order_id && (
+                    <small className="field-help">
+                      {linkedTransaction?.supplier
+                        ? "From linked Order"
+                        : linkedTransaction
+                          ? "Recorded on this seed lot; Order Supplier not recorded"
+                          : "Recorded on this seed lot"}
+                    </small>
+                  )}
+                  <p className="seed-secondary-fact">
+                    Order:{" "}
+                    {lot.order ? (
+                      <a href={`#/orders/${lot.order.id}`}>
+                        {lot.order.order_reference ?? "Purchase order"}
+                      </a>
+                    ) : (
+                      "Not linked"
+                    )}
+                  </p>
+                </section>
+                <section
+                  className="seed-fact-group seed-origin"
+                  aria-labelledby="seed-overview-source"
+                >
+                  <h4 id="seed-overview-source">Origin</h4>
+                  <p className="seed-fact-lead">
+                    {lot.provenance_site ? (
+                      <a href={`#/geography/${lot.provenance_site.id}`}>
+                        {lot.provenance_site.geographic_place_path
+                          ? `${lot.provenance_site.geographic_place_path} → `
+                          : ""}
+                        {lot.provenance_site.name}
+                      </a>
+                    ) : (
+                      "Provenance site not recorded"
+                    )}
+                  </p>
+                  <p>
+                    {lot.material_provenance ? (
+                      <a
+                        href={`#/geography?place=${lot.material_provenance.id}`}
+                      >
+                        {lot.material_provenance.display_path}
+                      </a>
+                    ) : (
+                      "Material provenance not recorded"
+                    )}
+                  </p>
+                </section>
+                <section
+                  className="seed-fact-group seed-dates"
+                  aria-labelledby="seed-overview-dates"
+                >
+                  <h4 id="seed-overview-dates">Dates &amp; condition</h4>
+                  <dl>
+                    <div>
+                      <dt>Acquired</dt>
+                      <dd>{dateLabel(lot.acquisition_date)}</dd>
+                    </div>
+                    <div>
+                      <dt>Harvested</dt>
+                      <dd>{dateLabel(lot.harvest_date)}</dd>
+                    </div>
+                    <div>
+                      <dt>Expected viability</dt>
+                      <dd>{dateLabel(lot.expected_viability_until)}</dd>
+                    </div>
+                  </dl>
+                </section>
+                <RecordDescendants
+                  headingId="seed-overview-descendants"
+                  loading={sowingsForLot === null}
+                  items={
+                    sowingsForLot
+                      ? [
+                          {
+                            label: `${String(sowingsForLot.length)} ${sowingsForLot.length === 1 ? "sowing" : "sowings"}`,
+                            href: `#/seeds/${lot.id}?tab=sowings`,
+                            onClick: () => {
+                              setTab("sowings");
+                            },
+                          },
+                        ]
+                      : []
+                  }
+                  lineageHref={`#/seeds/${lot.id}?tab=lineage`}
+                  onOpenLineage={() => {
+                    setTab("lineage");
+                  }}
                 />
-              </div>
-            )}
-            {lot.notes && (
-              <section
-                aria-labelledby="seed-overview-notes"
-                className="seed-fact-group seed-fact-group--notes"
-              >
-                <h4 id="seed-overview-notes">Notes</h4>
-                <p className="preserve-lines">{lot.notes}</p>
-              </section>
-            )}
-          </div>
+                {lot.harvest_conversion_id && (
+                  <div className="seed-overview-conversion">
+                    <ConversionHistory
+                      kind="seed_lot_id"
+                      id={lot.id}
+                      onChanged={onConversionChanged}
+                    />
+                  </div>
+                )}
+                {lot.notes && (
+                  <section
+                    aria-labelledby="seed-overview-notes"
+                    className="seed-fact-group seed-fact-group--notes"
+                  >
+                    <h4 id="seed-overview-notes">Notes</h4>
+                    <p className="preserve-lines">{lot.notes}</p>
+                  </section>
+                )}
+              </>
+            }
+            almanac={
+              <RecordAlmanac
+                kind="seed_lot"
+                id={lot.id}
+                current={lot.lifecycle === "active"}
+                recordedElsewhere={
+                  sowingsForLot === null ? (
+                    "Loading sowings…"
+                  ) : sowingsForLot.length > 0 ? (
+                    <>
+                      {sowingsForLot.length}{" "}
+                      {sowingsForLot.length === 1 ? "sowing" : "sowings"}{" "}
+                      started from this lot.{" "}
+                      <a
+                        href={`#/seeds/${lot.id}?tab=sowings`}
+                        onClick={() => {
+                          setTab("sowings");
+                        }}
+                      >
+                        Open Sowings
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      No sowings started from this lot yet.{" "}
+                      <a
+                        href={`#/seeds/${lot.id}?tab=sowings`}
+                        onClick={() => {
+                          setTab("sowings");
+                        }}
+                      >
+                        Open Sowings
+                      </a>
+                    </>
+                  )
+                }
+              />
+            }
+          />
         </div>
       )}
       {tab === "sowings" && (
@@ -694,7 +793,7 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-sowings"
         >
-          <RelatedSowings seedLotId={lot.id} />
+          <RelatedSowings sowings={sowingsForLot} />
         </div>
       )}
       {tab === "lineage" && (

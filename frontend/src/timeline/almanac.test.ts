@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import {
   almanacWindow,
   dayPosition,
+  dueLabel,
   partialMark,
   precisionGroups,
   type PartialDate,
@@ -73,4 +74,14 @@ test("Journal entries group by the precision actually recorded, in API order", (
     ["2024 · month not recorded", ["d"]],
     ["Date not recorded", ["e"]],
   ]);
+});
+
+test("UI-POLISH-006 B2: Next up names when a planned activity is due", () => {
+  expect(dueLabel("2026-11-27", "2026-11-27")).toBe("today");
+  expect(dueLabel("2026-11-28", "2026-11-27")).toBe("tomorrow");
+  expect(dueLabel("2026-11-30", "2026-11-27")).toBe("in 3 days");
+  expect(dueLabel("2026-11-26", "2026-11-27")).toBe("1 day overdue");
+  expect(dueLabel("2026-10-28", "2026-11-27")).toBe("30 days overdue");
+  // Across a DST change the count stays in whole calendar days.
+  expect(dueLabel("2027-04-01", "2027-03-20")).toBe("in 12 days");
 });

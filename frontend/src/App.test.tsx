@@ -108,6 +108,19 @@ function authenticatedThen(
         total_provenance_sites: 0,
       });
     if (
+      path.startsWith("/api/v1/schedule") &&
+      (init?.method === undefined || init.method === "GET")
+    )
+      return jsonResponse({
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 3,
+        today: "2026-10-10",
+        overdue_count: 0,
+        today_count: 0,
+      });
+    if (
       path === "/api/v1/botanical-identities" &&
       (init?.method === undefined || init.method === "GET")
     )
@@ -2182,16 +2195,15 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     screen.getAllByText("House → Seed cabinet → Drawer A")[0],
   ).toBeInTheDocument();
   expect(
+    screen.getByRole("heading", { name: "Enabled scopes" }).parentElement,
+  ).toHaveTextContent("Seed lots");
+  await user.click(screen.getByRole("tab", { name: "Contents" }));
+  expect(
     screen
       .getAllByRole("link", { name: "Plants" })
       .some((link) => link.getAttribute("href") === "#/plants"),
   ).toBe(true);
   expect(screen.getAllByText("2 total (1 active)")).toHaveLength(2);
-  expect(
-    screen
-      .getAllByLabelText("Usage scopes")
-      .some((item) => item.textContent.includes("Seed lots")),
-  ).toBe(true);
   await user.click(screen.getByRole("button", { name: "Edit location" }));
   const parent = screen.getByRole("combobox", { name: "Parent location" });
   await user.clear(parent);
@@ -3248,6 +3260,7 @@ test.each([
       ).not.toBeInTheDocument();
     row.focus();
     await user.keyboard("{Enter}");
+    await user.click(await screen.findByRole("tab", { name: "Contents" }));
     await screen.findByRole("table");
     expect(
       screen.queryByRole("list", { name: "Location hierarchy" }),
@@ -3290,6 +3303,7 @@ test("Location empty usage avoids repeated zeroes in directory and preview, deta
   const row = await screen.findByRole("button", { name: /^House/ });
   expect(within(row).getByText("No collection records")).toBeInTheDocument();
   await user.click(row);
+  await user.click(await screen.findByRole("tab", { name: "Contents" }));
   await screen.findByRole("table");
   expect(
     screen.queryByRole("list", { name: "Location hierarchy" }),
@@ -3343,6 +3357,7 @@ test("Location aggregates show separate Plant groups and descendant content beyo
     ),
   ).toBeInTheDocument();
   await user.click(row);
+  await user.click(await screen.findByRole("tab", { name: "Contents" }));
   expect(
     await screen.findByRole("columnheader", { name: "Including sublocations" }),
   ).toBeInTheDocument();

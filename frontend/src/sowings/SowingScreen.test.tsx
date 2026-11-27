@@ -307,7 +307,12 @@ test("germination tab keeps simple and dated totals distinct and supports correc
   await user.type(screen.getByLabelText("Newly germinated"), "8");
   await user.click(screen.getByRole("button", { name: "Save observation" }));
   expect(await screen.findByText("40%")).toBeInTheDocument();
-  expect(screen.getByText("12")).toBeInTheDocument();
+  // The key facts strip also shows the germinated total; the tab panel keeps its own.
+  expect(
+    within(screen.getByRole("tabpanel", { name: "Germination" })).getByText(
+      "12",
+    ),
+  ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Edit" }));
   await user.clear(screen.getByLabelText("Newly germinated"));
   await user.type(screen.getByLabelText("Newly germinated"), "0");
@@ -454,8 +459,29 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   expect(screen.getByText("Coco coir")).toBeInTheDocument();
   expect(screen.getByText("20.5–28 °C")).toBeInTheDocument();
   expect(screen.getByText("Check daily.")).toBeInTheDocument();
-  const back = screen.getByRole("button", { name: "← Back to Sowings" });
-  await user.click(back);
+  expect(
+    screen.queryByRole("button", { name: "← Back to Sowings" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "New sowing" }),
+  ).not.toBeInTheDocument();
+  // Action bar contract: 1 primary (Create Plant) + 2 secondaries + Edit + More
+  const actionBar = screen.getByRole("group", { name: "Record actions" });
+  expect(
+    within(actionBar).getByRole("link", { name: "Create Plant" }),
+  ).toBeVisible();
+  expect(
+    within(actionBar).getByRole("link", { name: "Record germination" }),
+  ).toBeVisible();
+  expect(
+    within(actionBar).queryByRole("link", { name: "Create Plant group" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Sowings" },
+    ),
+  );
   expect(screen.getByRole("list", { name: "Sowing collection" })).toHaveFocus();
 });
 
@@ -1194,6 +1220,52 @@ test("propagation paths distinguish direct results from retained extracted indiv
             },
           ],
         });
+      if (path.endsWith("/lineage")) {
+        return json({
+          subject: {
+            kind: "seed_lot",
+            id: seedLotId,
+            label: "Blue packet",
+            lifecycle: "active",
+            botanical_identity: {
+              id: identityId,
+              display_label: "Clitoria ternatea",
+            },
+          },
+          ancestors: [],
+        });
+      }
+      if (path.startsWith(`/api/v1/lineage/sowing/${sowingId}/children`)) {
+        return json({
+          items: [
+            {
+              record: {
+                kind: "plant",
+                id: "direct-plant",
+                label: "Direct specimen",
+                lifecycle: "active",
+              },
+              origin: null,
+              harvest_conversion: null,
+              descendant_count: 0,
+            },
+            {
+              record: {
+                kind: "plant_group",
+                id: "group-1",
+                label: "Original group",
+                lifecycle: "reversed",
+              },
+              origin: null,
+              harvest_conversion: null,
+              descendant_count: 1,
+            },
+          ],
+          total: 2,
+          offset: 0,
+          limit: 25,
+        });
+      }
       return undefined;
     }),
   );
@@ -1205,30 +1277,26 @@ test("propagation paths distinguish direct results from retained extracted indiv
   expect(
     screen.queryByRole("region", { name: "Propagation path" }),
   ).not.toBeInTheDocument();
-  expect(
-    await screen.findByRole("region", { name: "Descendants" }),
-  ).toHaveTextContent("1 exact individual");
-  await user.click(screen.getByRole("link", { name: "View lineage →" }));
-  const recorded = screen.getByRole("region", { name: "Recorded lineage" });
-  const directLink = within(recorded).getByRole("link", {
-    name: /Direct specimen/,
+  const descendants = await screen.findByRole("region", {
+    name: "Descendants",
   });
-  const extractedLink = within(recorded).getByRole("link", {
-    name: /Historical extraction/,
-  });
-  expect(extractedLink).toHaveTextContent(
-    "Plant extracted from Original group",
+  expect(descendants).toHaveTextContent("2 plants · 1 plant group");
+  await user.click(
+    within(descendants).getByRole("link", { name: "View lineage" }),
   );
-  expect(extractedLink).toHaveTextContent("reintegrated");
-  expect(directLink.closest("li")).not.toBe(extractedLink.closest("li"));
+  const ancestors = await screen.findByRole("region", { name: "Ancestors" });
   expect(
-    within(recorded).getByRole("link", { name: /Historical extraction/ }),
-  ).toHaveTextContent("Plant extracted from Original group");
+    within(ancestors).getByRole("link", { name: /Blue packet/ }),
+  ).toHaveAttribute("href", `#/seeds/${seedLotId}?tab=lineage`);
+  const recorded = await screen.findByRole("region", {
+    name: "Recorded from this record",
+  });
   expect(
-    within(recorded).getByRole("link", {
-      name: /Original group.*quantity unknown/s,
-    }),
-  ).toHaveTextContent("reversed");
+    within(recorded).getByRole("link", { name: "Direct specimen" }),
+  ).toHaveAttribute("href", "#/plants/direct-plant?tab=lineage");
+  expect(
+    within(recorded).getByRole("link", { name: "Original group" }),
+  ).toHaveAttribute("href", "#/plant-groups/group-1?tab=lineage");
 });
 
 test("BULK-001 Sowing selection excludes completed records and resets with filters", async () => {
@@ -1483,17 +1551,33 @@ test("Sowing row retains germination, direct commands and creation-only menu", a
 
 test("old Sowing propagation URL opens the canonical Lineage tab and empty summary", async () => {
   mockApi(
-    sowingHandler([sowing()], (path) =>
-      path.endsWith("/propagation-summary")
-        ? json({
-            plants: [],
-            plant_groups: [],
-            exact_descendant_count: 0,
-            approximate_plant_group_count: 0,
-            unknown_plant_group_count: 0,
-          })
-        : undefined,
-    ),
+    sowingHandler([sowing()], (path) => {
+      if (path.endsWith("/propagation-summary"))
+        return json({
+          plants: [],
+          plant_groups: [],
+          exact_descendant_count: 0,
+          approximate_plant_group_count: 0,
+          unknown_plant_group_count: 0,
+        });
+      if (path.endsWith("/lineage"))
+        return json({
+          subject: {
+            kind: "seed_lot",
+            id: seedLotId,
+            label: "Blue packet",
+            lifecycle: "active",
+            botanical_identity: {
+              id: identityId,
+              display_label: "Clitoria ternatea",
+            },
+          },
+          ancestors: [],
+        });
+      if (path.startsWith(`/api/v1/lineage/sowing/${sowingId}/children`))
+        return json({ items: [], total: 0, offset: 0, limit: 25 });
+      return undefined;
+    }),
   );
   window.location.hash = `#/sowings/${sowingId}?tab=propagation`;
   render(<App />);
@@ -1503,12 +1587,12 @@ test("old Sowing propagation URL opens the canonical Lineage tab and empty summa
   );
   expect(window.location.hash).toBe(`#/sowings/${sowingId}?tab=lineage`);
   expect(
-    await screen.findByText("No additional recorded lineage."),
+    await screen.findByText("Nothing recorded from it yet."),
   ).toBeVisible();
-  const path = screen.getByRole("region", { name: "Recorded lineage" });
+  const path = screen.getByRole("region", { name: "Ancestors" });
   expect(
     within(path).getByRole("link", { name: /Blue packet/ }),
-  ).toHaveAttribute("href", `#/seeds/${seedLotId}`);
+  ).toHaveAttribute("href", `#/seeds/${seedLotId}?tab=lineage`);
 });
 
 test("Sowing Details offers Undo creation in its header without an inline operation panel", async () => {

@@ -110,6 +110,7 @@ export function RecordVisual({
     <span
       ref={mediaTarget}
       title={showSource ? sourceLabel : undefined}
+      data-empty={source ? undefined : ""}
       className={`record-visual record-visual--${kind}${compact ? " record-visual--compact" : ""} ${className}`}
     >
       {source && media.src ? (
