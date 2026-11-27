@@ -29,6 +29,7 @@ from florabase.orders.api import router as orders_router
 from florabase.plants.api import plant_groups_router, plants_router
 from florabase.propagation.api import router as propagation_router
 from florabase.provenance_sites.api import router as provenance_sites_router
+from florabase.quick_add.api import router as quick_add_router
 from florabase.saved_views.api import router as saved_views_router
 from florabase.schedule.api import router as schedule_router
 from florabase.search.api import router as search_router
@@ -63,6 +64,7 @@ api_router.include_router(seed_lots_router)
 api_router.include_router(sowings_router)
 api_router.include_router(plants_router)
 api_router.include_router(plant_groups_router)
+api_router.include_router(quick_add_router)
 api_router.include_router(plants_events_router)
 api_router.include_router(plant_groups_events_router)
 api_router.include_router(events_router)
