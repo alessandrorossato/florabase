@@ -616,6 +616,8 @@ class MobileReleaseContract(unittest.TestCase):
         self.assertIn("set +x", release_script)
         self.assertIn("FLORABASE_ANDROID_CERT_SHA256", release_script)
         self.assertIn("apksigner", release_script)
+        # Parses both apksigner <= 36 ("Signer #1 ...") and newer ("V2 Signer: ...") output.
+        self.assertIn("Signer #1|V[0-9]+ Signer:", release_script)
         clean_env = {k: v for k, v in os.environ.items() if not k.startswith("FLORABASE_ANDROID_")}
         proc = subprocess.run(
             ["bash", str(ROOT / "scripts/mobile-android-release.sh")],
@@ -702,6 +704,12 @@ class MobileReleaseContract(unittest.TestCase):
         self.assertIn("set +x", workflow)
         self.assertIn("if: always()", workflow)
         self.assertIn('rm -f "${RUNNER_TEMP}/florabase-release.keystore"', workflow)
+        # Corepack resolves pnpm from the cwd package.json; --dir from the root picks its default.
+        self.assertNotIn("pnpm --dir", workflow)
+        self.assertIn("(cd frontend && pnpm install --frozen-lockfile", workflow)
+        self.assertIn("(cd mobile && pnpm install --frozen-lockfile", workflow)
+        # The runner drops build-tools newer than the declared 36.0.0 before the tag's release script.
+        self.assertIn('test "$newest" = "36.0.0"', workflow)
 
         # Every GitHub Action must be pinned to a full 40-char commit SHA.
         uses_refs = re.findall(r"^\s*(?:-\s+)?uses:\s*([^\s#]+)", workflow, re.M)

@@ -3515,6 +3515,28 @@
       "status": "verified"
     },
     {
+      "id": "DEMO-001",
+      "category": "ops",
+      "description": "Opt-in public read-only demo mode (FLORABASE_DEMO_READONLY) with explicit startup marker guard, cache-only external provider GETs, neutral visitor identity, optional Uvicorn worker scaling (FLORABASE_WORKERS), and lazy-loaded interactive guided tour across real workspaces while preserving standard production authentication unchanged",
+      "acceptance_criteria": [
+        "FLORABASE_DEMO_READONLY defaults to false with zero behavioral change to standard production routes, G-SEC/ENG-03 public allowlist, /api/v1/system/info capabilities ([device-auth]) and runtime_config, private thumbnail headers, or initial frontend bundle",
+        "Startup in demo mode (both release_schema serve and FastAPI lifespan) refuses unless a regular non-symlink .florabase-demo-readonly.marker file inside attachment storage carries florabase-public-read-only-demo-v1, and emits PUBLIC READ-ONLY DEMO: no login required when accepted",
+        "When FLORABASE_DEMO_READONLY=true, DemoReadOnlyMiddleware and auth dependencies reject every non-GET/HEAD/OPTIONS request with 403 demo_read_only (Cache-Control: no-store), external_botany GETs (external-taxa/search, occurrence-map/summary, occurrence-map/tiles) operate strictly cache-only with zero outbound GBIF calls or cache writes, GET /api/v1/auth/session returns a neutral Demo visitor identity (owner=false, login_name='', demo_readonly=true) with transient session and zero auth_sessions DB writes, GET /api/v1/auth/device-sessions returns [], thumbnails emit public Cache-Control without Vary: Cookie, and GET /api/v1/system/info advertises demo-readonly",
+        "FLORABASE_WORKERS (1..8, default 1) is parsed solely by release_schema uvicorn_workers_from_environment, passing --workers N to Uvicorn when greater than 1, with NAS default and multi-worker ReferenceSetupCoordinator behavior documented in docs/installation.md and docs/demo-mode.md",
+        "When session.demo_readonly is true, AuthProvider skips POST /api/v1/auth/csrf, WorkbenchShell hides sign-out, create actions and owner-only settings links, and App lazy-loads DemoExperience with a top Read-only demo banner, polite blocked-mutation notices, and a 7-step interactive guided tour navigating across Today, Botanical identities, Seeds, Plants, Lineage, Geography and Schedule with keyboard Escape/Skip/Restart, ?tour=1, resilient sessionStorage handling and GitHub docs/installation.md link",
+        "Unit tests, PostgreSQL integration tests, API drift check, docs/demo-mode.md, docs/archive/DEMO-001/evidence.md, and canonical verification gate pass"
+      ],
+      "dependencies": [
+        "SECURITY-001",
+        "DEV-GOLDEN-001",
+        "MOBILE-002",
+        "MOBILE-003",
+        "REF-SETUP-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "MOBILE-001",
       "category": "mobile",
       "description": "Capacitor Android shell spike with native runtime isolation, server URL health onboarding, user-CA network security config, build targets, impact classification, and MOBILE-002 ADR while preserving the PWA unchanged",
@@ -3602,28 +3624,6 @@
       "dependencies": [
         "MOBILE-002",
         "MOBILE-001"
-      ],
-      "priority": "P2",
-      "status": "implemented"
-    },
-    {
-      "id": "DEMO-001",
-      "category": "ops",
-      "description": "Opt-in public read-only demo mode (FLORABASE_DEMO_READONLY) with explicit startup marker guard, cache-only external provider GETs, neutral visitor identity, optional Uvicorn worker scaling (FLORABASE_WORKERS), and lazy-loaded interactive guided tour across real workspaces while preserving standard production authentication unchanged",
-      "acceptance_criteria": [
-        "FLORABASE_DEMO_READONLY defaults to false with zero behavioral change to standard production routes, G-SEC/ENG-03 public allowlist, /api/v1/system/info capabilities ([device-auth]) and runtime_config, private thumbnail headers, or initial frontend bundle",
-        "Startup in demo mode (both release_schema serve and FastAPI lifespan) refuses unless a regular non-symlink .florabase-demo-readonly.marker file inside attachment storage carries florabase-public-read-only-demo-v1, and emits PUBLIC READ-ONLY DEMO: no login required when accepted",
-        "When FLORABASE_DEMO_READONLY=true, DemoReadOnlyMiddleware and auth dependencies reject every non-GET/HEAD/OPTIONS request with 403 demo_read_only (Cache-Control: no-store), external_botany GETs (external-taxa/search, occurrence-map/summary, occurrence-map/tiles) operate strictly cache-only with zero outbound GBIF calls or cache writes, GET /api/v1/auth/session returns a neutral Demo visitor identity (owner=false, login_name='', demo_readonly=true) with transient session and zero auth_sessions DB writes, GET /api/v1/auth/device-sessions returns [], thumbnails emit public Cache-Control without Vary: Cookie, and GET /api/v1/system/info advertises demo-readonly",
-        "FLORABASE_WORKERS (1..8, default 1) is parsed solely by release_schema uvicorn_workers_from_environment, passing --workers N to Uvicorn when greater than 1, with NAS default and multi-worker ReferenceSetupCoordinator behavior documented in docs/installation.md and docs/demo-mode.md",
-        "When session.demo_readonly is true, AuthProvider skips POST /api/v1/auth/csrf, WorkbenchShell hides sign-out, create actions and owner-only settings links, and App lazy-loads DemoExperience with a top Read-only demo banner, polite blocked-mutation notices, and a 7-step interactive guided tour navigating across Today, Botanical identities, Seeds, Plants, Lineage, Geography and Schedule with keyboard Escape/Skip/Restart, ?tour=1, resilient sessionStorage handling and GitHub docs/installation.md link",
-        "Unit tests, PostgreSQL integration tests, API drift check, docs/demo-mode.md, docs/archive/DEMO-001/evidence.md, and canonical verification gate pass"
-      ],
-      "dependencies": [
-        "SECURITY-001",
-        "DEV-GOLDEN-001",
-        "MOBILE-002",
-        "MOBILE-003",
-        "REF-SETUP-001"
       ],
       "priority": "P2",
       "status": "implemented"

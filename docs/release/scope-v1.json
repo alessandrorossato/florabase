@@ -165,6 +165,7 @@
     "MULTIBRANCH-UAT-001": "tooling",
     "DEV-GOLDEN-001": "tooling",
     "DEV-REFERENCES-001": "tooling",
+    "DEMO-001": "best-effort",
     "GOLDEN-REFERENCE-001": "post-1.0",
     "PORTABLE-COMPOSE-001": "certify",
     "INSTALL-001": "release-work",
@@ -206,7 +207,6 @@
     "DOCS-004": "best-effort",
     "DOCS-003": "release-work",
     "MOBILE-002": "post-1.0",
-    "MOBILE-003": "post-1.0",
-    "DEMO-001": "best-effort"
+    "MOBILE-003": "post-1.0"
   }
 }

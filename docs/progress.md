@@ -36,6 +36,39 @@
   focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
   `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
 
+## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
+
+- Second `v0.1.0-beta.10` APK run (45981312380) built and signed the APK but
+  `scripts/mobile-android-release.sh` picked the runner's preinstalled build-tools 37.0.0 apksigner,
+  which prints `V2 Signer: certificate SHA-256 digest:` instead of `Signer #1 certificate ...`, so the
+  certificate check aborted. The workflow now removes build-tools newer than the declared 36.0.0 on
+  the ephemeral runner before running the tag's script, and the script parses both formats for future
+  tags. Contract tests cover both.
+
+## 2026-11-27 — Android release APK: Corepack pnpm version (MOBILE-003)
+
+- `mobile-android-release.yml` failed for `v0.1.0-beta.10` (run 45965802666) with
+  `ERR_PNPM_BAD_PM_VERSION`: `corepack enable` plus `pnpm --dir frontend` from the repository root
+  (no root `package.json`) made Corepack fetch its default pnpm 12 instead of the pinned
+  `pnpm@11.19.0`. The build step now runs pnpm from `frontend/` and `mobile/`; the workflow contract
+  test rejects `pnpm --dir`. Re-dispatch with `tag=v0.1.0-beta.10` attaches the APK to the existing
+  release; images and the release itself are unchanged.
+
+## 2026-11-27 — v0.1.0-beta.10 release preparation
+
+- On `docs/release-beta-10` from `origin/main` `7b667a4` (writer `claude-release-beta10`). Version
+  surfaces move to `0.1.0-beta.10` (`release/inputs.json`, backend package and module, frontend and
+  mobile packages, both Dockerfiles, OpenAPI `info.version`). The Unreleased CHANGELOG section
+  becomes the `v0.1.0-beta.10` entry covering Batch 13 (`PROPAGATION-BATCH-001`, `CARE-BULK-001`,
+  `FN-03`, `UX-SORT-001`, `MEDIA-FETCH-001`, `DOCS-004`), `MOBILE-002` and Batch 14b (`IMPORT-002`,
+  `REF-SETUP-001`, `ABOUT-001`, `UX-SORT-002`, `MEDIA-SETTINGS-001`, `MOBILE-003`, `DOC-04`,
+  `UI-POLISH-002`–`005`, `BETA-SECURITY-001`), with beta.9 upgrade notes: three migrations since
+  beta.9 (head `20261125_0050`), PostgreSQL `18.6-alpine-florabase.6`, and `compose.yaml` enabling
+  `FLORABASE_REFERENCES_SETUP=auto`. `docs/beta-data-001.md` names beta.10. Test fixtures that use
+  beta.9 as sample data are unchanged.
+- No feature status changes. Tag, protected publication and publication evidence remain operator
+  actions.
+
 ## 2026-11-26 — Batch 14b integration (IMPORT-002, REF-SETUP-001, ABOUT-001, UX-SORT-002, MEDIA-SETTINGS-001, MOBILE-003, DOC-04, UI-POLISH-002/003/004/005, BETA-SECURITY-001)
 
 - `ci/batch-14b` from `origin/main` `08ff2f9` (writer `claude-batch-14b`; supersedes the published
