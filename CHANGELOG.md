@@ -32,12 +32,12 @@ the new Reminders setting asks for the notification permission only when you tur
   overdue activities included unless you turn that off. Notifications are local only (no push
   service, no Google Play Services) and refresh when you open the app. The collapsed notification
   shows only the count; up to five activity titles appear only when expanded. Reminders survive
-  reboots and app updates. The web app and PWA are unchanged. See [docs/mobile.md](docs/operate/mobile.md#reminders-local-schedule-notifications).
+  reboots and app updates. The web app and PWA are unchanged. See [docs/operate/mobile.md](docs/operate/mobile.md#reminders-local-schedule-notifications).
 - **Read-only demo mode (`DEMO-001`):** an opt-in `FLORABASE_DEMO_READONLY=true` mode for a public
   showcase instance with a guided tour. It refuses to start without an explicit marker file in
   attachment storage, rejects every write, keeps external provider lookups cache-only and shows a
   neutral "Demo visitor". Off by default; normal installations are unaffected. See
-  [docs/demo-mode.md](docs/operate/demo-mode.md).
+  [docs/operate/demo-mode.md](docs/operate/demo-mode.md).
 - Optional `FLORABASE_WORKERS` (`1`–`8`, default `1`) sets the number of backend worker processes;
   add it to the `backend` environment to change it. Keep `1` on single-owner NAS hosts; each extra
   worker adds about 150–200 MiB of RAM. See [docs/operate/installation.md](docs/operate/installation.md).
