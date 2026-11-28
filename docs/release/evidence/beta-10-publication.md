@@ -1,6 +1,6 @@
 # v0.1.0-beta.10 publication record
 
-Published on 2026-11-27 through the protected
+Published on 2026-11-27 through the
 [Protected Florabase release](https://github.com/alessandrorossato/florabase/actions/runs/45962728106)
 workflow (run `45962728106`, attempt 1, succeeded). The operator created the annotated tag
 `v0.1.0-beta.10` (object `09160014dcfcbaf28a052cd7789f3f58b1ed7612`, 2026-11-27T08:03:10Z) on
