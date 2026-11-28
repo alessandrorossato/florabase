@@ -1,7 +1,7 @@
 """Authenticated full data export download and its size summary (DATA-EXPORT-001)."""
 
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from datetime import UTC, datetime
 from typing import Annotated
 
@@ -25,7 +25,7 @@ MAX_CONCURRENT_EXPORTS = 2
 EXPORT_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_EXPORTS)
 
 
-def reserve_export_slot() -> Iterator[None]:
+def reserve_export_slot() -> Generator[None]:
     """Held until the response has been sent or the client went away (request scope)."""
     if not EXPORT_SLOTS.acquire(blocking=False):
         raise HTTPException(
@@ -42,7 +42,7 @@ def reserve_export_slot() -> Iterator[None]:
         EXPORT_SLOTS.release()
 
 
-def get_export_session() -> Iterator[Session]:
+def get_export_session() -> Generator[Session]:
     """One read-only REPEATABLE READ snapshot that stays open while the ZIP streams.
 
     Request scope (the default) keeps it open until the response has been sent; it never writes,

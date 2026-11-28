@@ -882,6 +882,7 @@
       ],
       "backend": [
         "backend/tests/test_data_export.py",
+        "backend/tests/test_data_export_stream.py",
         "backend/tests/test_import_export.py",
         "backend/tests/test_import_export_api.py",
         "backend/tests/test_import_wizard.py"

@@ -23,7 +23,9 @@
   photo vanishing mid-export is counted missing instead of truncating the ZIP; failure and
   client-abort log lines without content; Android app disables photos above 100 MB; contract test
   that no exported column points at an excluded table unless dropped; synthetic table renamed.
-  Integration tests now 14, unit 8, frontend 4.
+  Integration tests now 14, unit 8, frontend 4. The first FULL stopped on the unit coverage floor
+  (89.65% < 90%): `tests/test_data_export_stream.py` (9, fake read-only session) now covers the
+  service and API without PostgreSQL (data_export 99.7-100% in unit runs).
 - Integration note: IDENTIFICATION-001's `identifications` table must be added to
   `data_export/registry.py` as `ExportTable("identifications", {"created_by_user_id": _OWNER})`, its
   columns to `reviewed_columns.json`, and identification history to the README list; the contract

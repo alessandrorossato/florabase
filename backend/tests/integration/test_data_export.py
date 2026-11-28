@@ -9,10 +9,10 @@ import os
 import subprocess
 import sys
 import zipfile
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import httpx
 import pytest
@@ -295,7 +295,7 @@ def test_export_session_is_one_read_only_repeatable_read_snapshot(
     engine: Engine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(export_api, "get_engine", lambda: engine)
-    sessions = cast(Generator[Session], export_api.get_export_session())
+    sessions = export_api.get_export_session()
     session = next(sessions)
     try:
         assert session.execute(text("SHOW transaction_isolation")).scalar_one() == (
