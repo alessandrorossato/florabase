@@ -3,6 +3,7 @@
 Self-hosting, upgrades, backup and restore, security, versioning, mobile, and PWA guides.
 
 - [Backup and restore](backup-restore.md) — Paired PostgreSQL and attachment-volume backup, verification, and destructive restore procedures.
+- [Public Read-Only Demo Mode (`DEMO-001`)](demo-mode.md) — Opt-in public read-only demo mode (FLORABASE_DEMO_READONLY), marker guard, FLORABASE_WORKERS, GET route audit, and guided tour (DEMO-001).
 - [Source-build deployment and upgrades](deployment.md) — Development-only source-build Docker Compose deployment, upgrades, and optional basemap configuration.
 - [Install Florabase](installation.md) — Self-hosting Florabase with the single compose.yaml, folder setup, upgrades, HTTPS reverse proxy, backup and restore.
 - [Florabase Android Mobile Shell (`mobile/`)](mobile.md) — Capacitor Android shell setup, emulator/device testing, release signing, Obtainium distribution, and troubleshooting.

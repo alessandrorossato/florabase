@@ -157,8 +157,8 @@
   semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
   guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
   `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
-- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
-  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
+- Docs & manifests: added [docs/operate/demo-mode.md](operate/demo-mode.md) (with full GET route side-effect audit
+  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/operate/installation.md](operate/installation.md),
   linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
   `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
   [evidence.md](archive/DEMO-001/evidence.md).

@@ -1,8 +1,10 @@
 # Public Read-Only Demo Mode (`DEMO-001`)
 
+> Summary: Opt-in public read-only demo mode (FLORABASE_DEMO_READONLY), marker guard, FLORABASE_WORKERS, GET route audit, and guided tour (DEMO-001).
+
 Florabase supports an explicit, opt-in **public read-only demo mode** (`FLORABASE_DEMO_READONLY=true`)
 designed for hosting a public showcase instance (such as `https://demo.example.org`) backed by the
-sample [Golden dataset](dev-golden.md) without exposing owner credentials, allowing database writes,
+sample [Golden dataset](../develop/dev-golden.md) without exposing owner credentials, allowing database writes,
 or forwarding public visitor traffic to external botanical providers.
 
 By default, `FLORABASE_DEMO_READONLY` is `false` and **none** of the demo middleware, auto-session
