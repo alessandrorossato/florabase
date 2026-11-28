@@ -1,5 +1,20 @@
 # Engineering progress
 
+## 2026-11-28 — v0.1.0-beta.11 release preparation
+
+- On `docs/release-beta-11` from `origin/main` `46dbb72` (writer `claude-release-beta11`). Version
+  surfaces move to `0.1.0-beta.11` (`release/inputs.json`, backend package and module, frontend and
+  mobile packages, both Dockerfiles, OpenAPI `info.version`). A new `v0.1.0-beta.11` CHANGELOG entry
+  covers Batch 15b (`QUICK-ADD-001`, `UX-ENTRY-002`, `BULK-002`, `UI-POLISH-006`, `MOBILE-004`,
+  `DEMO-001`; `UAT-INSTANCE-002` is development tooling only) with beta.10 upgrade notes: no
+  migration (head `20261125_0050`), PostgreSQL `18.6-alpine-florabase.6` and `compose.yaml`
+  unchanged. `docs/beta-data-001.md` names beta.11. `DOCS-005` is not part of this release.
+- Records the missing beta.10 publication evidence in
+  [beta-10-publication.md](release/evidence/beta-10-publication.md) (Release API, GHCR tags,
+  attestation statements, signed APK attached by the re-dispatched Android workflow).
+- No feature status changes. Tag, protected publication and beta.11 publication evidence remain
+  operator actions.
+
 ## 2026-11-27 — Batch 15 integration (UAT-INSTANCE-002, MOBILE-004, UI-POLISH-006, QUICK-ADD-001/UX-ENTRY-002/BULK-002, DEMO-001)
 
 - `ci/batch-15b` from `origin/main` `c83d816` (writer `claude-batch-15`) merges, in order,

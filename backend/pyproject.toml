@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "florabase-backend"
-version = "0.1.0-beta.10"
+version = "0.1.0-beta.11"
 description = "Florabase REST API"
 authors = [{ name = "Alessandro Rossato" }]
 license = "AGPL-3.0-or-later"
