@@ -1,0 +1,130 @@
+{
+  "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+  "bootstrap": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+  "bootstrap_commits": [],
+  "branch": "ci/batch-15b",
+  "reconciliation": {
+    "docs/progress.md": "Retain all source milestones, move the UAT-INSTANCE-002 milestone back above MOBILE-004 into merge order, and prepend the Batch 15 integration milestone listing the five sources, the abandoned first candidate and the separate DOCS-005 delivery.",
+    "docs/release/evidence/wf-04-batch-15b.md": "Record Batch 15 source provenance (five sources, MOBILE-004 containing UAT-INSTANCE-002, DEMO-001 containing MOBILE-004), why candidate ci/batch-15 was abandoned, the source-side conflict fixes, the excluded DOCS-005, shared-file notes, proposed release classes and pre-review checks."
+  },
+  "sources": [
+    {
+      "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+      "branch": "ci/uat-instance-002",
+      "claim": "36820ddb7b55",
+      "commits": [
+        "db7903e08610cbc4a0a3c6cb2d93e303f5c5ad60",
+        "572f0f3bf5e2764948e66a2cef21d139e8f8442f",
+        "1e6447f4bc2de8e0fa47f226b9daa473dd8fdd1e",
+        "bd890eeb7f4c71a3ac607505e96ec816672af631"
+      ],
+      "evidence": [
+        "docs/archive/UAT-INSTANCE-002/uat-instance-002-handoff.md"
+      ],
+      "id": "UAT-INSTANCE-002",
+      "merge": "d9c03e4f5b7f13619f10d079fb46c1cc809efed8",
+      "resolutions": [],
+      "reviewer": "claude-uat-instance-002-review",
+      "tip": "bd890eeb7f4c71a3ac607505e96ec816672af631",
+      "writer": "antigravity-neon-uat-instance-002"
+    },
+    {
+      "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+      "branch": "feat/mobile-004-notifications",
+      "claim": "000a35730397",
+      "commits": [
+        "0c9dbff68aef814087a653deab91c5aefd9624ac",
+        "db7903e08610cbc4a0a3c6cb2d93e303f5c5ad60",
+        "572f0f3bf5e2764948e66a2cef21d139e8f8442f",
+        "1e6447f4bc2de8e0fa47f226b9daa473dd8fdd1e",
+        "bd890eeb7f4c71a3ac607505e96ec816672af631",
+        "707a83316170c652f2c56f36aff393e4a4b89b38"
+      ],
+      "evidence": [
+        "docs/archive/MOBILE-004/evidence.md"
+      ],
+      "id": "MOBILE-004",
+      "merge": "6d5b21da67930ca85f90ff9d33fd1a01aaa6be14",
+      "resolutions": [],
+      "reviewer": "claude-mobile-004-review",
+      "tip": "707a83316170c652f2c56f36aff393e4a4b89b38",
+      "writer": "neon-mobile-004"
+    },
+    {
+      "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+      "branch": "fix/ui-polish-006-collection",
+      "claim": "da828bb8b4db",
+      "commits": [
+        "069b4bc780e74d9df248c7b298fcbe343d0d2612",
+        "f56b699bc77d412ec3eac9b795eaba9b6282b436",
+        "bc1863c9d378b9221eb5244a6f99ca82d9663b9f",
+        "a5f43a982e4e8279ae122775106677dda3e03744"
+      ],
+      "evidence": [
+        "docs/archive/UI-POLISH-006/evidence.md"
+      ],
+      "id": "UI-POLISH-006",
+      "merge": "4364d185e28910e052981e74abd142ca7e8b868e",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-ui-polish-006-review",
+      "tip": "a5f43a982e4e8279ae122775106677dda3e03744",
+      "writer": "antigravity-neon"
+    },
+    {
+      "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+      "branch": "feat/market-phase1",
+      "claim": "a78d2b3ab59e",
+      "commits": [
+        "8f182bab922fc54d7e3452f50578d5817299a57f",
+        "cef79c6068123e90b8eca554eff02deeae41a88b",
+        "35133abfffbd0ebbea59dc967027d1a346800f41",
+        "2f25f1210edc309ac860ae608ea10a225cc5915f",
+        "fa597e8ee182f08022eb69ec72dffa010755c708",
+        "7e3937b31e8676397280e51759227ab095c61319"
+      ],
+      "evidence": [
+        "docs/release/evidence/market-phase1.md"
+      ],
+      "id": "QUICK-ADD-001",
+      "merge": "1cff59c5ac078bda37007895f393e1ea2aa5b84c",
+      "resolutions": [
+        "docs/progress.md"
+      ],
+      "reviewer": "claude-market-phase1-review",
+      "tip": "7e3937b31e8676397280e51759227ab095c61319",
+      "writer": "claude-market-phase1"
+    },
+    {
+      "base": "c83d81638d643590fd83590b63b2b7374dabeaaa",
+      "branch": "feat/demo-001-readonly-tour",
+      "claim": "d78ed2a5a6d1",
+      "commits": [
+        "6232a9c5477685b3a116741aa7fd6e2a4fd54325",
+        "6704f07094183a9e999a5c1e1f73c89a4c2c553e",
+        "86772105afab5aa63ac9ac6990a937f2a2c3d2d5",
+        "c9831865b6463dfccfcba026100041df7644a36c",
+        "0c9dbff68aef814087a653deab91c5aefd9624ac",
+        "db7903e08610cbc4a0a3c6cb2d93e303f5c5ad60",
+        "572f0f3bf5e2764948e66a2cef21d139e8f8442f",
+        "1e6447f4bc2de8e0fa47f226b9daa473dd8fdd1e",
+        "bd890eeb7f4c71a3ac607505e96ec816672af631",
+        "707a83316170c652f2c56f36aff393e4a4b89b38",
+        "1a561e57440255b156cbf3b9c0474aa141dca4c2",
+        "ffb4cea74851553e7f8ffcfb6f9327b869c9fd41"
+      ],
+      "evidence": [
+        "docs/archive/DEMO-001/evidence.md"
+      ],
+      "id": "DEMO-001",
+      "merge": "a3535d9fce9949498dc02d0ce02ff9f4acbddff5",
+      "resolutions": [],
+      "reviewer": "claude-demo-001-review",
+      "tip": "ffb4cea74851553e7f8ffcfb6f9327b869c9fd41",
+      "writer": "antigravity-demo-001"
+    }
+  ],
+  "summary": "Collection pages, quick add, reminders, demo mode, UAT fix",
+  "version": 1
+}

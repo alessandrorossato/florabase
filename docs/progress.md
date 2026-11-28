@@ -1,40 +1,51 @@
 # Engineering progress
 
-## 2026-11-27 — Opt-in public read-only demo mode & guided tour (`DEMO-001`, realigned on `7b667a4` + review fixes)
+## 2026-11-27 — Batch 15 integration (UAT-INSTANCE-002, MOBILE-004, UI-POLISH-006, QUICK-ADD-001/UX-ENTRY-002/BULK-002, DEMO-001)
 
-- On `feat/demo-001-readonly-tour` realigned on `origin/main` `7b667a4` (post Batch 14b, writer
-  `antigravity-demo-001`). No database migration and zero impact on standard production
-  authentication (`FLORABASE_DEMO_READONLY` defaults to `false`, `G-SEC`/`ENG-03` public allowlist
-  and `MOBILE-003` `runtime_config` preserved).
-- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) in `core/config.py` and
-  single-source `uvicorn_workers_from_environment` (`FLORABASE_WORKERS` `1..8`, default `1`) in
-  `db/release_schema.py`; added `auth/demo_readonly.py` with explicit non-symlink startup marker
-  verification (`verify_demo_marker` requiring `.florabase-demo-readonly.marker` in both
-  `release_schema serve` and FastAPI `lifespan`, logging `PUBLIC READ-ONLY DEMO: no login required`),
-  `DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
-  `demo_read_only` (`Cache-Control: no-store`), transient in-memory `resolve_demo_actor` (zero
-  `auth_sessions` DB writes), neutral `Demo visitor` session response (`owner: false`,
-  `login_name: ""`), empty `GET /api/v1/auth/device-sessions`, cache-only `external_botany` GETs
-  (`external-taxa/search`, `occurrence-map/summary`, `occurrence-map/tiles` making zero outbound
-  GBIF calls and zero cache writes on miss), public demo thumbnail cache headers without
-  `Vary: Cookie`, and `"demo-readonly"` capability in `GET /api/v1/system/info`. Regenerated
-  `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
-- Frontend: skipped `POST /api/v1/auth/csrf` in `auth/AuthProvider.tsx` when `session.demo_readonly`
-  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; updated
-  `shell/WorkbenchShell.tsx` to display `Demo visitor (read-only)` and hide Sign out, `Record`,
-  `+ New`, saved-view removal and owner-only Settings links (`Account`, `Media`, `Import / Export`);
-  lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only in demo mode, rendering the
-  semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
-  guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
-  `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
-- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
-  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
-  linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
-  `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
-  [evidence.md](archive/DEMO-001/evidence.md).
-- Checks: `make api-generate` / `make api-check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
-  focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
-  `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
+- `ci/batch-15b` from `origin/main` `c83d816` (writer `claude-batch-15`) merges, in order,
+  `ci/uat-instance-002` `bd890ee`, `feat/mobile-004-notifications` `707a833` (it already contains
+  `bd890ee`, merged at the source to resolve the shared `make mobile-sync` line in `docs/mobile.md`),
+  `fix/ui-polish-006-collection` `a5f43a9`, `feat/market-phase1` `7e3937b` (QUICK-ADD-001,
+  UX-ENTRY-002, BULK-002) and `feat/demo-001-readonly-tour` `ffb4cea` (DEMO-001, realigned on
+  `c83d816`, registry entries moved off the tail of `docs/features.json` and
+  `docs/release/scope-v1.json`; it also merges `707a833` and adds `demo_readonly: false` to the
+  MOBILE-004 session fixture so `tsc -b` passes). Only `docs/progress.md` conflicted and was
+  resolved additively; the UAT-INSTANCE-002 milestone is moved back above MOBILE-004 into merge
+  order. No migration (Alembic head unchanged). The first candidate `ci/batch-15` (`070463f`) was
+  abandoned after its integration review found that `tsc -b` error. DOCS-005 is delivered
+  separately after this batch (operator decision 27/11).
+  Evidence: [wf-04-batch-15b.md](release/evidence/wf-04-batch-15b.md).
+- Checks on the integrated tree before review: OpenAPI export `--check` (no drift) and
+  `openapi-typescript` regeneration (no `schema.d.ts` change), `tsc -b` (exit 0), full Vitest,
+  backend unit tests outside `tests/integration` (only the known environment failures that also
+  fail on `main`), `check-features.py`, `check-doc-links.py` and `test-beta-runtime.py`.
+  Canonical FULL follows the recorded exact-head review.
+
+## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches (also: mobile-sync pnpm fix, follow-up of #231)
+
+- On `ci/uat-instance-002` from `origin/main` `c83d8163` (writer `antigravity-neon-uat-instance-002`;
+  registered right after `MULTIBRANCH-UAT-001` in `docs/features.json` as `implemented` and in
+  `docs/release/scope-v1.json` as `best-effort`). Tooling only: no product code, no migration.
+- Added local reflog proof `in_worktree_reflog()` and hardened `delivered()` error handling in
+  `scripts/uat_source.py`; extracted `verify_launched_sha()` and `check_upgradeable()` hooks in
+  `scripts/uat_preview.py` (deferring launched-SHA checks until after all container/volume/network/
+  mount/port/env/foreign-user checks pass, while keeping singleton UAT Preview and detached-owner
+  `delivered()` unchanged); overrode them in `scripts/uat_instance.py` so attached UAT instances
+  never call `gh api`, report stale launches in `status`, allow `stop`/`up`/guarded `reset`/guarded
+  `remove` without manual `docker rm`, keep `require_upgradeable` safety with a guarded reset hint
+  on `up`, refuse `seed`/`validate` while stale, and accept expired 40-hex SHAs only in
+  confirm-guarded `reset`/`remove` when all other identity checks pass. Added a one-line stale-launch
+  hint in `scripts/feature_batch.py` `prepare()` when the batch worktree owns a UAT instance.
+- Documented the rebuilt-branch / stale-launch contract in `docs/development-workflow.md` and
+  archived reproduction, open-check answers and smoke evidence in
+  [uat-instance-002-handoff.md](archive/UAT-INSTANCE-002/uat-instance-002-handoff.md).
+- Checks: `make test-uat-preview` (60 passed: preview 20, source 18, instance 22),
+  `make workflow-check`, `make test-agent-workflow` (81 passed, 3 skipped),
+  `make test-feature-workflow`, `make test-environment-workflow` (51 passed), `make doc-links`
+  (398 docs), `scripts/check-features.py` (205 features valid), real disposable Docker
+  `make smoke-uat-instance` (including branch-rewrite stale launch through `status`/`stop`/`up`/
+  guarded `reset` and before/after `io.florabase.sha` labels) and `make smoke-uat-preview`.
+  Canonical FULL via `make feature-verify` follows tree freeze.
 
 ## 2026-11-27 — MOBILE-004 Android local Schedule reminders (PWA preserved)
 
@@ -78,32 +89,6 @@
   survival, and logout cleanup). Canonical FULL `make feature-verify AGENT_ID=neon-mobile-004` runs
   on the frozen committed HEAD.
 
-## 2026-11-27 — UAT-INSTANCE-002 stale launch handling on rebuilt branches (also: mobile-sync pnpm fix, follow-up of #231)
-
-- On `ci/uat-instance-002` from `origin/main` `c83d8163` (writer `antigravity-neon-uat-instance-002`;
-  registered right after `MULTIBRANCH-UAT-001` in `docs/features.json` as `implemented` and in
-  `docs/release/scope-v1.json` as `best-effort`). Tooling only: no product code, no migration.
-- Added local reflog proof `in_worktree_reflog()` and hardened `delivered()` error handling in
-  `scripts/uat_source.py`; extracted `verify_launched_sha()` and `check_upgradeable()` hooks in
-  `scripts/uat_preview.py` (deferring launched-SHA checks until after all container/volume/network/
-  mount/port/env/foreign-user checks pass, while keeping singleton UAT Preview and detached-owner
-  `delivered()` unchanged); overrode them in `scripts/uat_instance.py` so attached UAT instances
-  never call `gh api`, report stale launches in `status`, allow `stop`/`up`/guarded `reset`/guarded
-  `remove` without manual `docker rm`, keep `require_upgradeable` safety with a guarded reset hint
-  on `up`, refuse `seed`/`validate` while stale, and accept expired 40-hex SHAs only in
-  confirm-guarded `reset`/`remove` when all other identity checks pass. Added a one-line stale-launch
-  hint in `scripts/feature_batch.py` `prepare()` when the batch worktree owns a UAT instance.
-- Documented the rebuilt-branch / stale-launch contract in `docs/development-workflow.md` and
-  archived reproduction, open-check answers and smoke evidence in
-  [uat-instance-002-handoff.md](archive/UAT-INSTANCE-002/uat-instance-002-handoff.md).
-- Checks: `make test-uat-preview` (60 passed: preview 20, source 18, instance 22),
-  `make workflow-check`, `make test-agent-workflow` (81 passed, 3 skipped),
-  `make test-feature-workflow`, `make test-environment-workflow` (51 passed), `make doc-links`
-  (398 docs), `scripts/check-features.py` (205 features valid), real disposable Docker
-  `make smoke-uat-instance` (including branch-rewrite stale launch through `status`/`stop`/`up`/
-  guarded `reset` and before/after `io.florabase.sha` labels) and `make smoke-uat-preview`.
-  Canonical FULL via `make feature-verify` follows tree freeze.
-
 ## 2026-11-27 — Collection detail consistency round & Back/New bar removal (`UI-POLISH-006`)
 
 - On `fix/ui-polish-006-collection` from `origin/main` `c83d8163` (writer `antigravity-neon`); frontend-only (no migrations, no API changes). Part B2 (approved by Alessandro on 26/11) was added on top by Claude after the independent review of the B1 commit.
@@ -135,6 +120,42 @@
 - Registered all three in `docs/features.json` (`implemented`) and `docs/release/scope-v1.json`
   (`best-effort`). Checks: backend ruff/format/mypy, focused pytest on PostgreSQL, frontend tsc,
   eslint and full vitest (1535 tests) pass; canonical `make feature-verify` pending.
+
+## 2026-11-27 — Opt-in public read-only demo mode & guided tour (`DEMO-001`, realigned on `7b667a4` + review fixes)
+
+- On `feat/demo-001-readonly-tour` realigned on `origin/main` `7b667a4` (post Batch 14b, writer
+  `antigravity-demo-001`). No database migration and zero impact on standard production
+  authentication (`FLORABASE_DEMO_READONLY` defaults to `false`, `G-SEC`/`ENG-03` public allowlist
+  and `MOBILE-003` `runtime_config` preserved).
+- Backend: added `demo_readonly: bool = False` (`FLORABASE_DEMO_READONLY`) in `core/config.py` and
+  single-source `uvicorn_workers_from_environment` (`FLORABASE_WORKERS` `1..8`, default `1`) in
+  `db/release_schema.py`; added `auth/demo_readonly.py` with explicit non-symlink startup marker
+  verification (`verify_demo_marker` requiring `.florabase-demo-readonly.marker` in both
+  `release_schema serve` and FastAPI `lifespan`, logging `PUBLIC READ-ONLY DEMO: no login required`),
+  `DemoReadOnlyMiddleware` rejecting all non-`GET`/`HEAD`/`OPTIONS` HTTP requests with `403`
+  `demo_read_only` (`Cache-Control: no-store`), transient in-memory `resolve_demo_actor` (zero
+  `auth_sessions` DB writes), neutral `Demo visitor` session response (`owner: false`,
+  `login_name: ""`), empty `GET /api/v1/auth/device-sessions`, cache-only `external_botany` GETs
+  (`external-taxa/search`, `occurrence-map/summary`, `occurrence-map/tiles` making zero outbound
+  GBIF calls and zero cache writes on miss), public demo thumbnail cache headers without
+  `Vary: Cookie`, and `"demo-readonly"` capability in `GET /api/v1/system/info`. Regenerated
+  `backend/openapi.json` and `frontend/src/api/schema.d.ts`.
+- Frontend: skipped `POST /api/v1/auth/csrf` in `auth/AuthProvider.tsx` when `session.demo_readonly`
+  is `true` and surfaced `403` `demo_read_only` responses via `shell/demo/readonlyNotice.ts`; updated
+  `shell/WorkbenchShell.tsx` to display `Demo visitor (read-only)` and hide Sign out, `Record`,
+  `+ New`, saved-view removal and owner-only Settings links (`Account`, `Media`, `Import / Export`);
+  lazy-loaded `shell/demo/DemoExperience.tsx` in `App.tsx` only in demo mode, rendering the
+  semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
+  guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
+  `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
+- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
+  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
+  linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
+  `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
+  [evidence.md](archive/DEMO-001/evidence.md).
+- Checks: `make api-generate` / `make api-check`, `scripts/check-features.py`, `scripts/check-doc-links.py`,
+  focused unit & PostgreSQL integration suites (`test_demo_readonly.py`, `test_demo_readonly_api.py`,
+  `DemoExperience.test.tsx`), and canonical FULL gate (`make verify-full AGENT_ID=antigravity-demo-001`).
 
 ## 2026-11-27 — Android release APK: apksigner output format (MOBILE-003)
 
