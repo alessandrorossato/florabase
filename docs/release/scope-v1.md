@@ -191,8 +191,10 @@ published before the candidate, it becomes the baseline and the gate record name
 `v0.1.0-beta.6` (commit `3552b3d`, Alembic head `20261110_0047`) was published on 2026-11-21
 ([publication record](evidence/beta-6-publication.md)). `v0.1.0-beta.7` (commit `1126c03`, Alembic
 head `20261110_0047`) followed the same day ([publication record](evidence/beta-7-publication.md)).
-`v0.1.0-beta.8` (commit `c4ffd63`, Alembic head `20261110_0047`) was published on 2026-11-23 and is
-the current baseline under this rule ([publication record](evidence/beta-8-publication.md)).
+`v0.1.0-beta.8` (commit `c4ffd63`, Alembic head `20261110_0047`) was published on 2026-11-23
+([publication record](evidence/beta-8-publication.md)). `v0.1.0-beta.10` (commit `4111ed8`, Alembic
+head `20261125_0050`) was published on 2026-11-27 and is the current baseline under this rule
+([publication record](evidence/beta-10-publication.md)).
 
 ### Core acceptance script (G-CORE)
 

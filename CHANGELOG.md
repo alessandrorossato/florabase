@@ -5,6 +5,60 @@ Notable changes to Florabase, newest first. Versions follow the
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
+## v0.1.0-beta.11 — 2026-11-28
+
+Prerelease of the private beta series: changes since `v0.1.0-beta.10`. No database migrations
+(Alembic head unchanged, `20261125_0050`); PostgreSQL stays `18.6-alpine-florabase.6`, and
+`compose.yaml` is unchanged. Take `compose.yaml` from the `v0.1.0-beta.11` tag, not from `main`.
+
+**Upgrading from `v0.1.0-beta.10`:** take a paired backup, then run an update (pull and redeploy)
+in your Compose manager; it pulls the new `:latest` `backend` and `frontend` images. Your existing
+`compose.yaml` keeps working unchanged, and no new host folders, volume mounts or settings are
+required. Android: update the app from the GitHub Release (Obtainium with prereleases included);
+the new Reminders setting asks for the notification permission only when you turn it on.
+
+### Added
+
+- **Quick add plant (`QUICK-ADD-001`):** a Quick add plant page (on Today, in **+ New** and in
+  **Record**) adds one plant or a plant group in one step: it suggests your botanical identities and
+  local WFO names, creates or reuses the identity and links a picked WFO name (only to an identity
+  that has no WFO link yet) in the same save, and works without the WFO index (free text). "Add and
+  add another" keeps place, supplier, origin and date.
+- **Create identity from the form (`UX-ENTRY-002`):** the identity pickers of the Plant and Plant
+  group form, the Sowing-to-Plant wizard and Pot on / Split offer "Create identity" for the typed
+  text without leaving the form; an exact duplicate selects the existing identity.
+- **Android reminders (`MOBILE-004`):** **Settings → Account → Reminders** (Android app only, off by
+  default) schedules one local daily digest of planned Schedule activities, 08:00 by default,
+  overdue activities included unless you turn that off. Notifications are local only (no push
+  service, no Google Play Services) and refresh when you open the app. The collapsed notification
+  shows only the count; up to five activity titles appear only when expanded. Reminders survive
+  reboots and app updates. The web app and PWA are unchanged. See [docs/operate/mobile.md](docs/operate/mobile.md#reminders-local-schedule-notifications).
+- **Read-only demo mode (`DEMO-001`):** an opt-in `FLORABASE_DEMO_READONLY=true` mode for a public
+  showcase instance with a guided tour. It refuses to start without an explicit marker file in
+  attachment storage, rejects every write, keeps external provider lookups cache-only and shows a
+  neutral "Demo visitor". Off by default; normal installations are unaffected. See
+  [docs/operate/demo-mode.md](docs/operate/demo-mode.md).
+- Optional `FLORABASE_WORKERS` (`1`–`8`, default `1`) sets the number of backend worker processes;
+  add it to the `backend` environment to change it. Keep `1` on single-owner NAS hosts; each extra
+  worker adds about 150–200 MiB of RAM. See [docs/operate/installation.md](docs/operate/installation.md).
+
+### Changed
+
+- **Collection record pages (`UI-POLISH-006`):** Seed lot, Sowing, Plant, Plant group, Harvest,
+  Cuttings and Location details share one layout: a key facts strip under the action bar, tab
+  counts and a "Next up" line that opens the Almanac. Every record except Location also gets the
+  same lineage strip and Lineage tab, and a short "Add photo" placeholder when it has no image. The
+  Back / New bar that was hidden on Plant and Sowing details is gone; the breadcrumb returns to the
+  list.
+- **Documentation layout (`DOCS-005`):** `docs/` is organised into `operate/` (installation,
+  backup and restore, security, mobile, demo mode), `develop/`, `architecture/`, `features/`, `product/` and
+  `archive/`. The installation guide is now [docs/operate/installation.md](docs/operate/installation.md);
+  the old top-level paths that earlier releases link to (`installation.md`, `mobile.md`,
+  `security.md`, `backup-restore.md`, `deployment.md`, `versioning.md`) remain as pointers.
+- **Dated bulk moves (`BULK-002`):** "Move to location…" asks "When did it happen?" when the
+  selection includes plants or plant groups (Today preselected, Another date or Date unknown), so
+  their Movement events carry the chosen date (Date unknown keeps them undated).
+
 ## v0.1.0-beta.10 — 2026-11-27
 
 Prerelease of the private beta series: changes since `v0.1.0-beta.9`. Three database migrations
