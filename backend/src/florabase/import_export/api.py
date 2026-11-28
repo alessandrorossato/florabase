@@ -19,6 +19,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.botanical_identities.service import BotanicalIdentityConflictError
+from florabase.data_export.api import router as data_export_router
 from florabase.db.session import get_database_session
 from florabase.import_export.service import (
     COLUMNS,
@@ -45,6 +46,7 @@ from florabase.seed_lots.service import SeedLotDomainConflictError, SeedLotRefer
 
 router = APIRouter(tags=["import-export"])
 router.include_router(sheet_import_router)
+router.include_router(data_export_router)
 ImportKind = Literal[
     "botanical-identities", "suppliers", "locations", "seed-lots", "plants", "plant-groups"
 ]

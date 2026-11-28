@@ -5410,6 +5410,34 @@
         "title": "FastCreate",
         "type": "object"
       },
+      "FullExportSummary": {
+        "properties": {
+          "attachment_bytes": {
+            "title": "Attachment Bytes",
+            "type": "integer"
+          },
+          "attachments": {
+            "title": "Attachments",
+            "type": "integer"
+          },
+          "files_allowed": {
+            "title": "Files Allowed",
+            "type": "boolean"
+          },
+          "records": {
+            "title": "Records",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "records",
+          "attachments",
+          "attachment_bytes",
+          "files_allowed"
+        ],
+        "title": "FullExportSummary",
+        "type": "object"
+      },
       "GeographicPlaceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -28005,6 +28033,68 @@
         "summary": "Tree",
         "tags": [
           "taxonomy"
+        ]
+      }
+    },
+    "/api/v1/exports/full.zip": {
+      "get": {
+        "operationId": "exportFullDataZip",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_files",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Files",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {}
+            },
+            "description": "The export ZIP"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Full Data",
+        "tags": [
+          "import-export",
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/exports/full/summary": {
+      "get": {
+        "operationId": "getFullExportSummary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FullExportSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Full Export Summary",
+        "tags": [
+          "import-export",
+          "import-export"
         ]
       }
     },

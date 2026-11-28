@@ -3750,6 +3750,27 @@
       ],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "DATA-EXPORT-001",
+      "category": "transfer",
+      "description": "Export the whole collection as one streamed ZIP of per-table CSV files with manifest and README, optionally with photo files; an exit/portability guarantee that is neither a backup nor a re-import format (re-import stays TRANSFER-001)",
+      "acceptance_criteria": [
+        "GET /api/v1/exports/full.zip (authenticated, same permission as the per-type CSV export) streams a zip64 ZIP from one read-only REPEATABLE READ snapshot with one UTF-8 BOM RFC 4180 CSV per exported table, lineage_edges.csv, manifest.json (version, Alembic revision, UTC time, per-file rows and SHA-256, include-files flag) and README.txt",
+        "data_export/registry.py lists every exported table, and contract tests fail when a model or database table is neither exported nor EXCLUDED with a reason, or when an exported table gains an unreviewed column",
+        "Users, sessions, login throttles, undo receipts, provider caches and native-range evidence are excluded; account ids become display names and no password hash, token digest or storage key appears in the archive",
+        "Rows are ordered by (created_at, id) and entries carry a fixed timestamp, so two exports of unchanged data differ only in manifest.json; partial dates keep ISO value plus precision; free text uses the IMPORT-001 formula-injection protection",
+        "Optional include_files adds files/<attachment uuid>.<ext> mapped by attachments.csv with matching SHA-256; demo mode allows the export but never includes files",
+        "Tools -> Import / Export shows an Export all data card above the per-type exports with the files checkbox, a size estimate and a this-is-not-a-backup link to the backup guide"
+      ],
+      "dependencies": [
+        "IMPORT-001",
+        "LINEAGE-002",
+        "ATTACHMENT-003",
+        "DEMO-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
     }
   ]
 }

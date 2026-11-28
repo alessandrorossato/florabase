@@ -1,6 +1,7 @@
 # Guided CSV import and operator export
 
-> Summary: Guided CSV/XLSX import wizard, per-type CSV import, and operator export (IMPORT-001/002).
+> Summary: Guided CSV/XLSX import wizard, per-type CSV import, operator export (IMPORT-001/002), and
+> the full data export ZIP (DATA-EXPORT-001).
 
 Import one file and one record type at a time in **Tools → Import / Export**. The workspace provides a
 blank template, a valid example, and a field guide for each type. Fill the template with UTF-8 CSV,
@@ -206,6 +207,41 @@ binaries or secret material.
 
 For source mapping, batch reconciliation and the manual workflows needed for
 first collection entry, see the [onboarding runbook](../../archive/BETA-DATA-001/beta-data-001.md).
+
+## Full data export (DATA-EXPORT-001)
+
+**Export all data** in Tools → Import / Export (above the per-type exports) downloads
+`florabase-export-<UTC time>.zip` from `GET /api/v1/exports/full.zip`, with the same authentication
+as the per-type CSV export. It is an exit and portability guarantee: **it is not a backup and cannot
+be imported back** (re-import is the planned `TRANSFER-001`; recovery uses
+[backup and restore](../../operate/backup-restore.md)).
+
+- One CSV per exported table (UTF-8 with BOM, RFC 4180, CRLF, header always present) plus
+  `lineage_edges.csv` (every recorded parent → child source relationship, from the lineage
+  module's own edge query), `README.txt` and `manifest.json` (format version, Florabase version,
+  Alembic revision, UTC export time, include-files flag, and rows, bytes and SHA-256 per file).
+- `backend/src/florabase/data_export/registry.py` is the single list of exported tables (`TABLES`)
+  and excluded tables (`EXCLUDED`, each with a reason). Contract tests fail when a model or
+  database table is in neither list, and when an exported table gains a column that is not in
+  `backend/tests/fixtures/data_export/reviewed_columns.json` or `dropped` with a reason. **A new
+  table or column must be classified there in the same change.**
+- Excluded: users, web and device sessions, login throttles, undo receipts, provider caches and
+  native-range provider evidence. Account ids become `*_display_name`; external links keep provider
+  ids only. Geographic places are limited to the ones the collection references and their ancestors.
+- Columns follow the database: ids are UUIDs, a `<column>_label` follows a reference to an
+  identity, location, supplier or collection record, a partial date becomes `<name>` (ISO
+  `YYYY`, `YYYY-MM` or `YYYY-MM-DD`) plus `<name>_precision`, timestamps are UTC ISO 8601 and
+  booleans `true`/`false`. Free text uses the same formula-injection protection as the CSV export.
+- Rows are ordered by `(created_at, id)` (or primary key) and ZIP entries carry a fixed
+  timestamp, so two exports of unchanged data differ only in `manifest.json`.
+- **Include photos and files** (off by default) adds `files/<attachment uuid>.<ext>`;
+  `attachments.csv` maps each attachment to its `file_path`. A file missing on disk is skipped and
+  counted in the manifest. `GET /api/v1/exports/full/summary` gives the record count and the photo
+  size the card shows as an estimate.
+- The ZIP streams from one read-only `REPEATABLE READ` snapshot with zip64 entries, so memory stays
+  bounded on the server. The web app still assembles the download in browser memory before saving,
+  like other protected downloads.
+- In the public demo (`DEMO-001`) the export works but never includes files.
 
 ## Spreadsheet wizard (single-sheet CSV and XLSX)
 

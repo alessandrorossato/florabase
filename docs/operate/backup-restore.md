@@ -9,6 +9,11 @@ installation guide (run over SSH in the folder holding the stack's `compose.yaml
 changes ([ADR 0008](../decisions/0008-self-initializing-single-compose.md); image-only updates at the
 same Alembic head write none, so the paired backup remains the required recovery point).
 
+The **Export all data** ZIP in Tools → Import / Export
+([DATA-EXPORT-001](../features/tools/import-export.md#full-data-export-data-export-001)) is a
+readable copy of your records for spreadsheets or other tools, **not a backup**: it cannot be
+restored or imported back. Use the procedures below for recovery.
+
 ## Coordinated database and attachment backup
 
 With the stack running:

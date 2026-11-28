@@ -2,6 +2,25 @@
 
 > Earlier milestones through `v0.1.0-beta.6` are archived in [archive/progress-until-beta-7.md](archive/progress-until-beta-7.md). Milestones before the `v0.1.0-beta.10` release preparation are in [archive/progress/v0.1.0-beta.10.md](archive/progress/v0.1.0-beta.10.md). Per-beta rotation started at `v0.1.0-beta.11` release prep (see [workflow/verification-and-gates.md](develop/workflow/verification-and-gates.md#documentation-and-review-artifact-placement)).
 
+## 2026-11-28 — Full data export ZIP (`DATA-EXPORT-001`, batch 16a)
+
+- On `claude/project-thread-d7pp0a` (to be integrated as `feat/data-export-001`) from `origin/main`
+  `524da27`, writer Claude thread; no migration. Design:
+  [archive/DATA-EXPORT-001/design.md](archive/DATA-EXPORT-001/design.md).
+- New `backend/src/florabase/data_export/` (registry, streaming service, API) included from
+  `import_export/api.py`: `GET /api/v1/exports/full.zip?include_files=` and
+  `GET /api/v1/exports/full/summary`; regenerated `openapi.json` and `schema.d.ts`. New
+  `FullExportCard` in Tools → Import / Export. Docs: feature guide section, backup and user-guide
+  "not a backup" lines, `DATA-EXPORT-001` in `features.json` (`implemented`) and `scope-v1.json`
+  (`best-effort`), verification-impact scope.
+- Checks run in the cloud thread (PostgreSQL 16, Node 22): `tests/test_data_export.py` (7) and
+  `tests/integration/test_data_export.py` (8, golden smoke copy) pass; ruff, mypy, eslint, tsc,
+  prettier clean; `FullExportCard.test.tsx` (3) pass; LibreOffice opens `plants.csv` with readable
+  columns. The remaining backend (12) and frontend (60) failures are identical on unchanged `main`
+  in that environment. Canonical FULL not yet run.
+- Integration note: IDENTIFICATION-001's `identifications` table must be added to
+  `data_export/registry.py` and `reviewed_columns.json`; the contract test fails until it is.
+
 ## 2026-11-28 — v0.1.0-beta.11 release preparation
 
 - On `docs/release-beta-11` from `origin/main` `46dbb72`, realigned on `af7a96c` after `DOCS-005`

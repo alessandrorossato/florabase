@@ -169,6 +169,7 @@
     "DEV-GOLDEN-001": "tooling",
     "DEV-REFERENCES-001": "tooling",
     "DEMO-001": "best-effort",
+    "DATA-EXPORT-001": "best-effort",
     "GOLDEN-REFERENCE-001": "post-1.0",
     "PORTABLE-COMPOSE-001": "certify",
     "INSTALL-001": "release-work",

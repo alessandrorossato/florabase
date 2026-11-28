@@ -2,6 +2,7 @@ import { ActionButton } from "../components/Action";
 import { useState } from "react";
 import { PageHeader } from "../components/ReferenceUI";
 import { SheetImportWizard } from "./SheetImportWizard";
+import { FullExportCard } from "./FullExportCard";
 
 import {
   activeCsrfToken,
@@ -269,6 +270,7 @@ export function ImportExportScreen() {
           </div>
         </section>
       )}
+      <FullExportCard />
       <div className="import-workspace__grid">
         <section
           className="card import-workspace__primary"

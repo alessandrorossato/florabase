@@ -1222,6 +1222,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exports/full.zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Full Data */
+        get: operations["exportFullDataZip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exports/full/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Full Export Summary */
+        get: operations["getFullExportSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exports/{kind}.csv": {
         parameters: {
             query?: never;
@@ -4904,6 +4938,17 @@ export interface components {
             propagation_attempt: components["schemas"]["AttemptSetup"];
             source_adjustment: components["schemas"]["SourceAdjustment"];
             vegetative_lot: components["schemas"]["VegetativeLotCreate"];
+        };
+        /** FullExportSummary */
+        FullExportSummary: {
+            /** Attachment Bytes */
+            attachment_bytes: number;
+            /** Attachments */
+            attachments: number;
+            /** Files Allowed */
+            files_allowed: boolean;
+            /** Records */
+            records: number;
         };
         /** GeographicPlaceCreate */
         GeographicPlaceCreate: {
@@ -13518,6 +13563,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exportFullDataZip: {
+        parameters: {
+            query?: {
+                include_files?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export ZIP */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getFullExportSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FullExportSummary"];
                 };
             };
         };

@@ -22,6 +22,14 @@ You can download a UTF-8 `.csv` spreadsheet for any of the six supported record 
 Your browser downloads the `.csv` file immediately, containing every record of that type in your
 collection.
 
+### Export all your data at once
+
+**Export all data**, at the top of the same screen, downloads one ZIP with every record of your
+collection: one CSV file per record type, a `README.txt` explaining the columns, and a
+`manifest.json`. Tick **Include photos and files** to add your photos in a `files/` folder; the
+card shows about how big that download will be. The CSV files open in any spreadsheet and stay
+readable without Florabase. **This is not a backup**: it cannot be imported back (see section 3).
+
 ## 2. Validate and preview a CSV import
 
 Florabase never writes an uploaded CSV file blindly to your collection. Every import starts with a
@@ -65,9 +73,10 @@ when bringing in a new collection:
 
 ## 3. Backups, restores, and upgrades
 
-> **Important:** CSV export is designed for spreadsheet analysis and record onboarding. It is **not**
-> a full system backup (it does not contain your uploaded photo files, full operation history, or
-> every record type).
+> **Important:** CSV export and the **Export all data** ZIP are designed for spreadsheets, record
+> onboarding and taking your data elsewhere. They are **not** a system backup: neither can be
+> restored or imported back, and the per-type CSV files do not contain photos, history or every
+> record type.
 
 Full backups (which pair the database and your uploaded media directory together), restores, and
 version upgrades are run by the instance operator on the host machine. For step-by-step instructions,
