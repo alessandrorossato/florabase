@@ -28067,6 +28067,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "description": "Too many full exports are running"
           }
         },
         "summary": "Export Full Data",

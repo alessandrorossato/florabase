@@ -1,5 +1,6 @@
 """Authenticated full data export download and its size summary (DATA-EXPORT-001)."""
 
+import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Annotated
@@ -17,6 +18,28 @@ from florabase.data_export.service import ExportOptions, stream_export, summary
 from florabase.db.session import get_database_session, get_engine
 
 router = APIRouter(tags=["import-export"])
+
+# Each download holds one pooled connection and an open snapshot for as long as the client takes,
+# so only a few may run at once in this process; the rest answer 429 instead of starving the pool.
+MAX_CONCURRENT_EXPORTS = 2
+EXPORT_SLOTS = threading.BoundedSemaphore(MAX_CONCURRENT_EXPORTS)
+
+
+def reserve_export_slot() -> Iterator[None]:
+    """Held until the response has been sent or the client went away (request scope)."""
+    if not EXPORT_SLOTS.acquire(blocking=False):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "export_in_progress",
+                "message": "Another full export is running. Try again when it has finished.",
+            },
+            headers={"Retry-After": "30"},
+        )
+    try:
+        yield
+    finally:
+        EXPORT_SLOTS.release()
 
 
 def get_export_session() -> Iterator[Session]:
@@ -73,10 +96,15 @@ def read_full_export_summary(
     "/exports/full.zip",
     operation_id="exportFullDataZip",
     response_class=StreamingResponse,
-    responses={200: {"content": {"application/zip": {}}, "description": "The export ZIP"}},
+    responses={
+        200: {"content": {"application/zip": {}}, "description": "The export ZIP"},
+        429: {"description": "Too many full exports are running"},
+    },
 )
 def export_full_data(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    # Declared before the snapshot, so a refused request never opens a database connection.
+    _slot: Annotated[None, Depends(reserve_export_slot)],
     database: Annotated[Session, Depends(get_export_session)],
     settings: Annotated[Settings, Depends(get_settings)],
     include_files: Annotated[bool, Query()] = False,

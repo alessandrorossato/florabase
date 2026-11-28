@@ -239,8 +239,11 @@ be imported back** (re-import is the planned `TRANSFER-001`; recovery uses
   counted in the manifest. `GET /api/v1/exports/full/summary` gives the record count and the photo
   size the card shows as an estimate.
 - The ZIP streams from one read-only `REPEATABLE READ` snapshot with zip64 entries, so memory stays
-  bounded on the server. The web app still assembles the download in browser memory before saving,
-  like other protected downloads.
+  bounded on the server. At most two full exports run at once per server process (each holds a
+  database connection while the client downloads); another request gets `429 export_in_progress`.
+  A photo deleted or unreadable during the export is skipped and counted as missing. The web app
+  still assembles the download in browser memory before saving, like other protected downloads; the
+  Android app does not offer photos above 100 MB and points to a web browser instead.
 - In the public demo (`DEMO-001`) the export works but never includes files.
 
 ## Spreadsheet wizard (single-sheet CSV and XLSX)

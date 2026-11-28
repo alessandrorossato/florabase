@@ -38,9 +38,9 @@ def test_every_model_table_is_exported_or_excluded() -> None:
 
 
 def test_a_new_unregistered_table_fails_the_contract() -> None:
-    names = {*Base.metadata.tables, "identifications"}
+    names = {*Base.metadata.tables, "future_records"}
     assert classification_errors(names) == [
-        "identifications: add it to data_export.registry TABLES or EXCLUDED (with a reason)"
+        "future_records: add it to data_export.registry TABLES or EXCLUDED (with a reason)"
     ]
     missing = set(Base.metadata.tables) - {"plants"}
     assert classification_errors(missing) == ["plants: listed in the registry but not a table"]
@@ -59,6 +59,15 @@ def test_every_column_of_an_exported_table_was_reviewed() -> None:
         columns = set(table_for(entry.table).columns.keys())
         assert set(entry.dropped) <= columns, entry.table
         assert all(reason.strip() for reason in entry.dropped.values())
+
+
+def test_no_exported_column_points_at_an_excluded_table() -> None:
+    """A reference to an excluded table (a user, a receipt) must be dropped with a reason."""
+    for entry in TABLES:
+        for column in table_for(entry.table).columns:
+            targets = {key.column.table.name for key in column.foreign_keys}
+            if targets & set(EXCLUDED):
+                assert column.name in entry.dropped, (entry.table, column.name)
 
 
 def test_no_secret_or_internal_column_is_exported() -> None:

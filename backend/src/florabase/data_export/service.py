@@ -13,7 +13,7 @@ import json
 import logging
 import time
 import zipfile
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -352,8 +352,32 @@ def stream_export(
     *,
     storage: AttachmentStorage | None = None,
     now: Callable[[], datetime] = lambda: datetime.now(UTC),
-) -> Iterator[bytes]:
+) -> Generator[bytes]:
     """Yield the export ZIP; ``database`` should be one read-only consistent snapshot."""
+    stage = ["start"]
+    try:
+        yield from _stream(database, options, storage=storage, now=now, stage=stage)
+    except GeneratorExit:
+        logger.info("Full data export stopped by the client", extra={"export_stage": stage[0]})
+        raise
+    except Exception as error:
+        # The 200 response has started, so the client sees a truncated ZIP; log only where and
+        # which error type, never record content.
+        logger.error(
+            "Full data export failed",
+            extra={"export_stage": stage[0], "export_error": type(error).__name__},
+        )
+        raise
+
+
+def _stream(
+    database: Session,
+    options: ExportOptions,
+    *,
+    storage: AttachmentStorage | None = None,
+    now: Callable[[], datetime],
+    stage: list[str],
+) -> Iterator[bytes]:
     started = time.monotonic()
     exported_at = now()
     sink = _Sink()
@@ -374,6 +398,7 @@ def stream_export(
     included_files: dict[UUID, str] = {}
     missing = 0
     if options.include_files and storage is not None:
+        stage[0] = FILES_DIR
         attachments = database.execute(
             select(
                 Attachment.id, Attachment.storage_key, Attachment.byte_size, Attachment.media_type
@@ -387,9 +412,16 @@ def stream_export(
             except AttachmentStorageError:
                 missing += 1
                 continue
+            try:
+                # Opened before the entry starts: a file deleted or unreadable since the snapshot
+                # is counted as missing instead of truncating the ZIP after the 200 response.
+                source = path.open("rb")
+            except OSError:
+                missing += 1
+                continue
             name = f"{FILES_DIR}/{attachment_id}{FILE_EXTENSIONS.get(media_type, '')}"
             with (
-                path.open("rb") as source,
+                source,
                 archive.open(_entry(name, compress=False), "w", force_zip64=True) as handle,
             ):
                 while chunk := source.read(FILE_CHUNK):
@@ -400,6 +432,7 @@ def stream_export(
 
     labels = _Labels(database)
     for entry in TABLES:
+        stage[0] = entry.table
         record = _FileRecord(entry.file, rows=0)
         columns = export_columns(entry, labels)
         headers = [column.header for column in columns]
@@ -421,6 +454,7 @@ def stream_export(
         records.append(record)
         yield sink.drain()
 
+    stage[0] = LINEAGE_EDGES_FILE
     lineage = _FileRecord(LINEAGE_EDGES_FILE, rows=0)
     with archive.open(_entry(LINEAGE_EDGES_FILE), "w", force_zip64=True) as handle:
         write(lineage, handle, "﻿".encode() + _csv_line(list(LINEAGE_COLUMNS)))
@@ -430,6 +464,7 @@ def stream_export(
     records.append(lineage)
     yield sink.drain()
 
+    stage[0] = MANIFEST_NAME
     manifest = {
         "format": FORMAT,
         "format_version": FORMAT_VERSION,

@@ -24,6 +24,7 @@ from florabase.attachments.storage import AttachmentStorage
 from florabase.auth.dependencies import require_authenticated_actor
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.data_export import api as export_api
+from florabase.data_export import service as export_service
 from florabase.data_export.api import get_export_session
 from florabase.data_export.registry import EXCLUDED, TABLES, classification_errors
 from florabase.data_export.service import (
@@ -325,3 +326,90 @@ def test_authenticated_download_with_files_and_unavailable_storage(engine: Engin
     assert unavailable.status_code == 503
     assert unavailable.json()["detail"]["message"] == "Attachment storage is unavailable"
     assert without_files.status_code == 200
+
+
+class _VanishingStorage(AttachmentStorage):
+    """The first photo disappears between the snapshot check and the copy."""
+
+    def __init__(self, root: Path) -> None:
+        super().__init__(root)
+        self.vanished = False
+
+    def active_path(self, storage_key: str, expected_size: int) -> Path:
+        path = super().active_path(storage_key, expected_size)
+        if not self.vanished:
+            self.vanished = True
+            return path.with_name(path.name + ".gone")
+        return path
+
+
+def test_a_photo_missing_during_the_export_is_counted_not_fatal(engine: Engine) -> None:
+    storage = _VanishingStorage(COPIES / COPY)
+    with _snapshot(engine) as session:
+        data = b"".join(
+            stream_export(
+                session, ExportOptions(include_files=True), storage=storage, now=lambda: FIXED
+            )
+        )
+    archive = zipfile.ZipFile(io.BytesIO(data))
+    assert archive.testzip() is None
+    attachments = _rows(archive, "attachments.csv")
+    manifest = json.loads(archive.read(MANIFEST_NAME))
+    assert manifest["attachment_files"] == {"included": len(attachments) - 1, "missing": 1}
+    assert sum(1 for row in attachments if row["file_path"] == "") == 1
+
+
+def test_a_failing_export_logs_where_without_content(
+    engine: Engine, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def broken(_database: Session) -> None:
+        raise RuntimeError("secret row content")
+
+    monkeypatch.setattr(export_service, "_Labels", broken)
+    with _snapshot(engine) as session, pytest.raises(RuntimeError):
+        b"".join(stream_export(session, ExportOptions(include_files=False), now=lambda: FIXED))
+    failures = [record for record in caplog.records if record.msg == "Full data export failed"]
+    assert len(failures) == 1
+    assert failures[0].__dict__["export_error"] == "RuntimeError"
+    assert "secret" not in failures[0].getMessage()
+
+
+def test_concurrent_full_exports_are_limited(engine: Engine) -> None:
+    _serve(engine, demo=False)
+    app.dependency_overrides[require_authenticated_actor] = lambda: None
+    held = 0
+    try:
+        for _ in range(export_api.MAX_CONCURRENT_EXPORTS):
+            assert export_api.EXPORT_SLOTS.acquire(blocking=False)
+            held += 1
+        busy = asyncio.run(_get("/api/v1/exports/full.zip"))
+        while held:
+            export_api.EXPORT_SLOTS.release()
+            held -= 1
+        first = asyncio.run(_get("/api/v1/exports/full.zip"))
+        second = asyncio.run(_get("/api/v1/exports/full.zip"))
+    finally:
+        while held:
+            export_api.EXPORT_SLOTS.release()
+            held -= 1
+        app.dependency_overrides.clear()
+    assert busy.status_code == 429
+    assert busy.json()["detail"]["code"] == "export_in_progress"
+    assert busy.headers["retry-after"] == "30"
+    # Finished downloads give their slot back.
+    assert (first.status_code, second.status_code) == (200, 200)
+    for _ in range(export_api.MAX_CONCURRENT_EXPORTS):
+        assert export_api.EXPORT_SLOTS.acquire(blocking=False)
+    for _ in range(export_api.MAX_CONCURRENT_EXPORTS):
+        export_api.EXPORT_SLOTS.release()
+
+
+def test_a_client_that_stops_reading_is_logged(
+    engine: Engine, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level("INFO")
+    with _snapshot(engine) as session:
+        chunks = stream_export(session, ExportOptions(include_files=False), now=lambda: FIXED)
+        assert next(chunks)
+        chunks.close()
+    assert any(record.msg == "Full data export stopped by the client" for record in caplog.records)

@@ -9,7 +9,9 @@ import {
   requestJson,
 } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { isNativeBearerTransport } from "../auth/transport";
 import type { components } from "../api/schema";
+import { photosTooLargeForApp } from "./fullExportLimits";
 
 type FullExportSummary = components["schemas"]["FullExportSummary"];
 
@@ -38,6 +40,10 @@ export function FullExportCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const filesAllowed = !demo && summary?.files_allowed !== false;
+  const tooLargeForApp = photosTooLargeForApp(
+    isNativeBearerTransport(),
+    summary?.attachment_bytes,
+  );
 
   async function loadSummary() {
     if (summary || !authorized) return;
@@ -59,7 +65,7 @@ export function FullExportCard() {
     setBusy(true);
     setError(null);
     try {
-      const files = includeFiles && filesAllowed;
+      const files = includeFiles && filesAllowed && !tooLargeForApp;
       await downloadProtectedFile({
         path: `/api/v1/exports/full.zip?include_files=${String(files)}`,
         capability,
@@ -98,8 +104,8 @@ export function FullExportCard() {
           <label className="checkbox-label">
             <input
               type="checkbox"
-              checked={includeFiles}
-              disabled={busy}
+              checked={includeFiles && !tooLargeForApp}
+              disabled={busy || tooLargeForApp}
               onChange={(event) => {
                 const checked = event.currentTarget.checked;
                 setIncludeFiles(checked);
@@ -108,7 +114,14 @@ export function FullExportCard() {
             />
             Include photos and files
           </label>
-          {includeFiles && summary && (
+          {includeFiles && summary && tooLargeForApp && (
+            <p className="field-help" role="status">
+              About {formatBytes(summary.attachment_bytes)} of photos is too
+              much to export in the app. Open Florabase in a web browser to
+              include them; the app exports the records without photos.
+            </p>
+          )}
+          {includeFiles && summary && !tooLargeForApp && (
             <p className="field-help" role="status">
               {summary.attachments === 0
                 ? "No photos stored yet."

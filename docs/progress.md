@@ -18,8 +18,16 @@
   prettier clean; `FullExportCard.test.tsx` (3) pass; LibreOffice opens `plants.csv` with readable
   columns. The remaining backend (12) and frontend (60) failures are identical on unchanged `main`
   in that environment. Canonical FULL not yet run.
+- Independent review (PASS WITH FIXES, `/mnt/project-files/data-export-001/review.md`) fixes:
+  at most 2 concurrent full exports (`429 export_in_progress`, slot taken before the snapshot); a
+  photo vanishing mid-export is counted missing instead of truncating the ZIP; failure and
+  client-abort log lines without content; Android app disables photos above 100 MB; contract test
+  that no exported column points at an excluded table unless dropped; synthetic table renamed.
+  Integration tests now 14, unit 8, frontend 4.
 - Integration note: IDENTIFICATION-001's `identifications` table must be added to
-  `data_export/registry.py` and `reviewed_columns.json`; the contract test fails until it is.
+  `data_export/registry.py` as `ExportTable("identifications", {"created_by_user_id": _OWNER})`, its
+  columns to `reviewed_columns.json`, and identification history to the README list; the contract
+  tests fail until it is.
 
 ## 2026-11-28 — v0.1.0-beta.11 release preparation
 
