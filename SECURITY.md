@@ -8,7 +8,7 @@
 | Latest published beta | Best-effort fixes on `main`, released in the next beta |
 | Older betas, release candidates and earlier releases | No |
 
-No stable release is published yet. See the [versioning policy](docs/versioning.md).
+No stable release is published yet. See the [versioning policy](docs/operate/versioning.md).
 
 ## Reporting a vulnerability
 
@@ -26,7 +26,7 @@ No response time is promised.
 Florabase uses backend-owned local accounts, opaque PostgreSQL-backed sessions in HttpOnly cookies,
 same-origin checks, and session-bound CSRF tokens. Public deployments require an operator-managed
 HTTPS reverse proxy and exact canonical-origin configuration. See the detailed
-[security architecture](docs/security.md) and [installation guide](docs/installation.md).
+[security architecture](docs/operate/security.md) and [installation guide](docs/operate/installation.md).
 
 Never commit `.env`, database dumps, uploads, access tokens, or real credentials. If a secret is
 exposed, revoke or rotate it immediately and remove it from current and historical publication as

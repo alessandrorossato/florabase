@@ -366,5 +366,5 @@ Media and Geography. Maps still contains Collection origins, Species distributio
 BotanicalIdentity Overview shows a read-only classification breadcrumb/related collection panel;
 Reference → Taxonomy owns explicit source search, inspection, confirmation and unlink.
 Taxonomy is classification; Collection Lineage retains material ancestry. Stable filter/selection URL
-state and stacked mobile tree/detail follow [the current taxonomy contract](../../collection-taxonomy.md).
+state and stacked mobile tree/detail follow [the current taxonomy contract](../../features/explore/collection-taxonomy.md).
 The operator's broad cross-application visual/product review remains a future checkpoint.

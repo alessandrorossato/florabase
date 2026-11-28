@@ -30,7 +30,7 @@ gates and its exclusions.
   groups, with extraction, height measurements and explicit transfers
 - **Collection → Harvests & Stored material**: structured harvests collected from a plant or plant
   group, stored material inventory, and explicit conversion to new seed lots (see the
-  [Harvest guide](docs/harvests.md))
+  [Harvest guide](docs/features/collection/harvests.md))
 - **Collection → Locations**: scoped hierarchical collection locations with atomic bulk moves
 - **Activity → Journal & History**: plant and plant-group journal events (including phenology
   observations) and read-only cross-domain operational history
@@ -42,7 +42,7 @@ gates and its exclusions.
 - **Explore → Taxonomy & Lineage**: classification taxonomy tree backed by a local reviewed WFO
   snapshot, plus explicit material and identity lineage (`SeedLot → Sowing → Plant / PlantGroup`,
   extraction, collection-produced seed lots) with receipt-proven reversal for supported operations
-- **Explore → Media**: [shared media library](docs/media-library.md) with reusable local/external
+- **Explore → Media**: [shared media library](docs/features/explore/media-library.md) with reusable local/external
   images, per-record captions and order, explicit primary selection, collection-photo galleries,
   protected thumbnails, retained unlinked assets and guarded deletion
 - **Explore → Geography**: local places and provenance sites, **Collection origins** provenance map,
@@ -55,13 +55,13 @@ gates and its exclusions.
   appearances, installation-wide media defaults, printable labels with authenticated QR lookup,
   guided CSV import/export, transparent data-source attribution with links to each official
   source, layered contextual help, and the running release with its changelog and licence
-- **Installable web app ([PWA](docs/pwa.md))**: installable as a progressive web app (installation
+- **Installable web app ([PWA](docs/operate/pwa.md))**: installable as a progressive web app (installation
   on physical phones is not yet verified)
 
 Each increment's implementation and verification status is in the
 [feature backlog](docs/features.json) and its
 [reconciliation against the release scope](docs/release/feature-reconciliation-v1.md). Mobile quick
-capture and the other themes after v1.0.0 are in the [product roadmap](docs/product-roadmap.md).
+capture and the other themes after v1.0.0 are in the [product roadmap](docs/product/product-roadmap.md).
 
 ## Screenshots
 
@@ -83,7 +83,7 @@ Florabase is a modular monolith:
 
 The production-oriented Compose stack publishes only the frontend proxy on `127.0.0.1`.
 PostgreSQL and the backend publish no ports (and can be isolated on a separate `internal: true`
-network via the optional hardened override in [docs/security.md](docs/security.md#optional-container-hardening)).
+network via the optional hardened override in [docs/operate/security.md](docs/operate/security.md#optional-container-hardening)).
 
 ## Requirements
 
@@ -92,14 +92,14 @@ Python 3 and `curl`. The development overlay uses Compose's `!override` tag (see
 [Docker Compose merge rules](https://docs.docker.com/reference/compose-file/merge/)). Host Node.js
 is optional.
 
-For self-hosting, follow [Install Florabase](docs/installation.md) using `compose.yaml` from the
+For self-hosting, follow [Install Florabase](docs/operate/installation.md) using `compose.yaml` from the
 latest release tag (Compose 2.20 baseline; no container runs as root). **Run the one-time
-[folder setup block](docs/installation.md#1-create-the-folders-and-set-owners-once) on the host
+[folder setup block](docs/operate/installation.md#1-create-the-folders-and-set-owners-once) on the host
 before the first deploy.** The single Compose stack initializes a fresh installation automatically
 and writes a verified backup before schema upgrades. Put it behind an HTTPS reverse proxy (or
 Tailscale Serve) with your exact canonical HTTPS origin.
 
-[Building from a source checkout](docs/deployment.md) is for development only.
+[Building from a source checkout](docs/operate/deployment.md) is for development only.
 
 ## Quick start for development
 
@@ -131,14 +131,14 @@ Open `http://localhost:5173` with the default development port.
 
 `make check` runs formatting checks, lint, strict Python and TypeScript typing, backend and frontend
 tests, and generated API drift checks. PostgreSQL integration tests run separately with
-`make test-integration`. See [development.md](docs/development.md) for focused workflows, migrations,
+`make test-integration`. See [development.md](docs/develop/development.md) for focused workflows, migrations,
 code generation, and Git practices.
 
 ## Backup and restore
 
 `make backup` stops backend writes while creating a paired custom-format PostgreSQL dump and local
 attachment-volume archive. `make restore` deliberately replaces both and requires explicit
-confirmation. Read [backup-restore.md](docs/backup-restore.md) before restoring; deployment
+confirmation. Read [backup-restore.md](docs/operate/backup-restore.md) before restoring; deployment
 configuration and secrets still need a separate protected backup.
 
 ## Project information
@@ -146,18 +146,18 @@ configuration and secrets still need a separate protected backup.
 - [Documentation index](docs/README.md)
 - [v1.0.0 release scope](docs/release/scope-v1.md)
 - [End-user guide](docs/user-guide/README.md)
-- [Installation, upgrade, backup and restore](docs/installation.md)
-- [Source-build deployment and upgrades](docs/deployment.md) (development)
-- [Development guide](docs/development.md)
-- [Domain model](docs/domain-model.md)
-- [Architecture](docs/architecture.md)
-- [Security architecture](docs/security.md)
+- [Installation, upgrade, backup and restore](docs/operate/installation.md)
+- [Source-build deployment and upgrades](docs/operate/deployment.md) (development)
+- [Development guide](docs/develop/development.md)
+- [Domain model](docs/architecture/domain-model.md)
+- [Architecture](docs/architecture/architecture.md)
+- [Security architecture](docs/operate/security.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Third-party notices](THIRD-PARTY-NOTICES.md)
 - [Changelog](CHANGELOG.md)
-- [Versioning and compatibility](docs/versioning.md)
-- [Product roadmap](docs/product-roadmap.md)
+- [Versioning and compatibility](docs/operate/versioning.md)
+- [Product roadmap](docs/product/product-roadmap.md)
 - [Engineering progress](docs/progress.md)
 
 ## License

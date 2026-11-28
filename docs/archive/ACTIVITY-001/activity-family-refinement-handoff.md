@@ -225,7 +225,7 @@ rewrite is introduced. Dashboard product behavior, navigation and aggregate sema
 
 ## UI CONTRACT
 
-The narrow [UI Foundation update](../../ui-contract.md) documents PageIdentity/PageTools, intrinsic wrapping,
+The narrow [UI Foundation update](../../develop/ui-contract.md) documents PageIdentity/PageTools, intrinsic wrapping,
 practical flexible search, compact controls, grouped white surfaces and subtle dividers. Borders carry
 structure; shadows remain restrained overlays. Newly touched pages must adapt to available width,
 including actual browser zoom. This is not the global cross-product visual migration.
@@ -256,7 +256,7 @@ No full release gate, migration cycle, global visual review or independent accep
 
 ## VISUAL EVIDENCE
 
-Current screenshots and [35 page / 28 drawer measurements](../../review/activity-family/filter-consistency/zoom-evidence.json)
+Current screenshots and [35 page / 28 drawer measurements](../review/activity-family/filter-consistency/zoom-evidence.json)
 are in `docs/review/activity-family/filter-consistency/` (168 PNGs). Earlier parent-folder and
 Journal/History captures are historical candidates. Actual Chrome zoom covers 1440×844 at
 80/100/125/150%, 1024×844 at 100/125%, and 390×844 at 100%. All document/main overflow, drawer/grid,
@@ -264,11 +264,11 @@ footer and local view-control assertions pass. Journal's short drawer measures a
 334–337 CSS px wide-screen height and 384 px on mobile; it no longer stretches into a blank sheet.
 Long Schedule/History content scrolls inside the fields, with the footer remaining reachable.
 
-Compare [Journal drawer](../../review/activity-family/filter-consistency/events-filters-1440-100.png),
-[History selections](../../review/activity-family/filter-consistency/history-filters-selected-1440-100.png),
-[Schedule drawer on mobile](../../review/activity-family/filter-consistency/schedule-filters-selected-390-100.png),
-[Calendar heading](../../review/activity-family/filter-consistency/schedule-calendar-1440-100.png) and
-[List heading](../../review/activity-family/filter-consistency/schedule-1440-100.png).
+Compare [Journal drawer](../review/activity-family/filter-consistency/events-filters-1440-100.png),
+[History selections](../review/activity-family/filter-consistency/history-filters-selected-1440-100.png),
+[Schedule drawer on mobile](../review/activity-family/filter-consistency/schedule-filters-selected-390-100.png),
+[Calendar heading](../review/activity-family/filter-consistency/schedule-calendar-1440-100.png) and
+[List heading](../review/activity-family/filter-consistency/schedule-1440-100.png).
 
 Final native browser checks pass for Record routes/chooser, Journal correction/date/search/deletion,
 Schedule notes search/versioned reschedule/completion/cancellation, Calendar modal menu/Escape/month/

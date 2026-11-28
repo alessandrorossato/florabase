@@ -104,7 +104,7 @@ are unchanged: metadata, release, the WFO format version and the WFO seal.
   or letting `FLORABASE_REFERENCES_SETUP=auto` (`REF-SETUP-001`) build it in-container with
   Florabase's own builders from pinned official archives whose SHA-256 checksums, member lists and
   sizes are verified before any parsing; see the
-  [installation guide](../../installation.md#optional-botanical-reference-datasets).
+  [installation guide](../../operate/installation.md#optional-botanical-reference-datasets).
 - **Managed directory trade-off (`REF-SETUP-001`):** Under `FLORABASE_REFERENCES_SETUP=auto`, the
   managed directory `/var/lib/florabase/data/state/reference/` is owned by the backend container
   user (`10001:10001`, mode `0700`, writable) rather than a root-owned read-only mount. A

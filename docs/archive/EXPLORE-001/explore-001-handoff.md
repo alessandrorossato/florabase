@@ -14,7 +14,7 @@ canonical `make feature-verify` **passed**. Authorized delivery and finish remai
 
 ## Representation
 
-The complete audited lifecycle matrix is in [Species distribution](../../species-distribution.md).
+The complete audited lifecycle matrix is in [Species distribution](../../features/explore/species-distribution.md).
 
 | Domain | Authoritative identity | Living | Current | Historical evidence |
 | --- | --- | --- | --- | --- |

@@ -129,5 +129,5 @@ change.
   base tables and automatic mother Journal Events are outside this design. Existing CSV
   import/export does not restore propagation graphs.
 
-See the [cuttings contract](../../cuttings.md) for operational behavior and the
-[domain model](../../domain-model.md#vegetative-propagation) for the wider propagation context.
+See the [cuttings contract](../../features/collection/cuttings.md) for operational behavior and the
+[domain model](../../architecture/domain-model/collection-concepts.md#vegetative-propagation) for the wider propagation context.

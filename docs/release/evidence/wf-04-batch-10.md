@@ -22,8 +22,8 @@ reviewed before preparation:
 
 | ID | Branch | Frozen tip | Writer | Source QA | Committed evidence |
 | --- | --- | --- | --- | --- | --- |
-| INSTALL-002 | `feat/install-002-minimal-compose` | `a012f4360171b1a34ca5422d6487b811ba94fb98` | `neon` | `independent-source-qa` (PASS) | [`0009-minimal-production-compose.md`](../../decisions/0009-minimal-production-compose.md), [`installation.md`](../../installation.md), [`progress.md`](../../progress.md) |
-| WF-SCOPE-001 | `feat/wf-scope-001-scoped-verification` | `1b78a0452031bd5ad0ebacc0515916037d7a2a28` | `neon-wf-scope-001` | `independent-source-qa` (PASS WITH NOTES) | [`development-workflow.md`](../../development-workflow.md), [`progress.md`](../../progress.md) |
+| INSTALL-002 | `feat/install-002-minimal-compose` | `a012f4360171b1a34ca5422d6487b811ba94fb98` | `neon` | `independent-source-qa` (PASS) | [`0009-minimal-production-compose.md`](../../decisions/0009-minimal-production-compose.md), [`installation.md`](../../operate/installation.md), [`progress.md`](../../progress.md) |
+| WF-SCOPE-001 | `feat/wf-scope-001-scoped-verification` | `1b78a0452031bd5ad0ebacc0515916037d7a2a28` | `neon-wf-scope-001` | `independent-source-qa` (PASS WITH NOTES) | [`development-workflow.md`](../../develop/development-workflow.md), [`progress.md`](../../progress.md) |
 
 ## Integration conflict and cross-branch checks
 

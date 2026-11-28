@@ -1,7 +1,7 @@
 # Changelog
 
 Notable changes to Florabase, newest first. Versions follow the
-[versioning policy](docs/versioning.md). The engineering record of every increment is
+[versioning policy](docs/operate/versioning.md). The engineering record of every increment is
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 
@@ -32,15 +32,15 @@ the new Reminders setting asks for the notification permission only when you tur
   overdue activities included unless you turn that off. Notifications are local only (no push
   service, no Google Play Services) and refresh when you open the app. The collapsed notification
   shows only the count; up to five activity titles appear only when expanded. Reminders survive
-  reboots and app updates. The web app and PWA are unchanged. See [docs/mobile.md](docs/mobile.md#reminders-local-schedule-notifications).
+  reboots and app updates. The web app and PWA are unchanged. See [docs/mobile.md](docs/operate/mobile.md#reminders-local-schedule-notifications).
 - **Read-only demo mode (`DEMO-001`):** an opt-in `FLORABASE_DEMO_READONLY=true` mode for a public
   showcase instance with a guided tour. It refuses to start without an explicit marker file in
   attachment storage, rejects every write, keeps external provider lookups cache-only and shows a
   neutral "Demo visitor". Off by default; normal installations are unaffected. See
-  [docs/demo-mode.md](docs/demo-mode.md).
+  [docs/demo-mode.md](docs/operate/demo-mode.md).
 - Optional `FLORABASE_WORKERS` (`1`–`8`, default `1`) sets the number of backend worker processes;
   add it to the `backend` environment to change it. Keep `1` on single-owner NAS hosts; each extra
-  worker adds about 150–200 MiB of RAM. See [docs/installation.md](docs/installation.md).
+  worker adds about 150–200 MiB of RAM. See [docs/operate/installation.md](docs/operate/installation.md).
 
 ### Changed
 
@@ -50,6 +50,11 @@ the new Reminders setting asks for the notification permission only when you tur
   same lineage strip and Lineage tab, and a short "Add photo" placeholder when it has no image. The
   Back / New bar that was hidden on Plant and Sowing details is gone; the breadcrumb returns to the
   list.
+- **Documentation layout (`DOCS-005`):** `docs/` is organised into `operate/` (installation,
+  backup and restore, security, mobile, demo mode), `develop/`, `architecture/`, `features/`, `product/` and
+  `archive/`. The installation guide is now [docs/operate/installation.md](docs/operate/installation.md);
+  the old top-level paths that earlier releases link to (`installation.md`, `mobile.md`,
+  `security.md`, `backup-restore.md`, `deployment.md`, `versioning.md`) remain as pointers.
 - **Dated bulk moves (`BULK-002`):** "Move to location…" asks "When did it happen?" when the
   selection includes plants or plant groups (Today preselected, Another date or Date unknown), so
   their Movement events carry the chosen date (Date unknown keeps them undated).

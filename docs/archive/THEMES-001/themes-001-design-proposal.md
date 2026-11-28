@@ -6,7 +6,7 @@ The supplied brief requested an isolated checkout; this existing Codex-managed w
 under the current repository instructions. No second worktree or protected environment is needed.
 No prior THEMES documents existed at this base; these documents establish the requested baseline.
 
-Companions: [token matrix](../../themes-001-token-matrix.md), [implementation plan](themes-001-implementation-plan.md),
+Companions: [token matrix](../../develop/themes-001-token-matrix.md), [implementation plan](themes-001-implementation-plan.md),
 [CONTROLS-001](../CONTROLS-001/controls-001-design-contract.md), [visual specimens](../../design/themes-controls/review.html).
 Both features must land before the remaining application-wide visual normalization, with independent
 deliveries. These proposals do not supersede the accepted UI contract until implementation approval.

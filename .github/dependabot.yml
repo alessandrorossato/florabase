@@ -15,7 +15,7 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
-    # Reopening criteria: docs/dependency-maintenance-baseline.md.
+    # Reopening criteria: docs/develop/dependency-maintenance-baseline.md.
     # Retain 19.2 patch proposals until real-browser acceptance coverage exists.
     ignore:
       - dependency-name: react

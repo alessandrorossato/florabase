@@ -13,7 +13,7 @@ does not authorize publication, bypass the vulnerability gate or touch productio
 | Provenance | Docker Official Image, `org.opencontainers.image.source` `https://github.com/docker-library/postgres.git#e00e1bd34ec5c8a8e7ad89b273b3d42efaf6d5bc:18/alpine3.24`, created 2026-11-05T19:06:10Z, version `18.6-alpine3.24`, Alpine 3.24.4 |
 | Replaces | `sha256:10a5c69a…` (same source revision, built 2026-10-21) |
 | Compatibility | Data directory initialized by the previous pin opens with its rows; PostgreSQL 18.6 on both |
-| Recovery tests | Two full disposable runtime smokes on this pin: backup, tamper detection, isolated restore, restic export/import, replacement restore, compatible/failed/interrupted upgrades ([evidence](../../beta-distribution-001-evidence.json)) |
+| Recovery tests | Two full disposable runtime smokes on this pin: backup, tamper detection, isolated restore, restic export/import, replacement restore, compatible/failed/interrupted upgrades ([evidence](../../archive/BETA-DISTRIBUTION-001/beta-distribution-001-evidence.json)) |
 | Scan | 1 CRITICAL / 25 HIGH, all `stdlib` v1.24.6 in `/usr/local/bin/gosu`; 0 secrets ([summary](postgresql-18.6-rebuild/summary.json)) |
 
 ## Option 1: a newer official PostgreSQL or gosu artifact

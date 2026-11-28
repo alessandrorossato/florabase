@@ -1,6 +1,6 @@
 > **Archived.** This is the product and release roadmap as it stood on `main` at
 > `947d77fc8bd2a757cdf49e28ec2e0f85b0374f1b` (last changed 2026-11-11). It is superseded by the
-> [v1.0.0 release scope](../scope-v1.md) and the current [product roadmap](../../product-roadmap.md).
+> [v1.0.0 release scope](../scope-v1.md) and the current [product roadmap](../../product/product-roadmap.md).
 > The text is unchanged; only relative links were adjusted for this location.
 
 # Florabase product and release roadmap
@@ -78,18 +78,18 @@ recorded as `implemented`.
 
 | Delivered area                                                                                   | Existing IDs and evidence / graph state                                                                                                                                                                                                                     |
 | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Self-hosted foundation, local owner authentication, typed API and guarded DB/media recovery      | FOUNDATION-001, SECURITY-001/002, OPS-001, CI-001/002/003 are `verified`; [workflow](../../development-workflow.md), [security](../../security.md), [recovery](../../backup-restore.md).                                                                                      |
-| Botanical identities/profiles, suppliers, collection Locations and geographic provenance         | Core identity/profile/supplier/location features are `verified`; GEOGRAPHY-002/003, LOCATION-002/003 and MAP-001 remain `implemented`; [domain](../../domain-model.md), [Location aggregation](../../location-descendant-aggregation.md).                               |
+| Self-hosted foundation, local owner authentication, typed API and guarded DB/media recovery      | FOUNDATION-001, SECURITY-001/002, OPS-001, CI-001/002/003 are `verified`; [workflow](../../develop/development-workflow.md), [security](../../operate/security.md), [recovery](../../operate/backup-restore.md).                                                                                      |
+| Botanical identities/profiles, suppliers, collection Locations and geographic provenance         | Core identity/profile/supplier/location features are `verified`; GEOGRAPHY-002/003, LOCATION-002/003 and MAP-001 remain `implemented`; [domain](../../architecture/domain-model.md), [Location aggregation](../../features/collection/location-descendant-aggregation.md).                               |
 | Seed lots, Sowings, dated germination observations, Plants and Plant groups                      | SEED-001–004, SOWING-001–003 and PLANT-001–006 are `verified`; GERMINATION-001 remains `implemented`. Unknown quantity/date precision is retained.                                                                                                          |
-| Explicit material ancestry, propagation, extraction and supported guarded reversals              | LINEAGE-001/002 and PROPAGATION-001–003 are `verified`; [integrity audit](../../lineage-integrity.md). LINEAGE-003 [ancestry explorer](../../lineage-explorer.md) is `implemented`.                                                                                      |
-| Journal and read-only cross-domain History                                                       | EVENT-001/002 and HISTORY-001 are `verified`; [History contract](../../operational-history.md), [handoff](../../archive/HISTORY-001/history-001-handoff.md). Product pass remains required.                                                                                                 |
-| Harvests, stored material and explicit harvested-seed conversion                                 | HARVEST-001 remains `implemented`; HARVEST-002/003 are `verified`; [Harvests](../../harvests.md), [inventory](../../harvest-inventory.md), [conversion](../../harvest-seed-conversion.md).                                                                                    |
-| Shared media, collection photos and primary imagery                                              | ATTACHMENT-002 and SUPPLIER-003 are `verified`; ATTACHMENT-003/004/005 remain `implemented`; [Media library](../../media-library.md), [Supplier handoff](../../archive/SUPPLIER-003/supplier-003-handoff.md).                                                                                |
-| Global search, Saved Views, atomic bulk Location moves, Orders and CSV import/export             | SEARCH-002, VIEW-001, BULK-001 and ORDER-001 are `verified`; SEARCH-001 and IMPORT-001 remain `implemented`; [Saved Views](../../saved-views.md), [Orders](../../orders.md), [CSV](../../import-export.md).                                                                   |
-| Explore occurrence maps, native ranges, reviewed native-range enrichment and classification tree | MAP-002, EXPLORE-001/002, ENRICHMENT-001 and TAXONOMY-003 are `verified`; [Maps](../../native-ranges-explore.md), [Taxonomy](../../collection-taxonomy.md). Classification is not phylogeny.                                                                            |
-| Printable physical labels with exact authenticated QR lookup                                     | LABEL-001 is `verified`; [workflow](../../labels.md), [review and outstanding physical checks](../../archive/LABEL-001/label-001-review.md). Mobile quick capture remains planned.                                                                                                        |
-| UI Foundation and operational Dashboard                                                          | DASHBOARD-001 is `verified`, delivered in PR #101; [handoff](../../archive/DASHBOARD-001/dashboard-001-handoff.md), [UI contract](../../ui-contract.md). Older UX-002–006 remain `implemented`; global normalization is pending.                                                              |
-| Concrete future work in Schedule List and Month Calendar                                         | SCHEDULE-001/002 are `verified`; Calendar delivered in PR #105; [Schedule](../../schedule.md), [Calendar handoff](../../archive/SCHEDULE-002/schedule-002-handoff.md). No recurrence/reminder implementation is implied.                                                                     |
+| Explicit material ancestry, propagation, extraction and supported guarded reversals              | LINEAGE-001/002 and PROPAGATION-001–003 are `verified`; [integrity audit](../../architecture/lineage-integrity.md). LINEAGE-003 [ancestry explorer](../../features/explore/lineage-explorer.md) is `implemented`.                                                                                      |
+| Journal and read-only cross-domain History                                                       | EVENT-001/002 and HISTORY-001 are `verified`; [History contract](../../features/activity/operational-history.md), [handoff](../../archive/HISTORY-001/history-001-handoff.md). Product pass remains required.                                                                                                 |
+| Harvests, stored material and explicit harvested-seed conversion                                 | HARVEST-001 remains `implemented`; HARVEST-002/003 are `verified`; [Harvests](../../features/collection/harvests.md), [inventory](../../features/collection/harvest-inventory.md), [conversion](../../features/collection/harvest-seed-conversion.md).                                                                                    |
+| Shared media, collection photos and primary imagery                                              | ATTACHMENT-002 and SUPPLIER-003 are `verified`; ATTACHMENT-003/004/005 remain `implemented`; [Media library](../../features/explore/media-library.md), [Supplier handoff](../../archive/SUPPLIER-003/supplier-003-handoff.md).                                                                                |
+| Global search, Saved Views, atomic bulk Location moves, Orders and CSV import/export             | SEARCH-002, VIEW-001, BULK-001 and ORDER-001 are `verified`; SEARCH-001 and IMPORT-001 remain `implemented`; [Saved Views](../../features/tools/saved-views.md), [Orders](../../features/sourcing/orders.md), [CSV](../../features/tools/import-export.md).                                                                   |
+| Explore occurrence maps, native ranges, reviewed native-range enrichment and classification tree | MAP-002, EXPLORE-001/002, ENRICHMENT-001 and TAXONOMY-003 are `verified`; [Maps](../../features/explore/native-ranges-explore.md), [Taxonomy](../../features/explore/collection-taxonomy.md). Classification is not phylogeny.                                                                            |
+| Printable physical labels with exact authenticated QR lookup                                     | LABEL-001 is `verified`; [workflow](../../features/collection/labels.md), [review and outstanding physical checks](../../archive/LABEL-001/label-001-review.md). Mobile quick capture remains planned.                                                                                                        |
+| UI Foundation and operational Dashboard                                                          | DASHBOARD-001 is `verified`, delivered in PR #101; [handoff](../../archive/DASHBOARD-001/dashboard-001-handoff.md), [UI contract](../../develop/ui-contract.md). Older UX-002–006 remain `implemented`; global normalization is pending.                                                              |
+| Concrete future work in Schedule List and Month Calendar                                         | SCHEDULE-001/002 are `verified`; Calendar delivered in PR #105; [Schedule](../../features/activity/schedule.md), [Calendar handoff](../../archive/SCHEDULE-002/schedule-002-handoff.md). No recurrence/reminder implementation is implied.                                                                     |
 | Persistent synthetic UAT and measured performance baseline                                       | PREVIEW-001 and PERF-001 are `verified`; INFRA-MAINT-001 landed in PR #106 but remains `implemented`; [infrastructure handoff](../../archive/INFRA-MAINT-001/infra-maint-001-handoff.md), [performance evidence](../../performance/PERF-001.md). Measurements predate later product increments. |
 
 ## Immediate PRE-0.1 product freeze path
@@ -104,7 +104,7 @@ The required sequence is:
    accepted navigation, exclusions and remaining release defects. Freeze major functionality and IA;
    stop adding large features before visual review. PHYLOGENY-001 is not a freeze dependency.
 4. **Global visual review, page by page.** Record findings across the complete inventory below.
-5. **UI normalization/refactor using [UI Foundation](../../ui-contract.md).** Resolve accepted findings
+5. **UI normalization/refactor using [UI Foundation](../../develop/ui-contract.md).** Resolve accepted findings
    through shared semantic tokens, primitives and interaction grammar; review the resulting pages.
 6. **Release-readiness audit.** Exercise the functional, operational, resource and security gates on
    the frozen candidate; fix concrete release blockers and retain evidence.
@@ -129,7 +129,7 @@ The bounded implementation candidate is ACTIVITY-001; see its [semantic audit an
 
 The pass examines Journal/History overlap, contextual entity timelines, links between related records,
 filters, terminology, presentation, Schedule completion and duplicate representations of one fact.
-Respect the existing [source/deduplication matrix](../../operational-history.md). Distinguish occurrence
+Respect the existing [source/deduplication matrix](../../features/activity/operational-history.md). Distinguish occurrence
 PartialDate from a visibly labelled recording-time fallback; never manufacture a day. Schedule
 completion retains its terminal planning fact and may explicitly link an actual compatible Event;
 it does not automatically manufacture a Journal occurrence or assign the due date as occurrence.
@@ -194,7 +194,7 @@ dialog dismissal and errors as well as populated screenshots.
 
 Acceptance: every inventory item has evidence or a documented non-applicable state; no critical
 usability/accessibility finding remains; accepted corrections are rechecked. All UI work converges
-on [ui-contract.md](../../ui-contract.md). Repeated problems belong in shared primitives or an explicit
+on [ui-contract.md](../../develop/ui-contract.md). Repeated problems belong in shared primitives or an explicit
 contract extension, not page-local colors, scales or interaction rules.
 
 ## v0.1.0 release gates — RELEASE_GATE / PRE-0.1
@@ -210,7 +210,7 @@ block release; lesser limitations require explicit disposition and truthful docu
 | Gate                                | Measurable acceptance evidence                                                                                                                                                                                                                                                                                          |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Functional                          | Every intended frozen v0.1 workflow passes an agreed UAT checklist; no known critical workflow blocker; Journal/History and Labels decisions accepted; functional/IA freeze recorded.                                                                                                                                   |
-| Testing                             | Exact final release tree passes canonical **full** verification under the [workflow](../../development-workflow.md); disposable clean-database migration chain/cycle passes; generated OpenAPI/TypeScript have no drift; representative UAT is accepted.                                                                      |
+| Testing                             | Exact final release tree passes canonical **full** verification under the [workflow](../../develop/development-workflow.md); disposable clean-database migration chain/cycle passes; generated OpenAPI/TypeScript have no drift; representative UAT is accepted.                                                                      |
 | Installation                        | Follow the documented production install on a fresh supported host, recording host/runtime versions; Compose starts healthy without developer-only state, source caches or populated dev volumes; owner/bootstrap, login/logout/session restoration and normal browser use pass.                                        |
 | Upgrade                             | Define supported starting version/revision(s), then demonstrate backup-before-upgrade, explicit forward Alembic migration, healthy startup and usable records/media/session flow after upgrade. Document unsupported origins and recovery; startup must not silently migrate or downgrade.                              |
 | Backup / restore                    | Paired PostgreSQL and local-media backup restores into an isolated environment; retained records, relationships and binary integrity match, and the application can use them. Document protected configuration/secrets backup, external-media limits and recovery instructions; a DB dump alone is incomplete recovery. |
@@ -250,7 +250,7 @@ not be the only deployment contract. Declare and test the supported architecture
 advertising support. End users should deploy published artifacts without local development builds.
 
 Keep the production topology and explicit migration/backup boundaries in
-[deployment](../../deployment.md) and [the environment workflow](../../development-workflow.md). Document
+[deployment](../../operate/deployment.md) and [the environment workflow](../../develop/development-workflow.md). Document
 artifact selection, upgrade, backup and recovery. Publishing, registry automation and release
 packaging belong to release readiness.
 
@@ -337,7 +337,7 @@ Acceptance direction: comparable seasonal observations preserve uncertainty and 
 first flowering from proof that no earlier flowering occurred. Integrate Journal/History rather
 than introducing disconnected duplicate timelines; decide the needed structure before extending Events.
 
-**PHENOLOGY-001** ([contract](../../phenology.md)) records a controlled stage on existing observation,
+**PHENOLOGY-001** ([contract](../../features/activity/phenology.md)) records a controlled stage on existing observation,
 flowering and fruiting Events and compares recorded observations year by year in the Plant and
 PlantGroup Journal. A correction trail, group proportions and cross-collection comparison are not
 part of this slice.
@@ -456,13 +456,13 @@ dataset. It needs its own bounded contract; it does not waive PHYLOGENY-001's so
 ## Source-blocked and deliberately deferred work
 
 **PHYLOGENY-001 = SOURCE_BLOCKED.** The repository's
-[exact source audit](../../phylogeny-001-source.md) and [blocked handoff](../../phylogeny-001-handoff.md) retain
+[exact source audit](../../archive/PHYLOGENY-001/phylogeny-001-source.md) and [blocked handoff](../../archive/PHYLOGENY-001/phylogeny-001-handoff.md) retain
 the Open Tree synthetic/annotation rights boundary and reopening criterion. No production phylogeny
 implementation is claimed. A taxonomic tree is not a phylogenetic tree; neither is material ancestry.
 This blocker prevents neither v0.1 freeze/release nor v1.0 core collection management. Continue source
 research separately if desired, or select the user-provided-tree path after its own review.
 
-**BOTANY-003** remains `planned`: [source decisions](../../botanical-profile-enrichment-sources.md) record
+**BOTANY-003** remains `planned`: [source decisions](../../features/explore/botanical-profile-enrichment-sources.md) record
 SOURCE_BLOCKED secure acquisition for the approved general-description path. WCVP geographic-area
 source approval and three individually approved alternative description records do not implement
 broad text enrichment or resolve its coverage gate. Manual profiles and delivered ENRICHMENT-001

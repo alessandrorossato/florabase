@@ -1,7 +1,7 @@
 # ATTACHMENT-004 implementation handoff
 
 Current shared-media behavior supersedes ownership/removal and derivative details below; see
-[ATTACHMENT-005](../../media-library.md). The remainder is the historical ATTACHMENT-004 review record.
+[ATTACHMENT-005](../../features/explore/media-library.md). The remainder is the historical ATTACHMENT-004 review record.
 
 Status: **ATTACHMENT-004 review record**; operator visual review passed.
 Branch: `feat/attachment-004`.

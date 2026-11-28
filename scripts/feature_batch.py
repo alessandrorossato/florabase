@@ -286,17 +286,24 @@ def _additive_progress(common: bytes, ours: bytes, theirs: bytes) -> bytes:
         prefix, suffix = ours.split(common)
         other_prefix, other_suffix = theirs.split(common)
         return prefix + other_prefix + common + suffix + other_suffix
-    # Allow a pure top-of-file prepend from the incoming source when the integration branch
-    # already carried a non-conflicting edit deeper in docs/progress.md (for example on main).
+    # Allow a pure top-of-file prepend from either side when the other side also carried a
+    # non-conflicting edit deeper in docs/progress.md (for example on main or a link rewrite).
+    common_lines = common.splitlines(keepends=True)
+    anchor = b"".join(common_lines[: min(len(common_lines), 3)])
     if theirs.endswith(common) and theirs.count(common) == 1:
         other_prefix = theirs[: -len(common)]
-        common_lines = common.splitlines(keepends=True)
-        anchor = b"".join(common_lines[: min(len(common_lines), 3)])
         if other_prefix and other_prefix.endswith(b"\n") and anchor and ours.count(anchor) == 1:
             idx = ours.index(anchor)
             prefix, ours_body = ours[:idx], ours[idx:]
             if prefix and prefix.endswith(b"\n"):
                 return prefix + other_prefix + ours_body
+    if ours.endswith(common) and ours.count(common) == 1:
+        prefix = ours[: -len(common)]
+        if prefix and prefix.endswith(b"\n") and anchor and theirs.count(anchor) == 1:
+            idx = theirs.index(anchor)
+            other_prefix, theirs_body = theirs[:idx], theirs[idx:]
+            if other_prefix and other_prefix.endswith(b"\n"):
+                return prefix + other_prefix + theirs_body
     raise WorkflowError("progress conflict cannot be resolved by retaining both sets of additions")
 
 

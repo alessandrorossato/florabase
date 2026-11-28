@@ -9,14 +9,14 @@ base/HEAD `e7ade78559803a35b738a669085799f55eb76258`. Feature status stays `impl
 Changes remain unstaged and uncommitted. No canonical FULL gate, receipt, push, PR, merge,
 delivery or environment upgrade was performed. Composition acceptance remains pending.
 
-[Current gallery](../../review/botanical-identities-visual-001/gallery.html) ·
-[Composition measurements](../../review/botanical-identities-visual-001/composition/browser-evidence.json) ·
-[Composition checks](../../review/botanical-identities-visual-001/composition/verification-results.json) ·
-[Accepted IA handoff](../../review/botanical-identities-visual-001/handoff-cross-functional.md) ·
-[Previous IA gallery](../../review/botanical-identities-visual-001/gallery-cross-functional.html) ·
-[Refinement handoff](../../review/botanical-identities-visual-001/handoff-refinement.md) ·
-[Refinement gallery](../../review/botanical-identities-visual-001/gallery-refinement.html) ·
-[First-pass gallery](../../review/botanical-identities-visual-001/gallery-pass1.html)
+[Current gallery](../review/botanical-identities-visual-001/gallery.html) ·
+[Composition measurements](../review/botanical-identities-visual-001/composition/browser-evidence.json) ·
+[Composition checks](../review/botanical-identities-visual-001/composition/verification-results.json) ·
+[Accepted IA handoff](../review/botanical-identities-visual-001/handoff-cross-functional.md) ·
+[Previous IA gallery](../review/botanical-identities-visual-001/gallery-cross-functional.html) ·
+[Refinement handoff](../review/botanical-identities-visual-001/handoff-refinement.md) ·
+[Refinement gallery](../review/botanical-identities-visual-001/gallery-refinement.html) ·
+[First-pass gallery](../review/botanical-identities-visual-001/gallery-pass1.html)
 
 ## Composition changes
 
@@ -153,7 +153,7 @@ one Sowing, two Plants, one PlantGroup, one Harvest with two material lines, fou
 a complete textual profile, one explicitly fabricated manual Italy range and one illustrative
 city-scale provenance site linked directly to a packet and direct Plant. Derived records do not
 inherit that site. Unknown quantities stay unknown; month-only dates remain month-only.
-[Fixture manifest](../../review/botanical-identities-visual-001/cross-functional/fixture-manifest.json)
+[Fixture manifest](../review/botanical-identities-visual-001/cross-functional/fixture-manifest.json)
 records exact new IDs, actions, source rights and unchanged original fixture counts.
 
 The illustration reuses the repository's offline sage fixture, by Caroline Léna Becker,
@@ -183,7 +183,7 @@ Two additional offline illustrations (portrait Aloe and landscape Ficus) were ad
 existing fictional review Plant to demonstrate multiple real thumbnails. Its existing sage image
 and identity cover remain. Creator/licence/source/derivative notices are retained in actual assets;
 all captions explicitly deny identification of the fictional Plant. No external download or original
-fixture record update was used. [Additive media manifest](../../review/botanical-identities-visual-001/composition/media-fixture.json).
+fixture record update was used. [Additive media manifest](../review/botanical-identities-visual-001/composition/media-fixture.json).
 
 ## Verification and acceptance
 

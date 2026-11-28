@@ -57,7 +57,7 @@ and for each of the three image index digests. Each statement names workflow
 source commit `4111ed8eed08e5d4286e84d4bbdc5b0634239bb2`. This record reads the statements; it
 does not repeat the cryptographic `gh attestation verify` check, which the operator can run as
 documented in
-[Install Florabase — Verify the release provenance](../../installation.md#verify-the-release-provenance-optional-digest-pinning)
+[Install Florabase — Verify the release provenance](../../operate/installation.md#verify-the-release-provenance-optional-digest-pinning)
 with `sha=4111ed8eed08e5d4286e84d4bbdc5b0634239bb2` and the digests above.
 
 ## Android APK

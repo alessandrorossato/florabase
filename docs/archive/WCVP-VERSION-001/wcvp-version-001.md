@@ -29,13 +29,13 @@ registry contains the complete approved Govaerts/Kew citation, URL and rights de
 The v16 upstream URL is mutable; its approved definition is immutable and any rotated bytes fail
 checksum validation. There is no latest-release discovery or arbitrary-URL option.
 See the [existing v15 source approval](../ENRICHMENT-001/native-range-enrichment-source-v15.md) and
-[WGSRPD/CLDR mapping evidence](../../native-range-enrichment.md#geography-contract).
+[WGSRPD/CLDR mapping evidence](../../features/explore/native-range-enrichment.md#geography-contract).
 
 The assessment found 8,225 added IDs, 393 removed IDs, 87,460 changed shared records,
 4,299 status transitions and 10,929 accepted-ID changes. An unchanged ID does not authorize a
 cross-version identity relationship. WGSRPD-CROSSWALK-V2 adds nine pairs, retains eleven,
-and excludes COS from new proposals. The [geography contract](../../native-range-enrichment.md#geography-contract)
-documents the 20 pairs and [historical compatibility](../../native-range-enrichment.md#historical-crosswalk-compatibility).
+and excludes COS from new proposals. The [geography contract](../../features/explore/native-range-enrichment.md#geography-contract)
+documents the 20 pairs and [historical compatibility](../../features/explore/native-range-enrichment.md#historical-crosswalk-compatibility).
 There is no index or seal change.
 
 ## Release selection and compatibility
@@ -99,7 +99,7 @@ files are refused and preserved. The small `.lock` file remains intentionally. N
 index conversion or link migration is needed. Mount indices read-only for the application.
 
 The **production-format v16 index is 952,799,232 bytes (908.66 MiB)**, with 1,448,984 taxa and
-1,995,338 distribution rows. [Recorded measurement](../../review/wcvp-version-001/provisioning-v16.json):
+1,995,338 distribution rows. [Recorded measurement](../review/wcvp-version-001/provisioning-v16.json):
 Python 3.14.7, wall 208.48s, user CPU 173.69s, system CPU 15.66s, peak process RSS 44,872 KiB
 (43.82 MiB). These are one local run's observations, not a guaranteed host/cgroup memory ceiling.
 The research comparison SQLite of 2,073,739,264 bytes is **not** the production index.
@@ -132,7 +132,7 @@ launcher at `/home/alessandro/.codex/worktrees/wcvp-version-001/florabase/.sourc
 labelled disposable network configuration; all repository database/ownership/cleanup guards remain.
 The launcher is outside the product and is unnecessary on hosts with available default pools.
 
-See [isolated Review and operator checklist](../../review/wcvp-version-001/README.md).
+See [isolated Review and operator checklist](../review/wcvp-version-001/README.md).
 The Review adapter reuses the existing environment/ownership checks with distinct project, database,
 volumes and port; its small additive fixture refuses existing unrelated data and retains repeat seed IDs.
 The standard Review, UI System v1, DEV, UAT, Preview and production are untouched.

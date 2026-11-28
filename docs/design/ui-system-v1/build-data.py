@@ -108,7 +108,7 @@ capture_dir = (
     / "visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/release-visual-audit-001"
 )
 capture_list = json.loads(
-    (ROOT / "docs/review/release-visual-audit-001/capture-index.json").read_text()
+    (ROOT / "docs/archive/review/release-visual-audit-001/capture-index.json").read_text()
 )
 cap = next(c for c in capture_list if c["id"] == "049")
 snapshot = Path(str(capture_dir / cap["file"]) + ".txt").read_text()
@@ -138,10 +138,10 @@ photos = json.loads(
     (ROOT / "scripts/fixtures/botanical-v5/media-manifest.json").read_text()
 )
 cs = json.loads(
-    (ROOT / "docs/review/release-visual-audit-001/capture-index.json").read_text()
+    (ROOT / "docs/archive/review/release-visual-audit-001/capture-index.json").read_text()
 )
 consumer = json.loads(
-    (ROOT / "docs/review/release-visual-audit-001/component-consumers.json").read_text()
+    (ROOT / "docs/archive/review/release-visual-audit-001/component-consumers.json").read_text()
 )
 data = {
     "sourceCommit": "ee3487412fe458cbdf7145154c54a58b66132cae",

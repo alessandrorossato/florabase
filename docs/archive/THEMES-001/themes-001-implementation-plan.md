@@ -9,7 +9,7 @@ normalization before the final application-wide review. Preserve separate featur
 See [THEMES handoff](themes-001-handoff.md) and [CONTROLS handoff](../CONTROLS-001/controls-001-handoff.md).
 The operator selected the functional footer System → Light → Dark cycler and a Settings sliders glyph.
 
-Read [themes](themes-001-design-proposal.md), [values/evidence](../../themes-001-token-matrix.md) and
+Read [themes](themes-001-design-proposal.md), [values/evidence](../../develop/themes-001-token-matrix.md) and
 [controls](../CONTROLS-001/controls-001-design-contract.md) together. Existing `docs/ui-contract.md` remains the
 accepted production reference until approved changes land.
 

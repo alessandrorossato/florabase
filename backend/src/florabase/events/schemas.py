@@ -76,7 +76,7 @@ class Measurement(BaseModel):
 
 
 class Phenology(BaseModel):
-    """A controlled phenological stage; see docs/phenology.md."""
+    """A controlled phenological stage; see docs/features/activity/phenology.md."""
 
     model_config = ConfigDict(extra="forbid")
 

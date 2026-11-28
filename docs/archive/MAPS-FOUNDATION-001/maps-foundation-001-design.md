@@ -144,7 +144,7 @@ Implementation results and exact verification are recorded in [the handoff](maps
 
 ## Native ranges proof after authenticated review — 2026-10-19
 
-The [live review](../../review/maps-foundation-001/live/README.md) proves the presentation shell in
+The [live review](../review/maps-foundation-001/live/README.md) proves the presentation shell in
 overview, one-species and multi-species modes, pane/inspection preservation, keyboard focus and
 existing Saved Views/URL integration against real persisted synthetic records. Compact controls
 and below-map supporting explanations were refined from actual mobile measurements. Native
@@ -172,7 +172,7 @@ fills from erasing selection or emphasis from painting into adjacent land. These
 Native ranges-owned. Later map phases may reuse layout, chooser placement and grounded drill-down
 patterns, but require their own provider, explicit-load, coordinate and Leaflet sizing validation.
 See the [current handoff](maps-foundation-001-handoff.md) and
-[authenticated evidence](../../review/maps-foundation-001/refinement/README.md).
+[authenticated evidence](../review/maps-foundation-001/refinement/README.md).
 
 ## Operator spatial workspace refinement — 2026-10-20
 
@@ -211,4 +211,4 @@ artifacts are updated; database schema, fixture and other maps are unchanged.
 Proven reuse remains composition and accessibility patterns. Native stripe/ancestor/identity-count
 semantics are not shared occurrence-density or material-origin abstractions. See the
 [current handoff](maps-foundation-001-handoff.md) and
-[spatial evidence](../../review/maps-foundation-001/spatial/README.md) for completed checks and limits.
+[spatial evidence](../review/maps-foundation-001/spatial/README.md) for completed checks and limits.

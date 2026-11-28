@@ -9,7 +9,8 @@ do not pre-build later capabilities.
 1. Read this file completely.
 2. Run `git status --short --branch`; preserve unrelated work and never expose secrets.
 3. Inspect `git log --oneline --decorate -10` and branch from the current verified `main`.
-4. Read `docs/progress.md` and inspect `docs/features.json`.
+4. Read the **latest milestone only** of `docs/progress.md`, inspect only touched feature IDs via
+   `make feature-show ID=<ID>`, and use [docs/agent-map.md](docs/agent-map.md) for exact sections.
 5. Inspect the relevant implementation and documentation before designing another mechanism.
 6. Run the narrowest meaningful baseline checks; use `make check` before risky or broad changes when
    the full stack is available.
@@ -30,7 +31,7 @@ commands such as `make feature-verify`. Hand over only with
 at a terminal after confirming the previous session is gone; agents never use it. Each live session
 uses its own `AGENT_ID`. This is a cooperative protocol, not authenticated security: follow it even
 where nothing would stop you. Mutating or unknown Compose passthrough is guarded or refused. Read-only reviewers use their own detached checkout.
-Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
+Follow [docs/develop/development-workflow.md](docs/develop/development-workflow.md) for source,
 environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
 then complete one policy-selected canonical gate before marking a feature `verified`.
 Infrastructure, security, dependencies, migrations, unknown changes and releases require FULL.
@@ -48,12 +49,11 @@ VERIFY → OPERATOR DELIVERY → FINISH.
   [ADR 0009](docs/decisions/0009-minimal-production-compose.md)).
 - `backend/tests/`: unit tests and clearly isolated PostgreSQL integration tests.
 - `frontend/src/`: accessible React UI and generated API declarations.
-- `docs/`: living architecture, operations, domain model, feature guides, backlog, progress, and
-  ADRs (see `docs/README.md`). Root `docs/` gets a new file only for a living, user- or
-  maintainer-facing guide; per-increment handoff, design and evidence files go in
-  `docs/archive/<FEATURE-ID>/` from the start. Review screenshots and visual-audit captures are
-  **not committed** (attach them to the PR or keep them in the project folder); only curated images
-  under `docs/assets/` are committed.
+- `docs/`: organized by folder (`operate/`, `develop/`, `architecture/`, `features/<workspace>/`,
+  `product/`, `decisions/`, `release/`, `user-guide/`; see [docs/README.md](docs/README.md) and
+  [docs/agent-map.md](docs/agent-map.md)). New living guides go in a subfolder with `> Summary:` and
+  a folder `README.md` link (no new `docs/` root `.md` files); increment artefacts go in
+  `docs/archive/<FEATURE-ID>/`. Review screenshots are **not committed**; only `docs/assets/`.
 - `scripts/`: guarded operational and verification scripts.
 - `compose.yaml`: the only production Compose (self-initializing, ADR 0008); `compose.dev.yaml`: the
   only development Compose. Workflow stacks are derived from it at run time by
@@ -62,7 +62,7 @@ VERIFY → OPERATOR DELIVERY → FINISH.
 
 ## Engineering conventions
 
-- New UI follows [UI Foundation v0.1](docs/ui-contract.md); reuse semantic tokens and shared primitives.
+- New UI follows [UI Foundation v0.1](docs/develop/ui-contract.md); reuse semantic tokens and shared primitives.
   Start new page compositions from the approved archetype guidance and `make ui-page`
   ([UI System v1 candidate](docs/design/ui-system-v1/gate-b/implementation.md)). Reuse PageHeader,
   DirectoryTools and house dialogs; domain code retains API, URL/filter, validation and save ownership.
@@ -128,7 +128,7 @@ and retirement only removes finished worktrees under `florabase-worktrees/`.
    Review/UAT resources, or belongs to another agent.
 3. If anything refuses, report the path and reason to the operator and stop.
 
-See [docs/agent-prompt-template.md](docs/agent-prompt-template.md) for the reusable prompt snippet.
+See [docs/develop/agent-prompt-template.md](docs/develop/agent-prompt-template.md) for the reusable prompt snippet.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never

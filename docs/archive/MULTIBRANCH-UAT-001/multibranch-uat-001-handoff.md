@@ -1,7 +1,7 @@
 # MULTIBRANCH-UAT-001 handoff — parallel per-worktree UAT instances
 
 8 November 2026 · `feat/multibranch-uat-001` · writer `claude-code-mbuat` · base `4c845b1`.
-Operator contract: [development workflow](../../development-workflow.md#uat-instances-parallel-per-worktree).
+Operator contract: [development workflow](../../develop/development-workflow.md#uat-instances-parallel-per-worktree).
 
 ## Scope decision
 

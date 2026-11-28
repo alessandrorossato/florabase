@@ -72,7 +72,7 @@ def validate() -> dict[str, int]:
     assert len({photo["url"] for photo in sparse["photos"]}) == 2
     assert all(photo["loaded"] for photo in sparse["photos"])
     originals = json.loads(
-        (ROOT / "docs/review/release-visual-audit-001/capture-index.json").read_text()
+        (ROOT / "docs/archive/review/release-visual-audit-001/capture-index.json").read_text()
     )
     original_index = {entry["id"]: entry for entry in originals}
     baseline = json.loads((DOCS / "baseline.json").read_text())

@@ -57,7 +57,7 @@ database or volume writes remain outside the guarantee.
 
 ## ATTACHMENT-005 extension
 
-[Shared media](../media-library.md) owns reusable MediaAssets and exact RecordMediaLinks above
+[Shared media](../features/explore/media-library.md) owns reusable MediaAssets and exact RecordMediaLinks above
 this unchanged original-file foundation. Unlink/cover removal retains assets; only fully
 unreferenced explicit asset deletion enters pending-delete cleanup. One regenerable private
 320px WebP derivative is cached per asset outside backed-up originals. This supersedes the

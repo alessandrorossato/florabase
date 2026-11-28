@@ -69,7 +69,7 @@ without undoing them, with return focus. There is no invented Cancel transaction
 
 ## Extended Botanical Review Dataset v5
 
-The [dedicated dataset document](../../review/extended-botanical-dataset-v5.md) describes exact counts,
+The [dedicated dataset document](../review/extended-botanical-dataset-v5.md) describes exact counts,
 relationships, uncertainty, native/provenance matrices, licensed media and recovery limits.
 
 | Live total | Count | Live total | Count |
@@ -107,7 +107,7 @@ shared-media cleanup or v5 destructive command exists. UAT seeding semantics rem
 
 ## Review evidence and canonical full verification
 
-[Authenticated v5 browser reports and screenshots](../../review/maps-origins-001/refinement-v5/README.md)
+[Authenticated v5 browser reports and screenshots](../review/maps-origins-001/refinement-v5/README.md)
 cover actual database-backed UI; isolated provider refusals are clearly labelled doubles. Map and
 Filters captures exist at 1440×844, 1024×844 and 390×844. Browser checks verify all 12 markers, exact
 KPIs, keyboard selection, multi-identity inspection, whole-row checkbox clicks, shared dismissal,
@@ -131,8 +131,8 @@ or runtime page errors occurred. Optional online refusal removes imagery and doe
 - Operational-script lint/format/typing, frontend formatting and `git diff --check` are checked before
   handoff. No canonical gate, receipt, staging, commit, push, PR or delivery is claimed.
 
-Earlier [synthetic renderer evidence](../../review/maps-origins-001/README.md) and
-[v4 authenticated captures](../../review/maps-origins-001/live/README.md) are historical. Their former online
+Earlier [synthetic renderer evidence](../review/maps-origins-001/README.md) and
+[v4 authenticated captures](../review/maps-origins-001/live/README.md) are historical. Their former online
 default/retry behavior and sparse one-site data are superseded by this phase. Intermediate harness
 selector failures and an incorrect API-check module invocation were corrected; only completed
 successful commands are counted.

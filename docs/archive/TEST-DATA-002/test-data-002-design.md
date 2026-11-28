@@ -3,9 +3,9 @@
 
 > The original `20261013_0042` measurements and review below are historical. DEV-GOLDEN-001
 > re-pins the current plan at `20261110_0047` and records the current counts and supported
-> primary DEV workflow in [Golden DEV operations](../../dev-golden.md).
+> primary DEV workflow in [Golden DEV operations](../../develop/dev-golden.md).
 
-2 November 2026 · `feat/test-data-002` · extends [TEST-DATA-001](../../test-data-001-design.md), which still
+2 November 2026 · `feat/test-data-002` · extends [TEST-DATA-001](../TEST-DATA-001/test-data-001-design.md), which still
 defines the architecture, locking, guards and baseline contract. Awaiting independent QA.
 
 Reviewed COMPREHENSIVE baseline: `cf42370751a9d32d6d2cfcca3e7b39b6edb429d5cc2f5793108f3de8e7963a11`

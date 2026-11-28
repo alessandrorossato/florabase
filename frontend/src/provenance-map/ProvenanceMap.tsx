@@ -350,7 +350,7 @@ export function ProvenanceMap({
           toggle={toggleFullscreen}
           label={label}
         />
-        {/* Not offered at all unless the operator enabled a provider (docs/deployment.md). */}
+        {/* Not offered at all unless the operator enabled a provider (docs/operate/deployment.md). */}
         {mapRuntimeConfig.onlineConfigured && (
           <label>
             <input

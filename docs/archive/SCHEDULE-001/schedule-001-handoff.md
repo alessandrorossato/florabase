@@ -13,7 +13,7 @@ Schedule-focused desktop/tablet/mobile UAT found no blocking product defect. Can
 Schedule stores future intention; Journal stores operator-recorded occurrences; History projects
 recorded facts. A narrow ScheduledActivity owns its title, kind, due day, optional notes, one optional
 exact collection target and terminal planning outcome. It owns neither care automation nor inventory.
-See [domain contract](../../schedule.md). No unresolved material domain decision remains.
+See [domain contract](../../features/activity/schedule.md). No unresolved material domain decision remains.
 
 ## STATUS MODEL
 

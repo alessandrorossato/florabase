@@ -132,7 +132,7 @@ back/forward/refresh restore state, and manual changes never silently save a vie
 
 ## RESPONSIVE / ZOOM
 
-Final screenshots and [machine layout evidence](../../review/journal-history/refined/zoom-evidence.json)
+Final screenshots and [machine layout evidence](../review/journal-history/refined/zoom-evidence.json)
 live in `docs/review/journal-history/refined/`: 71 screenshots and 21 page measurements.
 Review matrix: 1440×844 at 80%, 100%, 125%, 150%; 1024×844 at 100%, 125%; 390×844 at 100%.
 Dashboard is captured alongside Journal and History for direct grammar/density comparison.
@@ -149,9 +149,9 @@ uses its normal modal scroll; page content uses document scrolling. Native norma
 for launcher keyboard/outside-click/Escape/focus, filter/Saved View dismissal, notebook/germination
 chooser routing, pristine editor Escape/backdrop/focus, dirty discard/continue, and each structured
 source destination. Mobile create/edit/search/month precision/delete passes; its temporary note was
-removed through the source UI. Compare [Journal desktop](../../review/journal-history/refined/events-1440-100.png),
-[History desktop](../../review/journal-history/refined/history-1440-100.png) and
-[Dashboard desktop](../../review/journal-history/refined/dashboard-1440-100.png).
+removed through the source UI. Compare [Journal desktop](../review/journal-history/refined/events-1440-100.png),
+[History desktop](../review/journal-history/refined/history-1440-100.png) and
+[Dashboard desktop](../review/journal-history/refined/dashboard-1440-100.png).
 Full screen-reader acceptance and global page review remain independent QA.
 
 ## SCHEDULE RELATIONSHIP

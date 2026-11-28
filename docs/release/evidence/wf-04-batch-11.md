@@ -12,8 +12,8 @@ before preparation (source branches were not rewritten):
 
 | ID | Branch | Frozen tip | Writer | Source QA | Committed evidence |
 | --- | --- | --- | --- | --- | --- |
-| INSTALL-003 | `feat/install-003-latest-compose` | `ac93677107886284a91c9b36e2bdb751a2cf458f` | `antigravity-install-003` | `independent-source-qa` | [`0010-deployable-latest-compose.md`](../../decisions/0010-deployable-latest-compose.md), [`installation.md`](../../installation.md), [`progress.md`](../../progress.md) |
-| UI-REVIEW-001 (with LINEAGE-004 merged) | `fix/ui-ux-review` | `27ece94337fff7ba40951ee9194e1eb707b2e51e` | `claude-ui-review` | `independent-source-qa` | [`lineage-explorer.md`](../../lineage-explorer.md), [`page-inventory-v1.md`](../page-inventory-v1.md), [`progress.md`](../../progress.md) |
+| INSTALL-003 | `feat/install-003-latest-compose` | `ac93677107886284a91c9b36e2bdb751a2cf458f` | `antigravity-install-003` | `independent-source-qa` | [`0010-deployable-latest-compose.md`](../../decisions/0010-deployable-latest-compose.md), [`installation.md`](../../operate/installation.md), [`progress.md`](../../progress.md) |
+| UI-REVIEW-001 (with LINEAGE-004 merged) | `fix/ui-ux-review` | `27ece94337fff7ba40951ee9194e1eb707b2e51e` | `claude-ui-review` | `independent-source-qa` | [`lineage-explorer.md`](../../features/explore/lineage-explorer.md), [`page-inventory-v1.md`](../page-inventory-v1.md), [`progress.md`](../../progress.md) |
 
 ## Integration conflict and cross-branch checks
 
