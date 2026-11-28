@@ -18,7 +18,7 @@ and post-refinement targeted regressions. Both features remain `implemented`, no
 
 The delivered MAPS-ORIGINS-001 implementation from `46ade479` has now been reconciled with the
 combined candidate. Its local basemap, inspector, filters, Saved Views, privacy and precision behavior
-are retained. [Integration evidence](../../review/controls-001/origins-integration/README.md) supersedes the
+are retained. [Integration evidence](../review/controls-001/origins-integration/README.md) supersedes the
 older statements below that Origins reconciliation is pending. Original captures remain historical;
 new six-theme map captures and regression results describe the integrated tree. Canonical QA and
 protected delivery remain pending; neither Themes nor Controls is marked verified.
@@ -99,7 +99,7 @@ configuration loading, failure and saving. No additional Save/confirmation or na
 
 ## Accessibility and responsive evidence
 
-[Review gallery](../../review/themes-001/gallery.html), [evidence notes](../../review/themes-001/README.md),
+[Review gallery](../review/themes-001/gallery.html), [evidence notes](../review/themes-001/README.md),
 [approved contrast calculations](../../design/themes-controls/contrast-evidence.md).
 
 126 actual browser viewport captures cover representative surfaces across all six variants. Settings,

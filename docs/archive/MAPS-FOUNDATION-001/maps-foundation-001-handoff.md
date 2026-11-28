@@ -14,8 +14,8 @@
 - The authenticated operator review is accepted. No material blocker or production correction was found.
   The Review remains running for inspection and the operator may use the same credential in another
   browser; credentials are not recorded in this document.
-- [Current spatial evidence](../../review/maps-foundation-001/spatial/README.md) supersedes the layout in
-  [the previous refinement](../../review/maps-foundation-001/refinement/README.md). Older evidence is retained.
+- [Current spatial evidence](../review/maps-foundation-001/spatial/README.md) supersedes the layout in
+  [the previous refinement](../review/maps-foundation-001/refinement/README.md). Older evidence is retained.
 
 ## ARCHITECTURE AUDIT
 

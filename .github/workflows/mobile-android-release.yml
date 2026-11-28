@@ -95,7 +95,7 @@ jobs:
           done
           if [ "${#missing[@]}" -gt 0 ]; then
             echo "Missing required Android signing secrets: ${missing[*]}" >&2
-            echo "Configure these repository secrets per docs/mobile.md and re-run." >&2
+            echo "Configure these repository secrets per docs/operate/mobile.md and re-run." >&2
             exit 1
           fi
 

@@ -71,7 +71,7 @@ when bringing in a new collection:
 
 Full backups (which pair the database and your uploaded media directory together), restores, and
 version upgrades are run by the instance operator on the host machine. For step-by-step instructions,
-see the [Installation and operations guide](../installation.md).
+see the [Installation and operations guide](../operate/installation.md).
 
 Next, continue to **[Optional reference data](reference-data.md)** to see what optional external
 botanical datasets add to Florabase and what works without them.

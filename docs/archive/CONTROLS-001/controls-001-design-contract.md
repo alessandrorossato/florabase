@@ -2,7 +2,7 @@
 
 Status: **proposed design contract**, 22 October 2026. No runtime implementation or visual acceptance.
 Audit base: `b3f1de4`. Companion: [THEMES-001 proposal](../THEMES-001/themes-001-design-proposal.md),
-[token matrix](../../themes-001-token-matrix.md), [joint sequencing](../THEMES-001/themes-001-implementation-plan.md).
+[token matrix](../../develop/themes-001-token-matrix.md), [joint sequencing](../THEMES-001/themes-001-implementation-plan.md).
 The operator requires both features before the remaining application-wide visual normalization.
 They retain separate implementation branches, acceptance criteria, verification and delivery.
 

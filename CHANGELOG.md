@@ -1,7 +1,7 @@
 # Changelog
 
 Notable changes to Florabase, newest first. Versions follow the
-[versioning policy](docs/versioning.md). The engineering record of every increment is
+[versioning policy](docs/operate/versioning.md). The engineering record of every increment is
 [docs/progress.md](docs/progress.md); this file lists what an operator of an installation needs
 to know.
 

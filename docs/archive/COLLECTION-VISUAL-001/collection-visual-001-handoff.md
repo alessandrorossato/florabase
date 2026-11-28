@@ -10,7 +10,7 @@ verified now before staging and commit.
 [Feature Review](http://localhost:15174) uses the existing candidate-owned database/media and fixture
 v4/66. On resumption its frontend/backend were stopped; supported `feature-review-up` reused the
 existing state. No reset, removal, reseed or collection mutation. Persistent environments untouched.
-See the [fourth-pass evidence index](../../review/collection-visual/sowings-plants/fourth-pass/README.md).
+See the [fourth-pass evidence index](../review/collection-visual/sowings-plants/fourth-pass/README.md).
 
 ## FULL-PAGE FOOTER FIX
 

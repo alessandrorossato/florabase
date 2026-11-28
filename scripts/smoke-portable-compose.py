@@ -601,7 +601,7 @@ def refusals_before_any_data(probe: Stack) -> None:
 
     # Wrong ownership on backup/pre-upgrade refuses in backend before schema initialization.
     probe.owner("chown 0:0 /bind/backup/pre-upgrade")
-    probe.refuse("backend", "docs/installation.md", "wrong ownership on backup/pre-upgrade")
+    probe.refuse("backend", "docs/operate/installation.md", "wrong ownership on backup/pre-upgrade")
     probe.owner("chown 10001:10001 /bind/backup/pre-upgrade && chmod 0700 /bind/backup/pre-upgrade")
 
     # Nesting and same-folder refusals via mountinfo + stat in backend deploy step.
@@ -769,7 +769,7 @@ def smoke(
     source.owner("rm -rf /bind/data/backup")
     # Auto-created missing backup folder (short bind syntax) is refused before migration.
     source.backup_dir = source.root / "absent-backup"
-    source.refuse("backend", "docs/installation.md", "auto-created missing backup folder")
+    source.refuse("backend", "docs/operate/installation.md", "auto-created missing backup folder")
     source.compose("down", "--remove-orphans")
     source.owner("rm -rf /bind/absent-backup")
     source.backup_dir = saved_backup

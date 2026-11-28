@@ -118,7 +118,7 @@ absence/mismatch does not block identity detail or manual profile editing.
 
 Authenticated GET tree/node/detail and identity taxonomy/candidates. Owner/Origin/CSRF protected
 PUT exact-link confirmation and version-checked DELETE. Generated OpenAPI and TypeScript declarations
-updated; `make api-check` passes. See [contract](../../collection-taxonomy.md) for routes, errors and bounds.
+updated; `make api-check` passes. See [contract](../../features/explore/collection-taxonomy.md) for routes, errors and bounds.
 5,000 eligible identities, 100,000 fetched source nodes, depth 64, index 1 GB; explicit bound errors,
 without silent truncation. No provider dataset or canonical full taxonomy is returned/copied.
 

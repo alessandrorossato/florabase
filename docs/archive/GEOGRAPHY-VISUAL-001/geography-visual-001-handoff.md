@@ -104,8 +104,8 @@ localized: Geography is still the sole global geographic destination.
 
 ## Viewport fit and evidence
 
-[Current gallery, before/after links and machine-readable results](../../review/geography-visual-001/operator-corrections/README.md).
-The prior [final UX handoff](../../review/geography-visual-001/final-ux/handoff.md), initial and unified
+[Current gallery, before/after links and machine-readable results](../review/geography-visual-001/operator-corrections/README.md).
+The prior [final UX handoff](../review/geography-visual-001/final-ux/handoff.md), initial and unified
 navigation galleries remain historical evidence. Their flat overview, tabs and middle-map layouts
 are explicitly superseded by these operator decisions.
 

@@ -61,7 +61,7 @@ The red probe used the original Git object in disposable copied scripts, not a c
 
 ## Pending independent acceptance
 
-The [canonical workflow](../../development-workflow.md#review-profiles-and-verification-timing) explicitly
+The [canonical workflow](../../develop/development-workflow.md#review-profiles-and-verification-timing) explicitly
 assigns the frozen-tree canonical gate to a different QA agent/session. Therefore no canonical
 `make feature-verify` or delivery receipt was produced in this implementation handoff. Full application
 unit/integration tests, API drift, production builds and Alembic cycle were **not run** here; neither

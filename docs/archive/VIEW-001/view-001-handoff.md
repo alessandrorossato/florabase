@@ -17,7 +17,7 @@ reviewed tree before its authorized local commit and protected delivery.
 
 ## Domain, surfaces and state
 
-See [the complete audited surface/key/default matrix](../../saved-views.md#supported-surfaces-and-audit).
+See [the complete audited surface/key/default matrix](../../features/tools/saved-views.md#supported-surfaces-and-audit).
 Thirteen surfaces are supported: Global Search; Seed lots; Sowings; Plants/PlantGroups; Harvests;
 Stored material; Events; Media Library; Botanical identities; Suppliers; Locations; Geography;
 Collection Provenance map. All targeted useful directory controls were reused. Contextual details,

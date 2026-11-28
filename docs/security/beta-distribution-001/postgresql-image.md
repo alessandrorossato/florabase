@@ -164,7 +164,7 @@ digest, then:
 | SBOM | 54 components, none is gosu |
 | Root start | exit 64 with an explicit message before any directory or data change |
 
-**Runtime smoke** ([evidence](../../beta-distribution-001-evidence.json)) runs on an image built from
+**Runtime smoke** ([evidence](../../archive/BETA-DISTRIBUTION-001/beta-distribution-001-evidence.json)) runs on an image built from
 `postgres/` with the local builder and served from the nested test registry, so its digest differs
 from the pins; it proves behavior, not the pinned identity: fresh install, persistence, daemon
 restart, backup, isolated and replacement restore, explicit-migration upgrade, failure drills, and

@@ -21,7 +21,7 @@
 ## Maintainer and agent workflow
 
 Florabase is developed as small, dependency-aware increments. Start with the
-[development workflow](docs/development-workflow.md), then choose or discuss one item from
+[development workflow](docs/develop/development-workflow.md), then choose or discuss one item from
 [`docs/features.json`](docs/features.json).
 
 ### Workflow

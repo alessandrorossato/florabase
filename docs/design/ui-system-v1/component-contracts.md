@@ -1,6 +1,6 @@
 # Component contracts and ownership
 
-The old audit's [actual component inventory](../../review/release-visual-audit-001/component-inventory.md) and [consumer map](../../review/release-visual-audit-001/component-consumers.json) remain authoritative for existing code. The following is the proposed consolidation ledger. Gate B begins by checking each current export/prop rather than creating aliases for all names.
+The old audit's [actual component inventory](../../archive/review/release-visual-audit-001/component-inventory.md) and [consumer map](../../archive/review/release-visual-audit-001/component-consumers.json) remain authoritative for existing code. The following is the proposed consolidation ledger. Gate B begins by checking each current export/prop rather than creating aliases for all names.
 
 | Contract           | Current owner / reuse                      | Proposed responsibility and acceptance                                                                                                       |
 | ------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |

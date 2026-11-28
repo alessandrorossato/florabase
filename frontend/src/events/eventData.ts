@@ -66,7 +66,7 @@ export function measurementText(measurement: Measurement): string {
 
 export type Phenophase = NonNullable<EventResponse["phenology"]>["phase"];
 
-/** Controlled stages, grouped by the existing Event kind that owns them (docs/phenology.md). */
+/** Controlled stages, grouped by the existing Event kind that owns them (docs/features/activity/phenology.md). */
 export const phenophaseKinds: Record<
   "observation" | "flowering" | "fruiting",
   Phenophase[]

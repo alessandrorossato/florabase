@@ -71,7 +71,7 @@ and its full row schemas were inspected, with DOI/companion metadata confirming 
 [Source approval](native-range-enrichment-source-v15.md) records checksum, citation, retrieval,
 licence evidence and row-quality results. The earlier planning statements above are historical.
 
-The [implemented contract](../../native-range-enrichment.md) resolves taxon review with an explicit
+The [implemented contract](../../features/explore/native-range-enrichment.md) resolves taxon review with an explicit
 operator-confirmed WCVP ID, a deliberately small reviewed twelve-unit crosswalk, visible excluded
 splits/partial/unresolved units, unqualified Native assertions only, durable frozen proposals and
 immutable applications. Apply adds only selected mapped ranges and keeps all current ranges.

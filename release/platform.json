@@ -17,7 +17,7 @@
         "engine_version": "24.0.2",
         "compose_version": "2.20.1",
         "status": "candidate; not accepted; not probed by this repository",
-        "source": "operator-supplied measurements in docs/beta-security-001.md (2026-11-03)"
+        "source": "operator-supplied measurements in docs/archive/BETA-SECURITY-001/beta-security-001.md (2026-11-03)"
       }
     ]
   }

@@ -23,7 +23,7 @@ containers:
 1. **Operator-owned folder setup (amends ADR 0008 rule 1).** The root `prepare` service is removed;
    no container in `compose.yaml` runs as root (`user: "0:0"` is gone). The operator creates the
    data and backup folders and sets owners and modes once using the copy-paste block in
-   [docs/installation.md](../installation.md) (`postgres` `70:70` `0700`, `media` `10001:10001`
+   [docs/installation.md](../operate/installation.md) (`postgres` `70:70` `0700`, `media` `10001:10001`
    `0700`, `state` `10001:10001` `0755`, `backup/pre-upgrade` `10001:10001` `0700` — identical to
    the `v0.1.0-beta.7` layout). Every bind mount keeps `create_host_path: false`, so an unmounted
    volume still fails closed instead of creating an empty host directory.
@@ -69,13 +69,13 @@ containers:
    Only `frontend` publishes a port, bound literally to
    `127.0.0.1:${FLORABASE_HTTP_PORT:-8080}:8080`. Container-level hardening blocks (`read_only`,
    `tmpfs`, `cap_drop`, `no-new-privileges`) stay out of the default file; operators who want them
-   apply the documented override snippet in [docs/security.md](../security.md).
+   apply the documented override snippet in [docs/security.md](../operate/security.md).
 
 ## Consequences
 
 - `compose.yaml` drops from 188 lines to 49 lines while preserving every ADR 0008 data-safety
   refusal, `internal`/`app` network isolation, and `v0.1.0-beta.7` folder-layout compatibility.
-- Trade-offs explicitly accepted by the operator and documented in [docs/security.md](../security.md):
+- Trade-offs explicitly accepted by the operator and documented in [docs/security.md](../operate/security.md):
   - `backend` now mounts `FLORABASE_BACKUP_DIR` read-write and carries the one-time
     `FLORABASE_OWNER_*` variables in its container configuration (`docker inspect`) until removed
     (scrubbed from the `uvicorn` process environment before `exec`).

@@ -79,4 +79,4 @@ quantity or membership model remain separate work.
 
 ## BULK-001 interaction
 
-BULK-001 adds opt-in explicit selection to the unified directory, preserving Plant versus PlantGroup type. Active records move through authoritative Movement Event creation; each changed target retains one undated Event. No-op records create no Event. Ordinary Edit remains correction, and inactive/historical records are excluded from bulk movement. See [bulk operations](../../bulk-operations.md).
+BULK-001 adds opt-in explicit selection to the unified directory, preserving Plant versus PlantGroup type. Active records move through authoritative Movement Event creation; each changed target retains one undated Event. No-op records create no Event. Ordinary Edit remains correction, and inactive/historical records are excluded from bulk movement. See [bulk operations](../../features/collection/bulk-operations.md).

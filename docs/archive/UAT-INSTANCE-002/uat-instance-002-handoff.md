@@ -1,7 +1,7 @@
 # UAT-INSTANCE-002 handoff — stale launch handling on rebuilt branches
 
 27 November 2026 · `ci/uat-instance-002` · writer `antigravity-neon-uat-instance-002` · base `c83d8163` (fast-forwarded from batch 14b `7b667a47` after `v0.1.0-beta.10` landed on `origin/main`).
-Operator contract: [development workflow](../../development-workflow.md#uat-instances-parallel-per-worktree).
+Operator contract: [development workflow](../../develop/workflow/review-and-uat.md#uat-instances-parallel-per-worktree).
 Proposed release class in `docs/release/scope-v1.json`: **`best-effort`** (registered right after `MULTIBRANCH-UAT-001` in both `docs/features.json` and `docs/release/scope-v1.json`).
 
 ## Problem reproduction (before vs after)

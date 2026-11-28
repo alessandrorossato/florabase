@@ -176,7 +176,7 @@ refuses foreign volume users/network endpoints, stops writers, rechecks resource
 removes only the three UAT volumes plus the proved UAT containers/internal network. It does not
 recreate anything or change Git/source/other environments. The next active feature runs up, seed
 and status for a fresh baseline. Wrong confirmation and non-owners refuse. See the canonical
-[transition instructions](../../development-workflow.md#uat-preview-and-operator-acceptance), including
+[transition instructions](../../develop/development-workflow.md#uat-preview-and-operator-acceptance), including
 how an older owner invokes the corrected Makefile without changing that owner's source.
 
 Regression evidence and the actual `80b3` → `9f48` transition are recorded in the

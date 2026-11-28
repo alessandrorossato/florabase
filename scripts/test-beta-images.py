@@ -2115,7 +2115,7 @@ class ReleaseTests(unittest.TestCase):
                 validate_manifest(value)
 
     def test_attestation_policy_cannot_be_repo_only(self) -> None:
-        policy = (ROOT / "docs/beta-image-001.md").read_text()
+        policy = (ROOT / "docs/archive/BETA-IMAGE-001/beta-image-001.md").read_text()
         for flag in (
             "--signer-workflow",
             "--source-ref",

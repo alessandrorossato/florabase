@@ -1,0 +1,169 @@
+# Development
+
+> Summary: Local development setup, focused test/lint/typecheck commands, Alembic migrations, OpenAPI generation, and Git practices.
+
+The [development workflow](development-workflow.md) is canonical for DEV, agent-provided worktrees,
+Feature Review, Stable Preview, integration/CI, production, review order and verification receipts.
+
+Use Docker Compose 2.24.4 or newer for repository overlays. For a new primary checkout, follow
+[the development quick start](../../README.md#quick-start-for-development) to configure, start,
+migrate and bootstrap DEV. DEV always selects the primary checkout. Use `make feature-init`
+and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a feature
+worktree to inspect dirty source with synthetic UAT-only `preview / preview` at
+`http://localhost:15174`. `feature-review-*` remains the engineering/manual-owner alternative on
+that same port; stop it from its owning worktree first. Stable `origin/main` remains independently available through `make preview`
+at `http://localhost:15173`. No copied or symlinked `.env` is required.
+
+## Resource measurements
+
+The [PERF-001 protocol/report](../performance/PERF-001.md) documents the guarded `florabase-perf`
+project, production runtime builds, deterministic disposable dataset, API/SQL/browser collectors,
+comparison evidence and serial reproduction commands. It reuses the production topology with tmpfs
+PostgreSQL/media and a single loopback frontend port; it never imports operator data or loads the
+normal `.env`. Benchmark independently of quality/build jobs, and retain baseline evidence before
+changing code. Normal CI has deterministic query/loading regressions, not CPU/RAM/latency thresholds.
+
+## Checks
+
+Use the narrowest relevant command while working:
+
+```bash
+make format
+make format-check
+make lint
+make typecheck
+make test-backend
+make test-frontend
+make test-integration
+make api-check
+make build
+make check
+make ci
+make test-feature-workflow
+make feature-verify
+```
+
+`make format` modifies Python and frontend-supported text; the other check commands are intended to
+be non-destructive. `make test` combines backend unit and frontend tests. `make check` combines
+format checks, lint, strict typing, unit/component tests, and generated API drift. Run
+`make test-integration` separately for PostgreSQL-backed behavior; it creates the isolated
+`florabase-integration-<run-id>` Compose project, verifies disposable-database markers, migrates to head, and
+removes its tmpfs-backed database even on failure.
+
+Run production image builds when Dockerfiles, dependencies, build configuration, or release-facing
+code changes. Run migration and integration checks for schema or persistence changes.
+
+GitHub runs three stable checks for pull requests into `main`: `quality` runs
+`scripts/ci-verify.py quality` (the feature graph, the workflow suites its impact plan selects and
+`make check`; a docs-only plan runs only the graph and whitespace checks),
+`integration` exercises the same disposable PostgreSQL suite as `make test-integration`, and `build`
+builds both complete production images. `make ci` remains exhaustive. The canonical local
+`make feature-verify` computes an explicit affected/full plan automatically; `make verify-full`
+forces exhaustive local verification. Inspect it with `make verification-plan FORMAT=json`.
+True docs-only plans run no Docker/product suites. Product static checks stay global; bounded suites
+and independent production builds are selected by the versioned fail-closed impact map. Unknown,
+workflow, foundational, dependency and migration changes escalate full. Remote product suites and
+both builds remain exhaustive. Docs-only PRs run graph/whitespace checks in every required job;
+affected product PRs omit workflow helpers. Main stays exhaustive. See
+[CI-004 evidence and recovery](../archive/CI-004/ci-004-verification-efficiency-handoff.md).
+Version 3 receipts prove both the exact source tree and selected completed checks; focused iteration
+never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
+
+Disposable integration/migration/build/smoke resources retire automatically on success/failure and
+caught interruption, with exact positive ownership and residual verification. Quality remains
+reusable; `make quality-status`, `make quality-clean` and `make workflow-resources` expose its exact
+worktree lifecycle. Proven `feature-finish` retires only the finishing worktree's Quality project.
+Quality services default to `network_mode: none` (the generated `quality` override) so ordinary lint, format,
+typecheck, API-check, workflow-check, unit-test and local reference status/verify runs do not
+allocate per-worktree Docker bridge networks; only `make dependency-update` and
+`make dependency-update` and `make dev-references-setup` opt into the `quality-network` override (via
+`workflow_environment.py --quality-network`), attaching to Docker's shared default `bridge` without
+creating project bridge subnets. `make dependency-update` refreshes `frontend/pnpm-lock.yaml` via the
+isolated `frontend-lockfile` service (`toolchain` stage, bind-mounted `./frontend` without a
+`node_modules` volume, temporary store in `/tmp`), so lockfile updates still work cleanly when
+`package.json` changes before rebuilding frozen images. The `quality` override also sets
+`FLORABASE_QUALITY_OFFLINE: "1"` (cleared to `"0"` under `--quality-network`, with any non-offline
+`frontend` entrypoint invocation removing the image provenance marker) so offline Quality runs validate
+Florabase's own lockfile provenance marker (`/app/node_modules/.florabase-pnpm-lock.sha256`, written
+when `frontend/Dockerfile` installs pinned dependencies and initialized into the Quality
+`frontend_node_modules` volume via `dev-state-init`) against `/app/pnpm-lock.yaml` without depending on
+pnpm internal files, disable pnpm's `verify-deps-before-run` network hook offline, and execute requested
+tools directly without network calls (relying on the executed tools themselves to fail on missing or
+damaged package files), while persistent environments keep automatic `pnpm install` recovery. If the
+marker is missing or invalidated (for example after a lockfile change or a `--quality-network`
+`frontend` install), run `make quality-clean` to safely reinitialize only this worktree's Quality state.
+Persistent environments retain their existing guarded semantics.
+Shared BuildKit cache and ambiguous images remain explicitly reported; no shared-daemon global
+prune is automated.
+
+On hosts running multiple concurrent Florabase environments (DEV, Feature Review, UAT Preview,
+Stable Preview, integration tests or additional Compose stacks), configure Docker's daemon
+`default-address-pools` manually (for example adding a private RFC 1918 base block with `/24`
+subnets in `/etc/docker/daemon.json`) if the default `172.17`–`172.31` bridge subnet pool fills up.
+Repository scripts never modify host daemon configuration.
+
+## Optional host tools
+
+Containers are preferred. For focused host work, the declared ranges are Python 3.12–3.14 and Node
+24 with pnpm 11:
+
+```bash
+python3 -m venv backend/.venv
+backend/.venv/bin/pip install -r backend/requirements-dev.lock
+cd frontend
+corepack enable
+pnpm install --frozen-lockfile
+```
+
+Run backend tools from `backend/` and frontend tools from `frontend/`. Exact dependencies are in the
+committed lockfiles. Change direct pins deliberately, review release notes, refresh locks with
+`make dependency-update`, and run the full relevant suite.
+
+## API contracts
+
+FastAPI is authoritative. `backend/openapi.json` is generated from the application, and
+`frontend/src/api/schema.d.ts` is generated from that artifact. After an API contract change:
+
+```bash
+make api-generate
+make api-check
+```
+
+Commit both generated files. Do not hand-edit generated TypeScript declarations or accept drift.
+
+## Database migrations
+
+Alembic is the only schema-management path. Start PostgreSQL, then create and apply a revision:
+
+```bash
+make feature-review-up
+make migration MESSAGE="describe schema change"
+make feature-review-up
+```
+
+Inspect generated SQL, constraints, data safety, and downgrade behavior. Add PostgreSQL migration and
+invariant coverage proportional to risk. Never use application startup or `create_all()` to mutate
+the schema, and never rewrite a migration that may have been deployed.
+
+The current Alembic head is discovered from the migration chain rather than duplicated here; use
+`make feature-review-status` when needed.
+
+To upgrade the existing development database explicitly, use `make dev-upgrade`. It uses
+`compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
+and displays the resulting revision without deleting volumes. Back up meaningful production data
+before production upgrades; this development helper is not a production deployment command.
+
+## Git and backlog workflow
+
+Read `AGENTS.md`, `docs/progress.md`, and `docs/features.json`. Choose a scoped increment and use
+`make feature-init` in a worktree provided by an agent tool or `make feature-start BRANCH=feat/example` for
+manual development. Follow the [canonical review profiles and verification timing](development-workflow.md#review-profiles-and-verification-timing).
+Update tests/documentation and review the final tree before the canonical `make feature-verify`.
+Commit only when authorized; the operator runs protected delivery separately.
+
+`make feature-deliver` checks the exact reviewed tree, authenticated GitHub CLI, repository identity,
+current-SHA protected checks and exact PR identity. It pushes normally, reuses/creates one PR and waits
+for protected squash auto-merge. Reruns can recognize a proven completed delivery without another push.
+After merge, `make feature-finish` updates clean primary `main` and retains the linked feature worktree
+as detached; it refuses staged/dirty primary state. If delivery reports a migration, run
+`make dev-upgrade` only after finish. See [CONTRIBUTING.md](../../CONTRIBUTING.md).

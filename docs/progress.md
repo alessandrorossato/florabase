@@ -1,5 +1,14 @@
 # Engineering progress
 
+> Earlier milestones through `v0.1.0-beta.6` are archived in [archive/progress-until-beta-7.md](archive/progress-until-beta-7.md). Per-beta rotation starts at `v0.1.0-beta.11` release prep (see [workflow/verification-and-gates.md](develop/workflow/verification-and-gates.md#documentation-and-review-artifact-placement)).
+
+## 2026-11-27 — Docs subfolder reorganization, agent reading path, and drift checks (`DOCS-005`)
+
+- Reorganized `docs/` on `docs/docs-005-structure` (base `c83d816`, writer `antigravity-docs-005`) with a pure `git mv` first commit (`0390c760`) moving 67 top-level files into `operate/`, `develop/`, `architecture/`, `product/`, `features/{collection,activity,explore,sourcing,tools}/`, and `archive/<FEATURE-ID>/` (plus `git mv docs/review docs/archive/review`). Kept 7 top-level tombstones (`installation.md`, `security.md`, `backup-restore.md`, `deployment.md`, `mobile.md`, `versioning.md`, and existing `portable-installation.md`) preserving released `CHANGELOG.md` anchors and leaving `compose.yaml` and `postgres/florabase-postgres-entrypoint.sh` untouched.
+- Split `development-workflow.md` (80.8 KB) into `develop/workflow/` (6 files) + anchor-preserving index, and `domain-model.md` (75.6 KB) into `architecture/domain-model/` (4 files) + index; kept `develop/ui-contract.md` (48.2 KB) whole per Phase 1 ruling. Added `> Summary:` lines and folder `README.md` indexes, `docs/agent-map.md`, `make feature-show` / `make feature-list` (`scripts/feature-show.py`), updated `AGENTS.md` step 4, and extended `scripts/check-doc-links.py` + `scripts/test-doc-links.py` with structure drift checks.
+- Updated hard-coded `docs/` paths across backend (`release_schema.py`, `events/{model,schemas}.py` + regenerated `openapi.json`/`schema.d.ts`), frontend, scripts, tests, CI, `Makefile`, `release/platform.json`, and `docs/design/ui-system-v1/*.py`. Registered `DOCS-005` next to `DOCS-001` (`best-effort`). Evidence: [docs/archive/DOCS-005/evidence.md](archive/DOCS-005/evidence.md).
+- Fix round: generalized `scripts/feature_batch.py` `_additive_progress()` symmetrically so a pure top-prepend integration branch merges cleanly with an incoming branch that also rewrites deep links in `docs/progress.md` (keeping refusal when both sides edit deep text; tests in `scripts/test-agent-workflow.py`), and made `scripts/feature-show.py` match IDs/prefixes case-insensitively (`scripts/test-check-features.py`).
+
 ## 2026-11-27 — Batch 15 integration (UAT-INSTANCE-002, MOBILE-004, UI-POLISH-006, QUICK-ADD-001/UX-ENTRY-002/BULK-002, DEMO-001)
 
 - `ci/batch-15b` from `origin/main` `c83d816` (writer `claude-batch-15`) merges, in order,
@@ -148,8 +157,8 @@
   semantic-token `Read-only demo` banner, polite read-only mutation notices, and a 7-step interactive
   guided tour (`shell/demo/tourSteps.ts`, `shell/demo/demo.css`) linking to GitHub
   `docs/installation.md` with `Escape`/Skip/Restart, `?tour=1`, and resilient `sessionStorage`.
-- Docs & manifests: added [docs/demo-mode.md](demo-mode.md) (with full GET route side-effect audit
-  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/installation.md](installation.md),
+- Docs & manifests: added [docs/operate/demo-mode.md](operate/demo-mode.md) (with full GET route side-effect audit
+  and caching/rate-limit notes), documented `FLORABASE_WORKERS` in [docs/operate/installation.md](operate/installation.md),
   linked in `docs/README.md`, registered `DEMO-001` (`implemented`, proposed class `best-effort`) in
   `docs/features.json` and `docs/release/scope-v1.json`, and recorded evidence in
   [evidence.md](archive/DEMO-001/evidence.md).
@@ -586,7 +595,7 @@
   contained the wrong wording) and left historic manifests under `docs/release/evidence/batches/`
   untouched.
 - Rewrote the optional botanical reference datasets snippet and intro sentence in
-  [docs/installation.md](installation.md) so operators add the two `environment` list items and the
+  [docs/installation.md](operate/installation.md) so operators add the two `environment` list items and the
   `volumes` list item to the existing `backend` service lists without duplicating `environment:` or
   `volumes:` keys, keeping exact paths and environment variable names.
 - Registered `DOCS-004` (`implemented`, proposed release class `best-effort`) next to `DOCS-003`
@@ -761,7 +770,7 @@
   gzip (`301,721 B -> 302,954 B`, `91,795 B -> 92,134 B`), `index-*.css` `+0 B`, zero `@capacitor/*`
   dependencies in `frontend/package.json`.
 - Documented [ADR 0011](decisions/0011-mobile-device-sessions.md) (amending
-  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](mobile.md),
+  [ADR 0005](decisions/0005-authentication-and-sessions.md)), updated [docs/mobile.md](operate/mobile.md),
   added `MobileReleaseContract` to `scripts/test-beta-runtime.py`, and registered `MOBILE-002`
   (`implemented`, proposed class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
 - Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and full 13-step live Android 16
@@ -812,7 +821,7 @@
 ## 2026-11-23 — DOCS-003 installation guide accuracy fixes and v0.1.0-beta.8 publication record
 
 - On `docs/docs-003-install-guide` from `origin/main` `ddf5a14` (writer `antigravity-docs-003`).
-- Updated [docs/installation.md](installation.md), [docs/backup-restore.md](backup-restore.md),
+- Updated [docs/installation.md](operate/installation.md), [docs/backup-restore.md](operate/backup-restore.md),
   [README.md](../README.md) and [CHANGELOG.md](../CHANGELOG.md) (`Unreleased`) from the 2026-11-23
   operator rehearsal findings against the 40-line production `compose.yaml`:
   - Added a "Before you start" callout at the top of `docs/installation.md` and a bold sentence in
@@ -914,8 +923,8 @@
 - Classified `mobile/` and `frontend/src/mobile/` under non-FULL, non-golden `mobile` scope in
   `scripts/verification-impact.json` with regressions in `scripts/test-verification-impact.py`,
   permitted the standard `10.0.2.2` emulator loopback alias in `scripts/test-beta-runtime.py`,
-  documented setup and architecture in [docs/mobile.md](mobile.md) and
-  [docs/mobile-001-adr.md](mobile-001-adr.md), and registered `MOBILE-001` (`implemented`,
+  documented setup and architecture in [docs/mobile.md](operate/mobile.md) and
+  [docs/mobile-001-adr.md](archive/MOBILE-001/mobile-001-adr.md), and registered `MOBILE-001` (`implemented`,
   proposed release class `post-1.0`) in `docs/features.json` and `docs/release/scope-v1.json`.
 - Verified `make mobile-android-debug` (`app-debug.apk`, 6.5 MB) and live Android 16 AOSP emulator
   (`florabase_api36`): zero service-worker registrations, distinct invalid/unreachable/non-Florabase
@@ -963,7 +972,7 @@
   and `scripts/test-workflow-helpers.sh`.
 - **Agent post-delivery guidance:** Documented the 3-step post-delivery worktree removal rule for
   provider-managed worktrees in `AGENTS.md`, `docs/development-workflow.md`, and
-  [agent-prompt-template.md](agent-prompt-template.md).
+  [agent-prompt-template.md](develop/agent-prompt-template.md).
 - **Verification impact & Golden closure:** Added `backend/alembic.ini`, `backend/scripts/` and
   `postgres/` to `golden_prefixes` and classified `backend/scripts/check_api_routes.py` and
   `backend/scripts/test_check_api_routes.py` under `product_backend_prefixes` (product tier backend
@@ -1083,7 +1092,7 @@
   (`ghcr.io/alessandrorossato/florabase-{postgres,backend,frontend}:latest`), plain short bind
   mounts with Synology-style absolute host path examples, plain environment literals (no `.env` or
   Compose interpolation), header folder-setup instructions, and no custom networks (`internal: true`
-  and `app` moved to the optional hardened override in [docs/security.md](security.md)).
+  and `app` moved to the optional hardened override in [docs/security.md](operate/security.md)).
 - Added `change-me` placeholder password refusal in both
   `postgres/florabase-postgres-entrypoint.sh` (reproduced `18.6-alpine-florabase.4` at
   `index_digest` `sha256:2d843bd2ac7e9cebc4b4aaed2d24bb6f7717261fa27e798fe1f28583e853d625`,

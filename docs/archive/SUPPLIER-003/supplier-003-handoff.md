@@ -177,4 +177,4 @@ record here and in `docs/progress.md`.
 
 Suppliers now lives under Sourcing. Supplier detail links to its exact filtered Orders directory;
 transactions and totals belong to Orders, while existing Supplier/source/provenance/media semantics
-remain unchanged. Retired Suppliers retain historical Order links. See [Orders](../../orders.md).
+remain unchanged. Retired Suppliers retain historical Order links. See [Orders](../../features/sourcing/orders.md).

@@ -22,7 +22,7 @@ semantics, API contracts, dependencies, migrations and actual theme behavior are
 
 Calm, contemporary, precise botanical collection workspace; medium-compact density, white grouped
 surfaces, subtle borders, restrained accent, predictable tools and pleasant data entry. Source Sans 3
-and Source Serif 4 remain bundled locally. [Pre-change inventory](../../review/global-visual/audit.md) covers
+and Source Serif 4 remain bundled locally. [Pre-change inventory](../review/global-visual/audit.md) covers
 all 22 primary route states, important creation forms and Seeds/Sowings/Plants detail/edit flows.
 Findings distinguish BLOCKER, NORMALIZATION and POLISH before implementation. No product/IA defect
 requires reopening the freeze.
@@ -179,7 +179,7 @@ Alembic's 287 canonical geographic references; the fresh-baseline guard was corr
 tested to permit canonical references while refusing custom/operator data. Supported seed and repeat
 seed now pass: **v4/66**, ready, all managed IDs/counts and media retained. A rollback-only edit probe
 verifies ordinary operator edits survive repeat seed. The existing owner identity/credential hash is
-unchanged. [Preservation evidence](../../review/global-visual/review-seed-preservation.json) confirms protected
+unchanged. [Preservation evidence](../review/global-visual/review-seed-preservation.json) confirms protected
 UAT/DEV/Stable Preview/production Docker resource metadata and primary Git match the pre-seed snapshot;
 no UAT record or media read was performed.
 
@@ -348,7 +348,7 @@ timeline/calendar and Labels layout receive no mechanical propagation in this pa
 ### RESPONSIVE / ZOOM
 
 Authenticated browser evidence is indexed in
-[first-family evidence](../../review/global-visual/first-family/README.md). The twelve requested states
+[first-family evidence](../review/global-visual/first-family/README.md). The twelve requested states
 were inspected at real 1440×844, 1024×844 and 390×844 viewports. Additional 1152×675, 960×563 and
 819×675 captures approximate the effective space available at increased zoom. Those are viewport
 proxies, **not actual browser zoom**. No horizontal document overflow was observed. Drawer and short
@@ -561,7 +561,7 @@ recorded as completed.
 
 ### FINAL REVIEW EVIDENCE / LIMITS
 
-The second-family [evidence index](../../review/global-visual/second-family/README.md) records seven states
+The second-family [evidence index](../review/global-visual/second-family/README.md) records seven states
 at six viewport sizes (42 captures; saved geometry covers 12 Dashboard/Overview cases), actual
 native-modal focus/scroll checks, normal authenticated
 Save back to Photos, clean browser Back and the retained directory inspector. The final route hook
@@ -708,7 +708,7 @@ seeded external asset is linked to a Plant. Multi-item/external gallery and prod
 have focused tests but no fresh live fixture capture. No new fixtures, links or inferred ancestry
 were introduced for screenshots. The QR base URL remains unconfigured; no printing acceptance is claimed.
 
-See [third-family evidence](../../review/global-visual/third-family/README.md). All screenshots/probes describe
+See [third-family evidence](../review/global-visual/third-family/README.md). All screenshots/probes describe
 their actual scope. Actual zoom, dirty-prompt refusal and unavailable fixture states remain operator
 acceptance; this is readiness for manual visual review, not feature verification.
 
@@ -727,7 +727,7 @@ commit, push, delivery or canonical feature-verify. Feature remains in_progress.
 Final code checks for this refinement: **202 tests pass in 14 suites**, strict TypeScript,
 zero-warning targeted ESLint, Prettier, production build and diff whitespace pass. Minor new-test
 lint issues were corrected without changing assertions or timeouts. The staged diff is empty.
-The [third-family validation](../../review/global-visual/third-family/README.md) now includes the live
+The [third-family validation](../review/global-visual/third-family/README.md) now includes the live
 matrix, interactions, final checks and remaining operator acceptance. Earlier pending-browser notes
 are historical; the browser block was resolved by the fresh HTTP tab.
 
@@ -832,7 +832,7 @@ Corrections, transfers and history are not repurposed as a baseline.
 
 ### RESPONSIVE / ZOOM
 
-[Final SeedLot evidence](../../review/global-visual/final-seedlot/README.md) indexes 57 saved observations with
+[Final SeedLot evidence](../review/global-visual/final-seedlot/README.md) indexes 57 saved observations with
 no horizontal document overflow. Create top/actions and all four independent date precisions plus
 linked Acquisition cover 1440x844, 1152x675, 960x563, 1024x844, 819x675 and 390x844. The smaller desktop
 sizes are explicitly viewport proxies for 125%/150% zoom; real browser zoom was not available and
@@ -924,7 +924,7 @@ is valid. This is label/empty-state normalization; no Plant/Sowing visual redesi
 ### TESTS
 
 Final focused results, source checks and responsive evidence are indexed in
-[labels/empty-state evidence](../../review/global-visual/labels-empty/README.md). Candidate remains dirty,
+[labels/empty-state evidence](../review/global-visual/labels-empty/README.md). Candidate remains dirty,
 unstaged and uncommitted on `feat/global-visual-001`, base HEAD
 `cd63c185f7bcb0544cd9c3cff984b29564e6bc84`. Feature remains in_progress; canonical verification, stage,
 commit, push and delivery are not authorized. Existing Feature Review resources/data are preserved;
@@ -998,7 +998,7 @@ expanded/active-descendant state, required semantics and selection callbacks rem
 
 ### RESPONSIVE CHECKS
 
-[Dashboard/picker evidence](../../review/global-visual/seed-dashboard/README.md) records the actual
+[Dashboard/picker evidence](../review/global-visual/seed-dashboard/README.md) records the actual
 1440x844, 1024x844 and 390x844 viewports at 100%. Wide desktop has three summary columns and a two-column
 semantic grid; 1024 collapses the lower sections and mobile uses one readable column throughout.
 Both populated and empty activity states, exact/approximate stock, long origin, notes, protected media,

@@ -122,9 +122,16 @@ api-generate: ## Regenerate OpenAPI and TypeScript API declarations
 api-check: ## Verify generated API artifacts are current
 	./scripts/check-api-generated.sh
 
-.PHONY: doc-links license-check
-doc-links: ## Verify relative Markdown links across the repository
+.PHONY: doc-links license-check feature-show feature-list
+doc-links: ## Verify relative Markdown links and docs structure across the repository
 	@python3 ./scripts/check-doc-links.py
+
+feature-show: ## Show one feature (or prefix family) from docs/features.json and scope-v1.json: make feature-show ID=MOBILE-003
+	@test -n "$(ID)" || { echo 'ID is required, e.g. make feature-show ID=MOBILE-003 or ID=MOBILE-' >&2; exit 2; }
+	@python3 ./scripts/feature-show.py --show "$(ID)"
+
+feature-list: ## List features from docs/features.json (optional STATUS=in_progress)
+	@python3 ./scripts/feature-show.py --list $(if $(STATUS),--status "$(STATUS)",)
 
 license-check: ## List installed PyPI/npm dependency licences and fail on AGPL-incompatible terms
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts/license_check.py:/tmp/license_check.py:ro" backend python3 /tmp/license_check.py --pypi
@@ -152,7 +159,7 @@ migration: ## Create a migration: make migration MESSAGE="describe change"
 backup: ## Create coordinated PostgreSQL and attachment-volume backup artifacts
 	BACKUP_DIR="$(BACKUP_DIR)" ./scripts/backup.sh
 
-restore: ## Restore database and attachments; see docs/backup-restore.md
+restore: ## Restore database and attachments; see docs/operate/backup-restore.md
 	@test -n "$(FILE)" || { echo 'FILE is required'; exit 2; }
 	@test -n "$(ATTACHMENTS_FILE)" || { echo 'ATTACHMENTS_FILE is required'; exit 2; }
 	FILE="$(FILE)" ATTACHMENTS_FILE="$(ATTACHMENTS_FILE)" CONFIRM_REPLACE="$(CONFIRM_REPLACE)" CONFIRM_DATABASE="$(CONFIRM_DATABASE)" ./scripts/restore.sh
@@ -630,7 +637,7 @@ mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build
 	@set -euo pipefail; \
 	sdk="$${ANDROID_HOME:-$${ANDROID_SDK_ROOT:-$$HOME/Android/Sdk}}"; \
 	if [ ! -d "$$sdk" ]; then \
-		echo "Android SDK not found (set ANDROID_HOME; see docs/mobile.md)" >&2; \
+		echo "Android SDK not found (set ANDROID_HOME; see docs/operate/mobile.md)" >&2; \
 		exit 1; \
 	fi; \
 	export ANDROID_HOME="$$sdk"; \
@@ -638,5 +645,5 @@ mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build
 	cd mobile/android && ./gradlew assembleDebug; \
 	echo "Debug APK: mobile/android/app/build/outputs/apk/debug/app-debug.apk"
 
-mobile-android-release: ## Build, sign, and verify the release Android APK (requires signing env vars; see docs/mobile.md)
+mobile-android-release: ## Build, sign, and verify the release Android APK (requires signing env vars; see docs/operate/mobile.md)
 	@./scripts/mobile-android-release.sh

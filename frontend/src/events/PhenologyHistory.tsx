@@ -60,7 +60,7 @@ function chronological(a: EventResponse, b: EventResponse): number {
 }
 
 /**
- * Year-by-year phenology from recorded Journal entries only (docs/phenology.md). A stage seen in
+ * Year-by-year phenology from recorded Journal entries only (docs/features/activity/phenology.md). A stage seen in
  * another year but not this one reads "No … observation recorded", never "did not happen".
  */
 export function PhenologyHistory({

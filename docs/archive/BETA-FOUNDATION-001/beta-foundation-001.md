@@ -1,6 +1,6 @@
 # BETA-FOUNDATION-001 — v0.1.0-beta.1 acceptance contract
 
-> **Superseded in part (RELEASE-PLATFORM-DECOUPLE):** publication no longer requires approval of a specific host. `release/platform.json` records the supported linux/amd64 platform; host capacity, Docker/Compose, HTTPS, persistence and recovery acceptance are separate post-publication deployment gates (BETA-RUNTIME-001). See [BETA-IMAGE-001](../../beta-image-001.md#platform-policy-and-publication-prerequisite). The text below is preserved as historical record and is not rewritten.
+> **Superseded in part (RELEASE-PLATFORM-DECOUPLE):** publication no longer requires approval of a specific host. `release/platform.json` records the supported linux/amd64 platform; host capacity, Docker/Compose, HTTPS, persistence and recovery acceptance are separate post-publication deployment gates (BETA-RUNTIME-001). See [BETA-IMAGE-001](../BETA-IMAGE-001/beta-image-001.md#platform-policy-and-publication-prerequisite). The text below is preserved as historical record and is not rewritten.
 
 Audit date: 2026-11-02. Source baseline: `af2372c7e20468376b3d12904c83dee18133da84`
 (current cached main, PR #139). Candidate `3553a9c` received independent CONDITIONAL PASS;
@@ -55,7 +55,7 @@ Each integration test named below is under `backend/tests/integration/`.
 | Scheduling | `schedule/service.py` → ScheduleScreen, ScheduleCalendar, UpcomingActivities → `test_schedule.py`, calendar/Screen tests | **D** SCHEDULE-001/002 / SCHEDULE-UX-001: date-only tasks, targets, completion/cancellation, List/Calendar and Dashboard. **F** recurrence, push/email reminders and external calendar sync. Test local-day boundaries on the actual devices. |
 | Media | `attachments/storage.py`, `media/service.py`, `copies.py`, `fetch.py` → MediaScreen, PhotosSection → `test_shared_media.py`, `test_shared_media_concurrency.py`, `test_external_media_copies.py`, MediaScreen tests | **D** protected attachment core / supplier integration; **V** ATTACHMENT-003–005 / MEDIA-VISUAL-001. Shared/unlinked originals, per-record links, primaries and saved external copies exist. Test real photo sizes/orientation, unlink vs delete and recovery of saved copies. External network failures must preserve valid content. |
 | Authentication | `auth/` bootstrap/API/dependencies, `core/config.py` → `auth/`, App session restore → `test_authentication.py`, `test_transaction_lifecycle.py`, App tests | **D** SECURITY-002: owner password, Argon2id, server sessions, secure cookies, exact Origin and CSRF, throttling, default authenticated access. **M** real Tailscale HTTPS acceptance. Tailnet admission does not replace application authentication. **F** multi-user authorization/security sharing. |
-| Import / export | `import_export/api.py`, `service.py` → ImportExportScreen → `test_import_export_api.py`, ImportExportScreen.test.tsx, [format contract](../../import-export.md) | **V** IMPORT-001 already implemented: UTF-8 CSV, six kinds (identities, suppliers, Locations, SeedLots, Plants, groups), templates/examples, row preview/choices and atomic apply. 2 MiB / 2,000-row limits. Not a Sowing/Event/Harvest/media import, update-sync or complete portable transfer. Real data shape is an onboarding question, not proof import is absent. |
+| Import / export | `import_export/api.py`, `service.py` → ImportExportScreen → `test_import_export_api.py`, ImportExportScreen.test.tsx, [format contract](../../features/tools/import-export.md) | **V** IMPORT-001 already implemented: UTF-8 CSV, six kinds (identities, suppliers, Locations, SeedLots, Plants, groups), templates/examples, row preview/choices and atomic apply. 2 MiB / 2,000-row limits. Not a Sowing/Event/Harvest/media import, update-sync or complete portable transfer. Real data shape is an onboarding question, not proof import is absent. |
 | Search / maps / labels | search/explore/saved_views and label frontend → Dashboard, maps, LabelsScreen → `test_search002.py`, `test_species_distribution.py`, LabelsScreen tests | **D** SEARCH-002, VIEW-001, BULK-001, MAP-002, EXPLORE-001/002, MAPS-FOUNDATION-001, MAPS-DISTRIBUTION-001, MAPS-ORIGINS-001 and LABEL-001 are verified. **V** SEARCH-001 and MAP-001 remain implemented; physical label scans, actual mobile/keyboard use and optional providers still need field validation. No mandatory online basemap. |
 
 COLLECTION-VISUAL-002 remains **implemented**, with operator acceptance pending for the Harvest,
@@ -218,7 +218,7 @@ on sustained unready state, full disk, failed backup or failed upgrade. Bound co
 
 ### Backup, restore and upgrade safety contract
 
-Reuse [paired backup/restore](../../backup-restore.md), `scripts/backup.sh`, `restore.sh` and
+Reuse [paired backup/restore](../../operate/backup-restore.md), `scripts/backup.sh`, `restore.sh` and
 `backend/scripts/attachment_artifacts.py`: stop application writes; verify active original sizes and
 SHA-256; dump PostgreSQL and archive original objects; validate both; preserve unlinked originals and
 saved external copies. Thumbnails regenerate. Existing backup restarts backend on completion/failure;

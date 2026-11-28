@@ -39,7 +39,7 @@ done
 if [ "${#MISSING_VARS[@]}" -gt 0 ]; then
   echo "Android release signing environment variables are missing: ${MISSING_VARS[*]}" >&2
   echo "Set all four variables (FLORABASE_ANDROID_KEYSTORE, FLORABASE_ANDROID_STORE_PASSWORD, FLORABASE_ANDROID_KEY_ALIAS, FLORABASE_ANDROID_KEY_PASSWORD) to build a signed release APK." >&2
-  echo "See docs/mobile.md for one-time keystore creation and signing instructions." >&2
+  echo "See docs/operate/mobile.md for one-time keystore creation and signing instructions." >&2
   exit 1
 fi
 
@@ -50,7 +50,7 @@ fi
 
 SDK_DIR="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}"
 if [ ! -d "$SDK_DIR" ]; then
-  echo "Android SDK not found (set ANDROID_HOME; see docs/mobile.md)." >&2
+  echo "Android SDK not found (set ANDROID_HOME; see docs/operate/mobile.md)." >&2
   exit 1
 fi
 export ANDROID_HOME="$SDK_DIR"
@@ -58,7 +58,7 @@ export ANDROID_SDK_ROOT="$SDK_DIR"
 
 APKSIGNER="$(find "$SDK_DIR/build-tools" -maxdepth 2 -type f -name apksigner 2>/dev/null | sort -V | tail -n 1 || true)"
 if [ -z "$APKSIGNER" ] || [ ! -x "$APKSIGNER" ]; then
-  echo "apksigner not found under $SDK_DIR/build-tools (install build-tools;36.0.0; see docs/mobile.md)." >&2
+  echo "apksigner not found under $SDK_DIR/build-tools (install build-tools;36.0.0; see docs/operate/mobile.md)." >&2
   exit 1
 fi
 

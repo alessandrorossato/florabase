@@ -52,7 +52,7 @@ at commit `c4ffd63`.
 
 `gh attestation verify` (GitHub CLI 2.105.0) succeeded for `release-manifest.json` and for each of
 the three OCI image indexes as documented in
-[Install Florabase — Verify the release provenance](../../installation.md#verify-the-release-provenance-optional-digest-pinning):
+[Install Florabase — Verify the release provenance](../../operate/installation.md#verify-the-release-provenance-optional-digest-pinning):
 
 ```bash
 repo=alessandrorossato/florabase

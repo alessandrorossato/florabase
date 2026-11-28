@@ -126,7 +126,7 @@ function classifyNetworkError(
     return {
       kind: "tls",
       message:
-        "TLS certificate was not trusted. If your NAS uses a self-signed or private CA, install the CA certificate in Android Settings (see docs/mobile.md).",
+        "TLS certificate was not trusted. If your NAS uses a self-signed or private CA, install the CA certificate in Android Settings (see docs/operate/mobile.md).",
     };
   }
 

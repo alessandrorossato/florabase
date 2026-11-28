@@ -11,7 +11,7 @@ a running Florabase instance.
 You do not need any programming, server, or database knowledge to use Florabase or follow this
 guide. If Florabase is not installed yet, or if you need server administration instructions
 (such as backups, upgrades, or resetting a forgotten owner password on the server), see the
-[Installation and operations guide](../installation.md).
+[Installation and operations guide](../operate/installation.md).
 
 ## Signing in
 

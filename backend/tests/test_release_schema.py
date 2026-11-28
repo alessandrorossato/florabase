@@ -558,7 +558,7 @@ def test_deploy_refuses_missing_or_unwritable_backup_dir_before_connecting(
     state = tmp_path / "state"
     state.mkdir()
 
-    with pytest.raises(release_schema.SchemaError, match=r"docs/installation\.md"):
+    with pytest.raises(release_schema.SchemaError, match=r"docs/operate/installation\.md"):
         release_schema.deploy(
             MagicMock(attributes={}),
             schema.scripts,
@@ -669,7 +669,7 @@ def test_refuses_placeholder_config(
 
     err = capsys.readouterr().err
     assert expected in err
-    assert "docs/installation.md" in err
+    assert "docs/operate/installation.md" in err
     schema.engine.connect.assert_not_called()
     schema.engine.begin.assert_not_called()
     schema.exec_server.assert_not_called()

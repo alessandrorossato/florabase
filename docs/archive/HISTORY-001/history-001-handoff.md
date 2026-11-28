@@ -15,7 +15,7 @@
 ## Source audit and deduplication
 
 The complete source/date/subject/reference/duplicate/deep-link matrix is maintained in
-[the History contract](../../operational-history.md#audited-source-matrix). The implementation audit is:
+[the History contract](../../features/activity/operational-history.md#audited-source-matrix). The implementation audit is:
 
 | Audited source | Included | Reason / representation |
 | --- | --- | --- |

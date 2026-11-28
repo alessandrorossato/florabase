@@ -1,7 +1,7 @@
 # PHENOLOGY-001 integration handoff
 
 10 November 2026 · `feat/phenology-001` · writer `claude-phenology` · base `main`
-`48f35ea0da3c70a0955fad6e5a9055a424142bdc`. Contract: [phenology](../../phenology.md).
+`48f35ea0da3c70a0955fad6e5a9055a424142bdc`. Contract: [phenology](../../features/activity/phenology.md).
 
 Status: `implemented`, **READY_FOR_INTEGRATION**. Canonical FULL is intentionally deferred to the
 operator's consolidated integration tree; no feature receipt exists, so `make feature-deliver`
@@ -41,7 +41,7 @@ approximate checkbox disabled without a date, phenology merge regression test.
 
 UAT instance `florabase-uat-branch-feat-phenology-001` (port 15182, golden SMOKE plus 12 recorded
 observations). Real authenticated headless-Chromium captures in
-[`review/phenology-001/`](../../review/phenology-001/): `plant-history`, `record-dialog`,
+[`review/phenology-001/`](../review/phenology-001/): `plant-history`, `record-dialog`,
 `group-history` and `empty-state` at 1440, 768 and 390 px (dark), plus `plant-history-1440-light`
 and `plant-history-390-light`. No horizontal overflow at any width. Keyboard activation of date
 links is covered by tests. Not captured: a Journal with entries but no phenology (unit-tested).

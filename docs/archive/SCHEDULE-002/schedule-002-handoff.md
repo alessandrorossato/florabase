@@ -146,14 +146,14 @@ Screenshots (captured before disposable UAT cleanup):
 
 | Evidence                             | Screenshot                                                       |
 | ------------------------------------ | ---------------------------------------------------------------- |
-| Desktop populated month              | [1440 Calendar](../../review/schedule-002/calendar-1440.png)           |
-| Desktop day overflow/focus           | [1440 day drawer](../../review/schedule-002/day-drawer-1440.png)       |
-| Tablet populated month               | [1024 Calendar](../../review/schedule-002/calendar-1024.png)           |
-| Tablet completed filter              | [1024 completed](../../review/schedule-002/completed-1024.png)         |
-| Mobile compact month and full agenda | [390 Calendar](../../review/schedule-002/calendar-390.png)             |
-| Mobile selected-day actions          | [390 selected day](../../review/schedule-002/selected-day-390.png)     |
-| Mobile filtered empty state          | [390 empty](../../review/schedule-002/empty-390.png)                   |
-| Real Calendar-triggered completion   | [390 completion](../../review/schedule-002/browser-completion-390.png) |
+| Desktop populated month              | [1440 Calendar](../review/schedule-002/calendar-1440.png)           |
+| Desktop day overflow/focus           | [1440 day drawer](../review/schedule-002/day-drawer-1440.png)       |
+| Tablet populated month               | [1024 Calendar](../review/schedule-002/calendar-1024.png)           |
+| Tablet completed filter              | [1024 completed](../review/schedule-002/completed-1024.png)         |
+| Mobile compact month and full agenda | [390 Calendar](../review/schedule-002/calendar-390.png)             |
+| Mobile selected-day actions          | [390 selected day](../review/schedule-002/selected-day-390.png)     |
+| Mobile filtered empty state          | [390 empty](../review/schedule-002/empty-390.png)                   |
+| Real Calendar-triggered completion   | [390 completion](../review/schedule-002/browser-completion-390.png) |
 
 Both interrupted and final preview lifecycles retired only their exact owned containers,
 networks, volumes and unshared images, reporting zero residual containers/networks/volumes.
@@ -263,23 +263,23 @@ removed, reset, seeded or edited.
 
 | Current evidence              | Screenshot                                                           |
 | ----------------------------- | -------------------------------------------------------------------- |
-| Refined desktop Calendar      | [1440 Calendar](../../review/schedule-002/refined-calendar-1440-final.png) |
-| Bounded desktop create        | [1440 create](../../review/schedule-002/refined-create-1440.png)           |
-| Existing-target desktop edit  | [1440 edit](../../review/schedule-002/refined-edit-1440.png)               |
-| Explicit discard decision     | [1440 discard](../../review/schedule-002/refined-discard-1440.png)         |
-| Refined tablet Calendar       | [1024 Calendar](../../review/schedule-002/refined-calendar-1024-final.png) |
-| Expanded tablet create        | [1024 create](../../review/schedule-002/refined-create-1024.png)           |
-| Existing-target tablet edit   | [1024 edit](../../review/schedule-002/refined-edit-1024.png)               |
-| Refined mobile Calendar       | [390 Calendar](../../review/schedule-002/refined-calendar-390.png)         |
-| Compact mobile toolbar        | [390 toolbar](../../review/schedule-002/refined-toolbar-390.png)           |
-| Bounded mobile create         | [390 create](../../review/schedule-002/refined-create-390.png)             |
-| Scrollable mobile edit        | [390 edit](../../review/schedule-002/refined-edit-390.png)                 |
-| Notes and fixed mobile footer | [390 scrolled edit](../../review/schedule-002/refined-edit-scroll-390.png) |
-| Mobile dirty protection       | [390 discard](../../review/schedule-002/refined-discard-390.png)           |
-| Persisted mobile edit         | [390 saved notes](../../review/schedule-002/refined-save-390.png)          |
-| Desktop compact empty List    | [1440 empty](../../review/schedule-002/refined-empty-1440.png)             |
-| Tablet compact empty List     | [1024 empty](../../review/schedule-002/refined-empty-1024.png)             |
-| Mobile compact empty List     | [390 empty](../../review/schedule-002/refined-empty-390.png)               |
+| Refined desktop Calendar      | [1440 Calendar](../review/schedule-002/refined-calendar-1440-final.png) |
+| Bounded desktop create        | [1440 create](../review/schedule-002/refined-create-1440.png)           |
+| Existing-target desktop edit  | [1440 edit](../review/schedule-002/refined-edit-1440.png)               |
+| Explicit discard decision     | [1440 discard](../review/schedule-002/refined-discard-1440.png)         |
+| Refined tablet Calendar       | [1024 Calendar](../review/schedule-002/refined-calendar-1024-final.png) |
+| Expanded tablet create        | [1024 create](../review/schedule-002/refined-create-1024.png)           |
+| Existing-target tablet edit   | [1024 edit](../review/schedule-002/refined-edit-1024.png)               |
+| Refined mobile Calendar       | [390 Calendar](../review/schedule-002/refined-calendar-390.png)         |
+| Compact mobile toolbar        | [390 toolbar](../review/schedule-002/refined-toolbar-390.png)           |
+| Bounded mobile create         | [390 create](../review/schedule-002/refined-create-390.png)             |
+| Scrollable mobile edit        | [390 edit](../review/schedule-002/refined-edit-390.png)                 |
+| Notes and fixed mobile footer | [390 scrolled edit](../review/schedule-002/refined-edit-scroll-390.png) |
+| Mobile dirty protection       | [390 discard](../review/schedule-002/refined-discard-390.png)           |
+| Persisted mobile edit         | [390 saved notes](../review/schedule-002/refined-save-390.png)          |
+| Desktop compact empty List    | [1440 empty](../review/schedule-002/refined-empty-1440.png)             |
+| Tablet compact empty List     | [1024 empty](../review/schedule-002/refined-empty-1024.png)             |
+| Mobile compact empty List     | [390 empty](../review/schedule-002/refined-empty-390.png)               |
 
 ## Persistent manual-review UAT and final control refinement
 
@@ -422,7 +422,7 @@ All requested major screens were inspected through the browser using persistent 
   Calendar upper-bound Next is natively disabled, muted and uses not-allowed cursor. Current
   creation/save behavior also has automated coverage and the earlier real synthetic save evidence.
 
-Screenshots are in [persistent review evidence](../../review/schedule-002/persistent/): Calendar at all
+Screenshots are in [persistent review evidence](../review/schedule-002/persistent/): Calendar at all
 three sizes; toolbar Reset at all three; desktop/mobile edit, tablet create and zero target results;
 mobile scroll/discard; day overflow and disabled navigation; Dashboard, Seeds, Sowings/completed,
 Plants, Harvests/stored material, Locations, Journal, History, identities/profile, Taxonomy,
