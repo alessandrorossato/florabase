@@ -22,9 +22,12 @@ verification passed. No migration is added; Alembic head remains `20261006_0034`
 
 Inactive, reversed, reintegrated, transferred, completed, lost, discarded, exhausted and depleted
 records retain their normal correction/history paths. Bulk movement does not reactivate them. An
-active inventory can move independently of an inactive historical source Plant. Movement Events are
-undated (`occurred_on = null`), matching the existing unknown-date contract; execution timestamps do
-not invent an occurrence date. No-op records create no Event and do not advance `updated_at`.
+active inventory can move independently of an inactive historical source Plant. Movement Events take
+the occurrence date chosen in the Move dialog (BULK-002): the dialog asks "When did it happen?" only
+when the selection includes Plants or PlantGroups, preselects Today, and also offers Another date or
+Date unknown. Apply sends it as optional `occurred_on` (a partial date, same contract as Journal
+Events); `null` or an omitted field keeps the Events undated, and execution timestamps never invent
+an occurrence date. SeedLots, Sowings and Stored material record no Movement Event, so they take no date. No-op records create no Event and do not advance `updated_at`.
 
 ## Explicit transient selection
 
@@ -56,8 +59,9 @@ literals, and reject empty, duplicate or over-100 typed selections.
 
 - `POST /bulk/location/preview`: `{records: [{kind, id}], target_location_id}`.
 - `POST /bulk/location/apply`: the same exact references with each `expected_updated_at`, plus
-  `target_location_id` and `expected_target_updated_at` from the server preview. Preconditions must
-  be timezone-aware timestamps.
+  `target_location_id` and `expected_target_updated_at` from the server preview, and optional
+  `occurred_on` for the Plant/PlantGroup Movement Events. Preconditions must be timezone-aware
+  timestamps.
 
 Preview returns the exact selected count, human labels and kinds, current Location IDs/paths, target
 ID/path/version, every record version, per-record move/unchanged/conflict status, counts and

@@ -609,6 +609,7 @@ def test_production_public_and_authenticated_api_routes_remain_intact(tmp_path: 
                 "display_name": "Owner",
                 "owner": True,
                 "canonical_origin": "https://florabase.example",
+                "demo_readonly": False,
             }
         finally:
             production_app.dependency_overrides.clear()

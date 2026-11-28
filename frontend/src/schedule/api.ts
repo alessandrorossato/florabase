@@ -5,6 +5,7 @@ import {
   type ProtectedRequestInit,
 } from "../auth/api";
 import { monthDays } from "./calendar";
+import { notifyScheduleChanged } from "./changes";
 import {
   localDay,
   scheduleParams,
@@ -122,10 +123,13 @@ export function writeActivity(
   csrf: string,
   capability: ProtectedRequestCapability,
 ): Promise<Activity> {
-  return requestJson(
+  return requestJson<Activity>(
     `/api/v1/schedule${id ? `/${encodeURIComponent(id)}` : ""}?today=${localDay()}`,
     mutation(id ? "PUT" : "POST", payload, csrf, capability),
-  );
+  ).then((activity) => {
+    notifyScheduleChanged();
+    return activity;
+  });
 }
 export function transitionActivity(
   item: Activity,
@@ -134,7 +138,7 @@ export function transitionActivity(
   capability: ProtectedRequestCapability,
   event: ScheduleEvent | null = null,
 ): Promise<Activity> {
-  return requestJson(
+  return requestJson<Activity>(
     `/api/v1/schedule/${item.id}/${action}?today=${localDay()}`,
     mutation(
       "POST",
@@ -145,7 +149,10 @@ export function transitionActivity(
       csrf,
       capability,
     ),
-  );
+  ).then((activity) => {
+    notifyScheduleChanged();
+    return activity;
+  });
 }
 function mutation(
   method: string,

@@ -276,12 +276,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-/* Record tabs retain navigation contrast under the generic button hover rule. */
-.seeds-workspace .detail-tabs [role="tab"]:hover {
-  color: var(--primary);
-  background: var(--primary-subtle);
-}
-
 /* Creation shows the whole record; editing retains contextual section navigation. */
 .app-content .seeds-workspace .seed-creation-panel .collection-form {
   max-width: none;

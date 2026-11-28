@@ -14,6 +14,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
   type RefObject,
   type SyntheticEvent,
 } from "react";
@@ -44,6 +45,13 @@ import { isFreshDirectoryNavigation } from "./components/recordNavigation";
 import { WorkbenchShell } from "./shell/WorkbenchShell";
 import type { Section } from "./shell/navigation";
 import { isWorkspaceHome, workspaceHomes } from "./shell/navigation";
+
+const DemoExperience = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./shell/demo/DemoExperience");
+    return { default: module.DemoExperience };
+  }),
+);
 
 const HarvestScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -174,6 +182,13 @@ const AboutScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./settings/AboutScreen");
     return { default: module.AboutScreen };
+  }),
+);
+
+const QuickAddScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./quick-add/QuickAddScreen");
+    return { default: module.QuickAddScreen };
   }),
 );
 
@@ -401,6 +416,7 @@ function currentRoute(): Route {
     "about",
     "account",
     "media",
+    "quick-add",
   ];
   return {
     section: valid.includes(first as Section)
@@ -543,7 +559,13 @@ function ApplicationShell({
   const ownerIdentity = isReauthenticationState(state)
     ? state.retainedIdentity
     : state.session;
-  const signedInAs = ownerIdentity.display_name ?? ownerIdentity.login_name;
+  const demoReadOnly =
+    !isReauthenticationState(state) && state.session.demo_readonly;
+  const signedInAs =
+    ownerIdentity.display_name ??
+    (ownerIdentity.login_name !== ""
+      ? ownerIdentity.login_name
+      : "Demo visitor");
 
   return (
     <WorkbenchShell
@@ -551,8 +573,10 @@ function ApplicationShell({
       hash={window.location.hash || "#/dashboard"}
       signedInAs={signedInAs}
       signingOut={state.status === "logging-out"}
-      signOutDisabled={passwordChange?.pending}
+      signOutDisabled={Boolean(passwordChange?.pending) || demoReadOnly}
+      demoReadOnly={demoReadOnly}
       onSignOut={() => {
+        if (demoReadOnly) return;
         if (route.section === "account" && formDeparture.current?.() === false)
           return;
         void auth.logOut();
@@ -613,6 +637,11 @@ function ApplicationShell({
             formChanged.current = true;
         }}
       >
+        {demoReadOnly && (
+          <Suspense fallback={null}>
+            <DemoExperience onNavigate={navigateTo} />
+          </Suspense>
+        )}
         <RecordPresentationProvider
           key={route.section}
           fetchIdentities={
@@ -753,6 +782,8 @@ function ApplicationShell({
                 <DataSourcesScreen />
               ) : route.section === "about" ? (
                 <AboutScreen />
+              ) : route.section === "quick-add" ? (
+                <QuickAddScreen />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
@@ -1057,11 +1088,16 @@ function AuthenticatedApplication() {
   );
 }
 
-export function App() {
+export function App({
+  nativeChildren,
+}: {
+  nativeChildren?: ReactNode;
+} = {}) {
   return (
     <main>
       <AuthProvider>
         <AuthenticatedApplication />
+        {nativeChildren}
       </AuthProvider>
     </main>
   );

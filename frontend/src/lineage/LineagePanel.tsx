@@ -1,148 +1,159 @@
-import { useCallback, useEffect, useId, useState } from "react";
+import { useId } from "react";
 
-import type { components } from "../api/schema";
-import { ApiError, isExpectedAuthCancellation, requestJson } from "../auth/api";
-import { useAuth } from "../auth/context";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { LifecycleStatus } from "../components/WorkspaceUI";
 import { PropagationPath } from "../propagation/PropagationPath";
-import { InfoDisclosure } from "../components/ContextualHelp";
 import {
   ancestryHref,
+  ancestryKinds,
   lineageFallbackLabels as fallbackLabels,
   lineageHref as href,
   lineageKindLabels as labels,
   lineageVerbs,
   upstreamPath,
+  useDirectDescendants,
   useRecordedLineage,
+  type AncestryChildren,
+  type AncestryKind,
   type LineageEndpoint,
-  type LineageResponse,
+  type LineageNode,
 } from "./useRecordedLineage";
 import "./lineage-panel.css";
 
-type AncestryChildren = components["schemas"]["AncestryChildren"];
-type Descendants =
-  | { status: "loading" }
-  | { status: "ready"; value: AncestryChildren }
-  | { status: "error" };
-const DESCENDANT_PAGE = 25;
-
-const ancestryKinds = {
-  "seed-lots": "seed_lot",
-  plants: "plant",
-  "plant-groups": "plant_group",
-  "vegetative-lots": "vegetative_lot",
-  "propagation-attempts": "propagation_attempt",
-} as const;
-
-/**
- * Direct recorded descendants of one record (first page), read from the ancestry explorer's
- * children endpoint (no upstream walk); stale responses for another record are ignored.
- */
-function useDirectDescendants(
-  kind: LineageEndpoint,
-  id: string,
-): [Descendants, () => void] {
-  const auth = useAuth();
-  const { capability, sessionExpired } = auth;
-  const authorized =
-    auth.state.status === "authenticated" && capability.isAuthorized();
-  const key = `${kind}:${id}`;
-  const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<
-    { key: string; attempt: number } & Descendants
-  >({ status: "loading", key, attempt });
-  useEffect(() => {
-    if (!authorized) return;
-    const controller = new AbortController();
-    void requestJson<AncestryChildren>(
-      `/api/v1/lineage/${ancestryKinds[kind]}/${id}/children?offset=0&limit=${String(DESCENDANT_PAGE)}`,
-      { capability, signal: controller.signal },
-    )
-      .then((value) => {
-        if (!controller.signal.aborted)
-          setState({ status: "ready", key, attempt, value });
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted || isExpectedAuthCancellation(error))
-          return;
-        if (error instanceof ApiError && error.status === 401) {
-          sessionExpired();
-          return;
-        }
-        setState({ status: "error", key, attempt });
-      });
-    return () => {
-      controller.abort();
-    };
-  }, [attempt, authorized, capability, id, key, kind, sessionExpired]);
-  const retry = useCallback(() => {
-    setAttempt((value) => value + 1);
-  }, []);
-  if (state.key !== key || state.attempt !== attempt)
-    return [{ status: "loading" }, retry];
-  return [state, retry];
+export interface LineagePanelSubject {
+  kind: LineageNode["kind"] | "harvest";
+  id: string;
+  label: string | null;
+  lifecycle: string;
 }
 
 /**
- * The record's Lineage tab: the explorer entry point, its recorded upstream path, then what
- * was recorded from it. A record that starts a line (a purchased Seed lot) has no upstream
- * path but can still have recorded descendants.
+ * The record's Lineage tab, uniform across every Collection record type (Seed lot, Sowing,
+ * Plant, Plant group, Vegetative lot, Rooting attempt, Harvest):
+ *   1. Explore material ancestry link
+ *   2. Ancestors (horizontal chain ending in "This record", or empty wording)
+ *   3. Recorded from this record (elbow-connector tree, or empty wording)
  */
 export function LineagePanel({
   kind,
   id,
+  includeSubject = false,
+  subject,
+  descendantsKind,
+  descendantsId,
+  descendantsOverride,
+  explorerHref,
 }: {
   kind: LineageEndpoint;
   id: string;
+  /** True when `kind`/`id` is the parent record (Sowing reads its Seed lot, Harvest its source). */
+  includeSubject?: boolean;
+  /** The current record when `includeSubject` is true (Sowing or Harvest). */
+  subject?: LineagePanelSubject;
+  /** Explicit kind/id for direct descendants (used by Sowing). */
+  descendantsKind?: AncestryKind;
+  descendantsId?: string;
+  /** Pre-loaded direct descendants (used by Harvest seed-lot conversions). */
+  descendantsOverride?: AncestryChildren;
+  /** Override for the Material ancestry explorer link. */
+  explorerHref?: string;
 }) {
   const [upstream, retryUpstream] = useRecordedLineage(kind, id);
-  const [descendants, retryDescendants] = useDirectDescendants(kind, id);
-  const explorer = ancestryHref(ancestryKinds[kind], id);
+  const resolvedDescKind: AncestryKind | null =
+    descendantsOverride !== undefined
+      ? null
+      : (descendantsKind ?? (!includeSubject ? ancestryKinds[kind] : null));
+  const resolvedDescId =
+    descendantsOverride !== undefined
+      ? null
+      : (descendantsId ?? (!includeSubject ? id : null));
+  const [loadedDescendants, retryDescendants] = useDirectDescendants(
+    resolvedDescKind,
+    resolvedDescId,
+  );
+  const descendants =
+    descendantsOverride !== undefined
+      ? ({ status: "ready", value: descendantsOverride } as const)
+      : loadedDescendants;
+
+  const explorer =
+    explorerHref ??
+    (descendantsKind && descendantsId
+      ? ancestryHref(descendantsKind, descendantsId)
+      : ancestryHref(ancestryKinds[kind], id));
+  const parentKind: LineageNode["kind"] | "harvest" =
+    subject?.kind ?? descendantsKind ?? ancestryKinds[kind];
+
   let body;
   if (upstream.status === "loading" || descendants.status === "loading")
     body = <p role="status">Loading recorded lineage…</p>;
-  else if (
-    upstream.status === "ready" &&
-    descendants.status === "ready" &&
-    upstream.value.ancestors.length === 0 &&
-    descendants.value.total === 0
-  )
-    body = <DetailEmptyState>No recorded lineage.</DetailEmptyState>;
-  else
-    // Each half fails on its own, so a loaded upstream path is never hidden by the other.
-    body = (
-      <>
-        {upstream.status === "error" ? (
-          <div className="notice notice--error" role="alert">
-            <p>Florabase could not load the recorded upstream path.</p>
-            <button type="button" onClick={retryUpstream}>
-              Retry lineage
-            </button>
-          </div>
-        ) : upstream.value.ancestors.length > 0 ? (
-          <RecordedUpstream kind={kind} value={upstream.value} />
-        ) : (
-          <p className="lineage-panel__start">
-            No recorded source: this record starts its line.
-          </p>
-        )}
-        {descendants.status === "error" ? (
-          <div className="notice notice--error" role="alert">
-            <p>Florabase could not load what was recorded from this record.</p>
-            <button type="button" onClick={retryDescendants}>
-              Retry recorded descendants
-            </button>
-          </div>
-        ) : (
-          <RecordedDescendants
-            parentKind={ancestryKinds[kind]}
-            value={descendants.value}
-            explorer={explorer}
-          />
-        )}
-      </>
-    );
+  else {
+    const responseSubject =
+      upstream.status === "ready"
+        ? (upstream.value as { subject?: LineageNode }).subject
+        : undefined;
+    const ancestorNodes: LineageNode[] =
+      upstream.status === "ready"
+        ? [
+            ...upstreamPath(upstream.value),
+            ...(includeSubject && responseSubject ? [responseSubject] : []),
+          ]
+        : [];
+    const currentRecord: LineagePanelSubject | null =
+      subject ??
+      (responseSubject
+        ? {
+            kind: responseSubject.kind,
+            id: responseSubject.id,
+            label: responseSubject.label ?? null,
+            lifecycle: responseSubject.lifecycle,
+          }
+        : null);
+
+    if (
+      upstream.status === "ready" &&
+      descendants.status === "ready" &&
+      ancestorNodes.length === 0 &&
+      descendants.value.total === 0
+    )
+      body = <DetailEmptyState>No recorded lineage.</DetailEmptyState>;
+    else
+      // Each half fails on its own, so a loaded upstream path is never hidden by the other.
+      body = (
+        <>
+          {upstream.status === "error" ? (
+            <div className="notice notice--error" role="alert">
+              <p>Florabase could not load the recorded upstream path.</p>
+              <button type="button" onClick={retryUpstream}>
+                Retry lineage
+              </button>
+            </div>
+          ) : ancestorNodes.length > 0 && currentRecord ? (
+            <RecordedUpstream nodes={ancestorNodes} current={currentRecord} />
+          ) : (
+            <p className="lineage-panel__start">
+              No recorded source: this record starts its line.
+            </p>
+          )}
+          {descendants.status === "error" ? (
+            <div className="notice notice--error" role="alert">
+              <p>
+                Florabase could not load what was recorded from this record.
+              </p>
+              <button type="button" onClick={retryDescendants}>
+                Retry recorded descendants
+              </button>
+            </div>
+          ) : (
+            <RecordedDescendants
+              parentKind={parentKind}
+              value={descendants.value}
+              explorer={explorer}
+            />
+          )}
+        </>
+      );
+  }
   return (
     <>
       <p className="lineage-explore">
@@ -158,7 +169,7 @@ function RecordedDescendants({
   value,
   explorer,
 }: {
-  parentKind: (typeof ancestryKinds)[LineageEndpoint];
+  parentKind: LineageNode["kind"] | "harvest";
   value: AncestryChildren;
   explorer: string;
 }) {
@@ -204,61 +215,39 @@ function RecordedDescendants({
 }
 
 function RecordedUpstream({
-  kind,
-  value,
+  nodes,
+  current,
 }: {
-  kind: LineageEndpoint;
-  value: LineageResponse;
+  nodes: LineageNode[];
+  current: LineagePanelSubject;
 }) {
-  if (kind !== "seed-lots") {
-    // The API walks nearest-first. Reverse only that explicit path for material flow.
-    const nodes = upstreamPath(value);
-    const subject = value.subject;
-    return (
-      <PropagationPath
-        title="Recorded lineage"
-        listLabel="Recorded upstream path"
-        stages={[
-          ...nodes.map((node) => [
-            {
-              type: labels[node.kind],
-              label: node.label ?? fallbackLabels[node.kind],
-              href: href(node.kind, node.id),
-              state: node.lifecycle,
-            },
-          ]),
-          [
-            {
-              type: `This ${labels[subject.kind]}`,
-              label: subject.label ?? fallbackLabels[subject.kind],
-              href: href(subject.kind, subject.id),
-              state: subject.lifecycle,
-              current: true,
-            },
-          ],
-        ]}
-      />
-    );
-  }
+  const currentHref =
+    current.kind === "harvest"
+      ? `#/harvests/${current.id}?tab=lineage`
+      : href(current.kind, current.id);
   return (
-    <div>
-      <InfoDisclosure label="How this path is recorded">
-        <p>
-          Only explicit collection relationships are shown. A shared Botanical
-          identity does not imply lineage.
-        </p>
-      </InfoDisclosure>
-      <ol className="lineage-list" aria-label="Recorded upstream path">
-        {value.ancestors.map((node) => (
-          <li key={`${node.kind}:${node.id}`}>
-            <span className="record-state">{labels[node.kind]}</span>{" "}
-            <a href={href(node.kind, node.id)}>
-              {node.label ?? fallbackLabels[node.kind]}
-            </a>{" "}
-            <span className="record-state">{node.lifecycle}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
+    <PropagationPath
+      title="Ancestors"
+      listLabel="Recorded upstream path"
+      stages={[
+        ...nodes.map((node) => [
+          {
+            type: labels[node.kind],
+            label: node.label ?? fallbackLabels[node.kind],
+            href: href(node.kind, node.id),
+            state: node.lifecycle,
+          },
+        ]),
+        [
+          {
+            type: `This ${labels[current.kind]}`,
+            label: current.label ?? fallbackLabels[current.kind],
+            href: currentHref,
+            state: current.lifecycle,
+            current: true,
+          },
+        ],
+      ]}
+    />
   );
 }

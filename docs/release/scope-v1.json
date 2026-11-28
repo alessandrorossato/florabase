@@ -54,6 +54,7 @@
     "EVENT-002": "baseline",
     "FN-03": "best-effort",
     "CARE-BULK-001": "best-effort",
+    "BULK-002": "best-effort",
     "ATTACHMENT-002": "baseline",
     "ATTACHMENT-003": "certify",
     "ATTACHMENT-004": "baseline",
@@ -164,8 +165,10 @@
     "INSTALL-GUIDE-001": "best-effort",
     "SETUP-SAFETY-001": "tooling",
     "MULTIBRANCH-UAT-001": "tooling",
+    "UAT-INSTANCE-002": "best-effort",
     "DEV-GOLDEN-001": "tooling",
     "DEV-REFERENCES-001": "tooling",
+    "DEMO-001": "best-effort",
     "GOLDEN-REFERENCE-001": "post-1.0",
     "PORTABLE-COMPOSE-001": "certify",
     "INSTALL-001": "release-work",
@@ -182,11 +185,14 @@
     "UI-POLISH-003": "best-effort",
     "UI-POLISH-004": "best-effort",
     "UI-POLISH-005": "best-effort",
+    "UI-POLISH-006": "best-effort",
     "FN-02": "best-effort",
     "FN-04": "best-effort",
     "UX-SORT-001": "best-effort",
     "UX-SORT-002": "best-effort",
     "UX-ENTRY-001": "best-effort",
+    "UX-ENTRY-002": "best-effort",
+    "QUICK-ADD-001": "best-effort",
     "BRAND-01": "certify",
     "DOC-03": "release-work",
     "DOC-01": "release-work",
@@ -207,6 +213,7 @@
     "DOCS-004": "best-effort",
     "DOCS-003": "release-work",
     "MOBILE-002": "post-1.0",
-    "MOBILE-003": "post-1.0"
+    "MOBILE-003": "post-1.0",
+    "MOBILE-004": "post-1.0"
   }
 }

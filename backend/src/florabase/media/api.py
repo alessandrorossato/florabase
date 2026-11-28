@@ -21,6 +21,7 @@ from florabase.attachments.api import _http_error as attachment_error
 from florabase.attachments.api import get_attachment_storage
 from florabase.attachments.model import Attachment
 from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
+from florabase.auth.demo_readonly import demo_thumbnail_headers
 from florabase.auth.dependencies import (
     AuthenticatedActor,
     require_authenticated_actor,
@@ -28,6 +29,7 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.collection_photos.service import TARGET_MODELS
+from florabase.core.config import Settings, get_settings
 from florabase.db.ordering import DirectorySort
 from florabase.db.session import get_database_session
 from florabase.media import service
@@ -292,6 +294,7 @@ def thumbnail(
     storage: Storage,
     _actor: Reader,
     if_none_match: Annotated[str | None, Header()] = None,
+    settings: Annotated[Settings | None, Depends(get_settings)] = None,
 ) -> Response:
     try:
         asset = service.require_asset(database, asset_id, lock=True)
@@ -304,12 +307,9 @@ def thumbnail(
         assert attachment is not None
         storage.active_path(attachment.storage_key, attachment.byte_size)
         etag = f'"media-{attachment.sha256}-320-webp-v1"'
-        headers = {
-            "Cache-Control": "private, max-age=86400, must-revalidate",
-            "ETag": etag,
-            "Vary": "Cookie",
-            "X-Content-Type-Options": "nosniff",
-        }
+        headers = demo_thumbnail_headers(
+            etag, demo_readonly=bool(settings and settings.demo_readonly)
+        )
         validators = {value.strip() for value in (if_none_match or "").split(",")}
         if "*" in validators or etag in validators or f"W/{etag}" in validators:
             return Response(status_code=304, headers=headers)

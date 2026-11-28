@@ -849,6 +849,22 @@
       "status": "implemented"
     },
     {
+      "id": "BULK-002",
+      "category": "bulk",
+      "description": "Date Plant and PlantGroup bulk moves (Today by default) instead of recording undated Movement Events",
+      "acceptance_criteria": [
+        "POST /api/v1/bulk/location/apply accepts optional occurred_on (the Journal PartialDate contract); Plant and PlantGroup Movement Events take it, null or an omitted field keeps them undated, and SeedLot, Sowing and Stored material moves are unchanged",
+        "The Move to location dialog asks When did it happen? only when the selection includes Plants or PlantGroups, preselects Today, offers Another date and Date unknown, and blocks apply on an unfinished date without calling the server",
+        "Unit, PostgreSQL integration and component tests cover dated, undated and seed-only moves; no migration"
+      ],
+      "dependencies": [
+        "BULK-001",
+        "UX-DATE-001"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
       "id": "ATTACHMENT-002",
       "category": "attachment",
       "description": "Implement guarded local attachment storage",
@@ -2854,6 +2870,23 @@
       "status": "implemented"
     },
     {
+      "id": "UAT-INSTANCE-002",
+      "category": "infrastructure",
+      "description": "Allow attached per-worktree UAT instances to detect and recover safely from stale launches after branch history rewrites without manual container deletion",
+      "acceptance_criteria": [
+        "Only attached UATInstance worktrees treat a non-ancestor io.florabase.sha as a stale launch, proved only when all container, volume, network, mount, port, environment and volume-user identity checks pass and the 40-hex commit exists locally in this worktree's HEAD or branch reflog; singleton UAT Preview and detached owners keep the unchanged delivered() path",
+        "Attached UATInstance identity checks never call gh api; wherever delivered() still runs, gh lookup failures raise a single clear WorkflowError naming the short SHA and next command instead of a raw 422 or traceback",
+        "On a stale launch, status reports 'launched HEAD: <sha> (stale: not in current history)' with the rebuild/reset next step, stop/remove/reset/up succeed without manual docker rm, up preserves migration safety via require_upgradeable with a guarded reset hint and never auto-resets, and seed/validate refuse until up rebuilds from HEAD",
+        "An unknown 40-hex SHA outside this worktree's reflog is refused by status, stop, up, seed and validate, and accepted only by confirm-guarded reset/remove when all other identity checks pass; malformed SHAs and foreign identities remain refused everywhere",
+        "Offline regressions and real disposable Docker smoke (rebuilt branch history through status, seed/validate refusal, stop, up relabeling and guarded reset) plus canonical FULL pass before operator delivery"
+      ],
+      "dependencies": [
+        "MULTIBRANCH-UAT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "DEV-GOLDEN-001",
       "category": "infrastructure",
       "description": "Persistent comprehensive synthetic Golden collection in primary main DEV",
@@ -3186,6 +3219,26 @@
       "status": "implemented"
     },
     {
+      "id": "UI-POLISH-006",
+      "category": "ux",
+      "description": "Collection detail consistency round (batch 15 / beta.11): remove the hidden Back/New bar from Plant and Sowing details in code, unify LineageStrip, LineagePanel, DetailTabs, RecordOverview + RecordAlmanac, RecordDescendants, DetailHeader action bar, SpecimenLabel formatting, child-record cards, Sowing germination layout, Harvest compact table/status/lineage, Location tabs/header, and close UI-POLISH-005 review leftovers",
+      "acceptance_criteria": [
+        "Plant and Sowing details no longer render the context Back/New bar in the DOM (no CSS hiding rule remains in detail-page.css); list views keep New and creationTriggerRef/data-collection-return; clicking the Plants/Sowings breadcrumb returns focus to the collection list",
+        "LineageStrip keeps Full lineage pinned right at constant height on every tab, wraps long chains without clipping, carries harvested as on Harvest's last arrow, and appends a compact descendants summary linking to the Lineage tab",
+        "LineagePanel is used on every Collection detail (including Sowing and Harvest) with one Ancestors horizontal chain plus Recorded from this record elbow tree and one empty-state wording per case",
+        "All Collection details share DetailTabs order Overview · <work tabs> · Photos · Lineage (Location: Overview · Contents) with one underline active tab style, two-column RecordOverview (facts left, RecordAlmanac right), one-line RecordDescendants in Overview, uniform RecordChildCard cards, and consistent SpecimenLabel typography (monospace only for dates/quantities/codes)",
+        "Header action bars follow at most one primary (first) + two secondary + Edit + More (Sowing moves Create Plant group into More; Harvest shows status chip and Record disposition primary when held; Location puts Create child before Log care and removes duplicate root subtitle and scope chips)",
+        "Sowing Germination tab places Observation history full-width below the metrics row and Sowing Overview replaces filler text with real germination summary; Harvest Overview uses one compact Materials & storage table with inline links for Seed lot conversions and disposition history",
+        "Cuttings useRecordTab follows later ?tab= route changes, Species distribution shows represented/ready counts once in the overview, and dead Media :not(.page-header--directory) CSS rules are removed",
+        "Every Collection record shows a shared key facts strip under the action bar, a short Add photo placeholder when it has no image, a Next up line opening the Almanac, and count badges on its tabs that keep the tabs' accessible names"
+      ],
+      "dependencies": [
+        "UI-POLISH-005"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "FN-02",
       "category": "ux",
       "description": "Sort the Seeds, Sowings and Plants directories by name and by their own date",
@@ -3268,6 +3321,41 @@
         "PLANT-001"
       ],
       "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "UX-ENTRY-002",
+      "category": "ux",
+      "description": "Create a botanical identity from inside the Plant form, Sowing-to-Plant wizard and pot-on identity pickers",
+      "acceptance_criteria": [
+        "The identity pickers of the Plant/PlantGroup create and edit form, the Sowing descendant wizard and the pot-on/split dialog offer Create identity for the typed text, opening a shared dialog with WFO name suggestions, cultivar and common name",
+        "Creating selects the new identity in the form that opened it without submitting or losing that form; an exact duplicate selects the existing identity instead of failing",
+        "Component tests cover creation, duplicate reuse, validation errors and pot-on into a newly created identity"
+      ],
+      "dependencies": [
+        "UX-ENTRY-001",
+        "FN-04",
+        "UI-REVIEW-002"
+      ],
+      "priority": "P3",
+      "status": "implemented"
+    },
+    {
+      "id": "QUICK-ADD-001",
+      "category": "ux",
+      "description": "Quick add a Plant or PlantGroup with WFO name autocomplete, creating its botanical identity and WFO link in the same transaction",
+      "acceptance_criteria": [
+        "POST /api/v1/quick-add/plant creates or reuses the botanical identity (an exact duplicate is reused and never relinked), confirms a picked WFO taxon through the existing TAXONOMY-001 link only when its name still matches, and creates one Plant or a PlantGroup with a count, all in one transaction that leaves nothing behind on any failure",
+        "The Quick add plant page (Today, the New menu and Record) suggests your identities and local WFO names, says whether the result reuses an identity, links it to WFO or saves free text, works without the WFO index, and offers Add and open or Add and add another keeping place, supplier, origin and date",
+        "Schema, PostgreSQL integration and component tests cover WFO linking, reuse, groups, rollback, CSRF and an unavailable index; no migration"
+      ],
+      "dependencies": [
+        "PLANT-002",
+        "TAXONOMY-001",
+        "REF-SETUP-001",
+        "UI-REVIEW-002"
+      ],
+      "priority": "P2",
       "status": "implemented"
     },
     {
@@ -3531,6 +3619,28 @@
       "status": "verified"
     },
     {
+      "id": "DEMO-001",
+      "category": "ops",
+      "description": "Opt-in public read-only demo mode (FLORABASE_DEMO_READONLY) with explicit startup marker guard, cache-only external provider GETs, neutral visitor identity, optional Uvicorn worker scaling (FLORABASE_WORKERS), and lazy-loaded interactive guided tour across real workspaces while preserving standard production authentication unchanged",
+      "acceptance_criteria": [
+        "FLORABASE_DEMO_READONLY defaults to false with zero behavioral change to standard production routes, G-SEC/ENG-03 public allowlist, /api/v1/system/info capabilities ([device-auth]) and runtime_config, private thumbnail headers, or initial frontend bundle",
+        "Startup in demo mode (both release_schema serve and FastAPI lifespan) refuses unless a regular non-symlink .florabase-demo-readonly.marker file inside attachment storage carries florabase-public-read-only-demo-v1, and emits PUBLIC READ-ONLY DEMO: no login required when accepted",
+        "When FLORABASE_DEMO_READONLY=true, DemoReadOnlyMiddleware and auth dependencies reject every non-GET/HEAD/OPTIONS request with 403 demo_read_only (Cache-Control: no-store), external_botany GETs (external-taxa/search, occurrence-map/summary, occurrence-map/tiles) operate strictly cache-only with zero outbound GBIF calls or cache writes, GET /api/v1/auth/session returns a neutral Demo visitor identity (owner=false, login_name='', demo_readonly=true) with transient session and zero auth_sessions DB writes, GET /api/v1/auth/device-sessions returns [], thumbnails emit public Cache-Control without Vary: Cookie, and GET /api/v1/system/info advertises demo-readonly",
+        "FLORABASE_WORKERS (1..8, default 1) is parsed solely by release_schema uvicorn_workers_from_environment, passing --workers N to Uvicorn when greater than 1, with NAS default and multi-worker ReferenceSetupCoordinator behavior documented in docs/installation.md and docs/demo-mode.md",
+        "When session.demo_readonly is true, AuthProvider skips POST /api/v1/auth/csrf, WorkbenchShell hides sign-out, create actions and owner-only settings links, and App lazy-loads DemoExperience with a top Read-only demo banner, polite blocked-mutation notices, and a 7-step interactive guided tour navigating across Today, Botanical identities, Seeds, Plants, Lineage, Geography and Schedule with keyboard Escape/Skip/Restart, ?tour=1, resilient sessionStorage handling and GitHub docs/installation.md link",
+        "Unit tests, PostgreSQL integration tests, API drift check, docs/demo-mode.md, docs/archive/DEMO-001/evidence.md, and canonical verification gate pass"
+      ],
+      "dependencies": [
+        "SECURITY-001",
+        "DEV-GOLDEN-001",
+        "MOBILE-002",
+        "MOBILE-003",
+        "REF-SETUP-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "MOBILE-001",
       "category": "mobile",
       "description": "Capacitor Android shell spike with native runtime isolation, server URL health onboarding, user-CA network security config, build targets, impact classification, and MOBILE-002 ADR while preserving the PWA unchanged",
@@ -3616,6 +3726,25 @@
         "Opt-in .github/workflows/mobile-android-release.yml triggers only on completed successful Protected Florabase release workflow_run (head_sha) and workflow_dispatch (no push/pull_request triggers, job-only contents:write, pinned action SHAs, no secret leaks), leaves beta-images.yml untouched, and docs/mobile.md documents keystore creation, backup warning, secrets, and Obtainium setup"
       ],
       "dependencies": [
+        "MOBILE-002",
+        "MOBILE-001"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
+      "id": "MOBILE-004",
+      "category": "mobile",
+      "description": "Opt-in local Schedule reminder digests in the Capacitor Android app via @capacitor/local-notifications (F-Droid clean, zero push/Google Play Services, zero DB migration or backend changes) while keeping the PWA unchanged",
+      "acceptance_criteria": [
+        "PWA remains unchanged (web build, sw.js, manifest.webmanifest, CSP, auth, and Account screen without Reminders section; zero @capacitor/* in frontend/package.json; measured web bundle delta reported)",
+        "Native-only Reminders panel in Settings -> Account (below Connected devices) defaults off with 08:00 local time and include-overdue on, persists per device in Capacitor Preferences, requests POST_NOTIFICATIONS only on opt-in, and handles denied or later-revoked permission without re-prompting",
+        "Deterministic serialized plan builder schedules at most one inexact allowWhileIdle daily digest per active day over the next 14 local calendar days using GET /api/v1/schedule (handling DST transitions, nonexistent/ambiguous times, overdue-only today, single-activity deep links, overflow pages, and owned ID range 41000..41099)",
+        "Lock-screen privacy uses VISIBILITY_PRIVATE channel with count-only collapsed text and <=5 sanitized <=60-char titles in expanded inboxList only (no targets, locations, notes, server URL, or tokens; Preferences plan summary stores counts only), and cancels pending + delivered owned notifications on switch-off, logout, 401/revocation, server change/forget, and min_client_version failure",
+        "Tapping a notification deep-links into Schedule on cold start, warm start, and across expired-session login; alarms survive reboot and APK update (MY_PACKAGE_REPLACED on LocalNotificationRestoreReceiver, exported=false); MobileReleaseContract enforces permission allowlist (SCHEDULE_EXACT_ALARM removed), zero Google/Firebase deps, and monochrome ic_stat_florabase asset determinism; debug and signed release APKs build and emulator evidence is recorded"
+      ],
+      "dependencies": [
+        "MOBILE-003",
         "MOBILE-002",
         "MOBILE-001"
       ],

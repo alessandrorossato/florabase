@@ -1963,9 +1963,6 @@ button:disabled {
   .sowing-master-detail:not(.is-detail-view) .sowing-detail-pane {
     display: none;
   }
-  .sowing-master-detail.is-detail-view .sowing-back {
-    display: inline-flex;
-  }
 
   .plant-master-detail {
     display: block;
@@ -1977,10 +1974,6 @@ button:disabled {
 
   .plant-master-detail:not(.is-detail-view) .plant-detail-pane {
     display: none;
-  }
-
-  .plant-master-detail.is-detail-view .plant-back {
-    display: inline-flex;
   }
 
   .plant-kind-actions {
@@ -4122,9 +4115,7 @@ button:disabled {
 .operational-layout .detail-tabs {
   margin-top: var(--space-6);
 }
-.operational-back,
-.operational-layout.is-detail-view .sowing-back,
-.operational-layout.is-detail-view .plant-back {
+.operational-back {
   display: inline-flex;
   margin-bottom: var(--space-4);
 }
@@ -6712,35 +6703,7 @@ button:disabled {
 }
 @media (min-width: 75rem) {
   .collection-detail .germination-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .collection-detail .germination-section {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: 0.65rem 1.25rem;
-    align-items: start;
-  }
-  .collection-detail .germination-section > .germination-heading:first-child {
-    grid-column: 1 / -1;
-  }
-  .collection-detail .germination-metrics {
-    grid-column: 1;
-    grid-row: 2 / 4;
-    margin: 0;
-  }
-  .collection-detail
-    .germination-section
-    > .germination-heading:not(:first-child) {
-    grid-column: 2;
-    grid-row: 2;
-  }
-  .collection-detail .germination-history {
-    grid-column: 2;
-    grid-row: 3;
-    margin: 0;
-  }
-  .collection-detail .germination-section > p {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   }
   .sowing-advanced-fields > .collection-form-section:nth-child(2) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6749,9 +6712,6 @@ button:disabled {
     > .collection-form-section:nth-child(2)
     > :is(h4, fieldset, .field--full) {
     grid-column: 1 / -1;
-  }
-  .sowings-workspace .collection-detail .overview-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .sowings-workspace
     .collection-detail
@@ -7845,7 +7805,7 @@ button:disabled {
   grid-column: 1 / -1;
   margin: 0;
 }
-.harvest-detail section {
+.harvest-detail .detail-tab-panel > section {
   margin-block: 1.5rem;
 }
 .harvest-line {

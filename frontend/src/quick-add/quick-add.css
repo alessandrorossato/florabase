@@ -1,0 +1,59 @@
+.quick-add-form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 48rem;
+}
+
+.quick-add-row {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  align-items: end;
+}
+
+.quick-add-name {
+  position: relative;
+}
+
+.quick-add-suggestions {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 18rem;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  box-shadow: 0 0.4rem 1.2rem color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.quick-add-suggestions[hidden] {
+  display: none;
+}
+
+.quick-add-suggestions li {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.quick-add-suggestions li[aria-selected="true"],
+.quick-add-suggestions li:hover {
+  background: var(--surface-subtle);
+}
+
+.quick-add-suggestions small {
+  color: var(--text-muted);
+}
+
+.quick-add-material {
+  display: grid;
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}

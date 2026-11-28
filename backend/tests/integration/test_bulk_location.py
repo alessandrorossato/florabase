@@ -147,6 +147,42 @@ def test_real_mixed_transaction_history_projections_and_repeat(
     assert db.scalar(select(func.count()).select_from(Event)) == before_events + 1
 
 
+def test_dated_bulk_move_records_occurrence_on_plant_events(
+    db: Session, authenticated_browser: tuple[str, str]
+) -> None:
+    rows, _source, target = setup(db)
+    payload = {"records": refs(rows), "target_location_id": str(target.id)}
+    preview = request(
+        "POST",
+        "/api/v1/bulk/location/preview",
+        browser=authenticated_browser,
+        mutation_headers=True,
+        body=payload,
+    )
+    assert preview.status_code == 200
+    body = apply_body(preview.json()) | {
+        "occurred_on": {"precision": "day", "year": 2026, "month": 11, "day": 27}
+    }
+    applied = request(
+        "POST",
+        "/api/v1/bulk/location/apply",
+        browser=authenticated_browser,
+        mutation_headers=True,
+        body=body,
+    )
+    assert applied.status_code == 200
+    db.expire_all()
+    movement = db.scalar(select(Event).where(Event.plant_id == rows[2].id))
+    assert movement
+    assert movement.kind == "movement"
+    assert movement.occurred_on_precision == "day"
+    assert (movement.occurred_on_year, movement.occurred_on_month, movement.occurred_on_day) == (
+        2026,
+        11,
+        27,
+    )
+
+
 @pytest.mark.parametrize(
     "change",
     ["location", "notes", "state", "deleted", "target_deleted", "target_scope", "target_renamed"],

@@ -14,6 +14,7 @@ export interface NativeBearerTransportConfig {
   clearToken: () => Promise<void>;
   getDefaultDeviceLabel: () => Promise<string>;
   onChangeServer?: () => void;
+  onTrustLost?: () => Promise<void> | void;
 }
 
 interface TransportState {
@@ -24,6 +25,7 @@ interface TransportState {
   clearToken: (() => Promise<void>) | null;
   getDefaultDeviceLabel: (() => Promise<string>) | null;
   onChangeServer: (() => void) | null;
+  onTrustLost: (() => Promise<void> | void) | null;
 }
 
 const state: TransportState = {
@@ -34,6 +36,7 @@ const state: TransportState = {
   clearToken: null,
   getDefaultDeviceLabel: null,
   onChangeServer: null,
+  onTrustLost: null,
 };
 
 export function configureNativeBearerTransport(
@@ -46,6 +49,7 @@ export function configureNativeBearerTransport(
   state.clearToken = config.clearToken;
   state.getDefaultDeviceLabel = config.getDefaultDeviceLabel;
   state.onChangeServer = config.onChangeServer ?? null;
+  state.onTrustLost = config.onTrustLost ?? null;
 }
 
 export function resetAuthTransport(): void {
@@ -56,6 +60,7 @@ export function resetAuthTransport(): void {
   state.clearToken = null;
   state.getDefaultDeviceLabel = null;
   state.onChangeServer = null;
+  state.onTrustLost = null;
 }
 
 export function isNativeBearerTransport(): boolean {
@@ -91,6 +96,13 @@ export async function clearNativeBearerToken(): Promise<void> {
       await state.clearToken();
     } catch {
       // Best-effort clear; in-memory token is already wiped.
+    }
+  }
+  if (state.mode === "bearer" && state.onTrustLost !== null) {
+    try {
+      await state.onTrustLost();
+    } catch {
+      // Best-effort local cleanup on loss of trust.
     }
   }
 }

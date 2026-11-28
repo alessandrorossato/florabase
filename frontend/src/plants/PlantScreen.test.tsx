@@ -612,7 +612,18 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
     await screen.findByRole("heading", { name: "Avocado #1" }),
   ).toBeInTheDocument();
   expect(screen.getByText("Grafted specimen.")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "← Back to Plants" }));
+  expect(
+    screen.queryByRole("button", { name: "← Back to Plants" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "New plant or group" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Plants" },
+    ),
+  );
   expect(screen.getByRole("list", { name: "Plants collection" })).toHaveFocus();
 });
 
@@ -697,7 +708,16 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
     notes: null,
   });
   expect(
-    screen.getByRole("button", { name: "New plant or group" }),
+    screen.queryByRole("button", { name: "New plant or group" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Plants" },
+    ),
+  );
+  expect(
+    await screen.findByRole("button", { name: "New plant or group" }),
   ).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -1127,7 +1147,15 @@ test("group count validation covers exact and approximate zero before valid atom
     lifecycle: "completed",
     quantity: { value: 0, is_approximate: false },
   });
-  await user.click(screen.getByRole("button", { name: "New plant or group" }));
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Plants" },
+    ),
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
@@ -2637,18 +2665,18 @@ test("group extraction history uses only recorded group origin and includes reta
     }),
   );
   await assertDedicatedDetails();
-  const history = screen.getByRole("region", { name: "Extracted Plants" });
-  expect(
-    within(history).getByRole("link", { name: "Returned specimen" }),
-  ).toHaveAttribute("href", `#/plants/${plantId}`);
-  expect(history).toHaveTextContent("Reintegrated");
-  expect(history).not.toHaveTextContent("Same identity, different origin");
-  expect(history).toHaveTextContent(
-    "1 extracted Plant · historical extractions",
-  );
+  const descendants = screen.getByRole("region", { name: "Descendants" });
+  expect(descendants).toHaveTextContent("1 extracted plant");
   expect(
     screen.getByRole("region", { name: "Plant group facts" }),
   ).toHaveTextContent("Current quantity5 plants");
+  await user.click(screen.getByRole("tab", { name: "Lineage" }));
+  const history = screen.getByRole("region", { name: "Extraction history" });
+  expect(
+    within(history).getByRole("link", { name: "Returned specimen" }),
+  ).toHaveAttribute("href", `#/plants/${plantId}?tab=lineage`);
+  expect(history).toHaveTextContent("Reintegrated");
+  expect(history).not.toHaveTextContent("Same identity, different origin");
 });
 
 test("transfer dialog contains keyboard focus and restores the operation trigger on escape", async () => {

@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+from florabase.seed_lots.schemas import PartialDate
+
 BulkKind = Literal["seed_lot", "sowing", "plant", "plant_group", "harvest_inventory"]
 
 
@@ -34,6 +36,8 @@ class BulkLocationApplyRequest(BaseModel):
     records: list[BulkPrecondition] = Field(min_length=1, max_length=100)
     target_location_id: UUID
     expected_target_updated_at: AwareDatetime
+    # Occurrence date of the Plant/PlantGroup Movement Events; null keeps them undated.
+    occurred_on: PartialDate | None = None
 
     @model_validator(mode="after")
     def unique_references(self) -> Self:

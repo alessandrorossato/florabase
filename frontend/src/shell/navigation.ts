@@ -28,7 +28,8 @@ export type Section =
   | "help"
   | "data-sources"
   | "about"
-  | "media";
+  | "media"
+  | "quick-add";
 
 export type WorkspaceId =
   "today" | "collection" | "activity" | "explore" | "sourcing" | "settings";
@@ -234,6 +235,7 @@ export const createActions = [
   ["New supplier", "#/suppliers?action=create", "store"],
   ["New location", "#/locations?action=create", "pin"],
   ["New local place", "#/geography?action=create", "globe"],
+  ["Quick add plant", "#/quick-add", "add"],
 ] as const satisfies readonly (readonly [string, string, IconName])[];
 
 /** Flattened destinations, used by the command palette. */

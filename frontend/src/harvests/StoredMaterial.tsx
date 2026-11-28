@@ -46,6 +46,7 @@ import { InventoryDialog } from "./InventoryDialog";
 import {
   identityChoices,
   materials,
+  quantityLabel,
   type Harvest,
   type HarvestItem,
 } from "./api";
@@ -103,7 +104,7 @@ function History({ inventory }: { inventory: Inventory }) {
     <div className="inventory-history">
       <button
         type="button"
-        className="button--secondary"
+        className="harvest-materials-link"
         aria-expanded={open}
         onClick={() => {
           setOpen((v) => !v);
@@ -152,7 +153,15 @@ function History({ inventory }: { inventory: Inventory }) {
     </div>
   );
 }
-export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
+export function StoredMaterialSection({
+  harvest,
+  onInventoriesLoaded,
+  dispositionRequest,
+}: {
+  harvest: Harvest;
+  onInventoriesLoaded?: (rows: Inventory[]) => void;
+  dispositionRequest?: { seq: number; inventoryId: string } | null;
+}) {
   const operationReturn = useRef<HTMLElement | null>(null);
   const auth = useAuth();
   const { capability, sessionExpired } = auth;
@@ -172,6 +181,30 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
   const [removing, setRemoving] = useState<Inventory | null>(null);
   const [pending, setPending] = useState(false);
   const handledInventoryEdit = useRef<string | null>(null);
+  const [handledDispositionSeq, setHandledDispositionSeq] = useState(0);
+  const onInventoriesLoadedRef = useRef(onInventoriesLoaded);
+  useEffect(() => {
+    onInventoriesLoadedRef.current = onInventoriesLoaded;
+  }, [onInventoriesLoaded]);
+  if (
+    dispositionRequest &&
+    dispositionRequest.seq !== handledDispositionSeq &&
+    rows
+  ) {
+    setHandledDispositionSeq(dispositionRequest.seq);
+    const inventory = rows.find(
+      (row) =>
+        row.id === dispositionRequest.inventoryId && row.state === "active",
+    );
+    const harvestedItem = inventory
+      ? harvest.items.find(
+          (candidate) => candidate.id === inventory.harvest_item_id,
+        )
+      : undefined;
+    if (inventory && harvestedItem) {
+      setEditor({ item: harvestedItem, inventory, disposition: true });
+    }
+  }
   useEffect(() => {
     if (!authorized) return;
     const controller = new AbortController();
@@ -180,6 +213,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
         if (!controller.signal.aborted) {
           setRows(data);
           setError(null);
+          onInventoriesLoadedRef.current?.(data);
         }
       })
       .catch((failure: unknown) => {
@@ -260,12 +294,18 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       setPending(false);
     }
   }
+  const trackedWithDispositions = rows
+    ? harvest.items.flatMap((item) => {
+        const inventory = rows.find((row) => row.harvest_item_id === item.id);
+        return inventory?.has_dispositions ? [{ item, inventory }] : [];
+      })
+    : [];
   return (
     <section
       className="stored-material-section record-section"
-      aria-label="Stored material"
+      aria-label="Materials and stored inventory"
     >
-      <h4>Stored material</h4>
+      <h4>Materials collected</h4>
       {error && (
         <p role="alert">
           {error}{" "}
@@ -288,157 +328,210 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       )}
       {!rows && !error && <p role="status">Loading stored material…</p>}
       {rows && (
-        <ol className="harvest-items">
-          {harvest.items.map((item) => {
-            const inventory = rows.find(
-              (row) => row.harvest_item_id === item.id,
-            );
-            return (
-              <li
-                key={item.id}
-                id={inventory ? `inventory-${inventory.id}` : undefined}
-                tabIndex={-1}
-              >
-                <strong>
-                  {materials.find((m) => m.id === item.material_kind)?.label}
-                </strong>
-                {item.description && (
-                  <p className="preserve-lines">{item.description}</p>
-                )}
-                {inventory ? (
-                  <dl className="stored-material-facts">
-                    <div>
-                      <dt>Remaining</dt>
-                      <dd>{remainingLabel(inventory)}</dd>
-                    </div>
-                    <div>
-                      <dt>State</dt>
-                      <dd>
-                        {inventory.state === "active" ? "Active" : "Depleted"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Storage</dt>
-                      <dd>
-                        {inventory.location ? (
-                          <a href={`#/locations/${inventory.location.id}`}>
-                            {inventory.location.display_path}
-                          </a>
-                        ) : (
-                          "Not recorded"
+        <>
+          <div className="harvest-materials-table-wrap">
+            <table className="harvest-materials-table">
+              <thead>
+                <tr>
+                  <th scope="col">Material</th>
+                  <th scope="col">Quantity</th>
+                  <th scope="col">Remaining</th>
+                  <th scope="col">State</th>
+                  <th scope="col">Storage</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {harvest.items.map((item) => {
+                  const inventory = rows.find(
+                    (row) => row.harvest_item_id === item.id,
+                  );
+                  const materialLabel =
+                    materials.find((m) => m.id === item.material_kind)?.label ??
+                    "stored material";
+                  return (
+                    <tr
+                      key={item.id}
+                      id={inventory ? `inventory-${inventory.id}` : undefined}
+                      tabIndex={-1}
+                    >
+                      <td>
+                        <strong>{materialLabel}</strong>
+                        {item.description && (
+                          <p className="preserve-lines">{item.description}</p>
                         )}
-                      </dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <span>Not tracked as stored material</span>
-                )}
-                <div
-                  className="actions stored-material-actions"
-                  onClickCapture={(event) => {
-                    if (event.target instanceof Element)
-                      operationReturn.current = event.target.closest(
-                        ".overflow-popover",
-                      )
-                        ? event.currentTarget.querySelector(".overflow-trigger")
-                        : event.target.closest("button,a");
-                  }}
-                >
-                  {inventory?.state === "active" &&
-                    item.material_kind === "seed" && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConverting(inventory);
+                      </td>
+                      <td className="harvest-materials-table__data">
+                        {quantityLabel(item)}
+                      </td>
+                      <td>
+                        {inventory ? (
+                          remainingLabel(inventory)
+                        ) : (
+                          <span className="field-help">
+                            Not tracked as stored material
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {inventory ? (
+                          <LifecycleStatus
+                            state={
+                              inventory.state === "active"
+                                ? "active"
+                                : "depleted"
+                            }
+                          >
+                            {inventory.state === "active"
+                              ? "Active"
+                              : "Depleted"}
+                          </LifecycleStatus>
+                        ) : (
+                          <span className="field-help">Not tracked</span>
+                        )}
+                      </td>
+                      <td>
+                        {inventory ? (
+                          inventory.location ? (
+                            <a href={`#/locations/${inventory.location.id}`}>
+                              {inventory.location.display_path}
+                            </a>
+                          ) : (
+                            "Not recorded"
+                          )
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td
+                        onClickCapture={(event) => {
+                          if (event.target instanceof Element)
+                            operationReturn.current = event.target.closest(
+                              ".overflow-popover",
+                            )
+                              ? event.currentTarget.querySelector(
+                                  ".overflow-trigger",
+                                )
+                              : event.target.closest("button,a");
                         }}
                       >
-                        Create Seed lot
-                      </button>
-                    )}
-                  {!inventory ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditor({ item });
-                      }}
-                    >
-                      Track stored material
-                    </button>
-                  ) : (
-                    <>
-                      {inventory.state === "active" && (
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          onClick={() => {
-                            setEditor({ item, inventory, disposition: true });
-                          }}
-                        >
-                          Record disposition
-                        </button>
-                      )}
-                      <OverflowMenu
-                        ariaLabel={`More ${materials.find((m) => m.id === item.material_kind)?.label ?? "stored material"} actions`}
-                      >
-                        <ActionLink
-                          icon="print"
-                          className="button-link button--secondary"
-                          href={labelComposerHref(
-                            "stored-material",
-                            inventory.id,
-                          )}
-                        >
-                          Print label
-                        </ActionLink>
-                        <ActionButton
-                          icon="edit"
-                          type="button"
-                          className="button--secondary"
-                          onClick={() => {
-                            setEditor({ item, inventory });
-                          }}
-                        >
-                          Edit stored material
-                        </ActionButton>
-                        {!inventory.has_dispositions && (
+                        {!inventory ? (
                           <button
                             type="button"
                             className="button--secondary"
                             onClick={() => {
-                              setError(null);
-                              setRemoving(inventory);
+                              setEditor({ item });
                             }}
                           >
-                            Remove tracking
+                            Track stored material
                           </button>
+                        ) : (
+                          <OverflowMenu
+                            ariaLabel={`More ${materialLabel} actions`}
+                          >
+                            {inventory.state === "active" && (
+                              <button
+                                type="button"
+                                className="button--secondary"
+                                onClick={() => {
+                                  setEditor({
+                                    item,
+                                    inventory,
+                                    disposition: true,
+                                  });
+                                }}
+                              >
+                                Record disposition
+                              </button>
+                            )}
+                            {inventory.state === "active" &&
+                              item.material_kind === "seed" && (
+                                <button
+                                  type="button"
+                                  className="button--secondary"
+                                  onClick={() => {
+                                    setConverting(inventory);
+                                  }}
+                                >
+                                  Create Seed lot
+                                </button>
+                              )}
+                            <ActionLink
+                              icon="print"
+                              className="button-link button--secondary"
+                              href={labelComposerHref(
+                                "stored-material",
+                                inventory.id,
+                              )}
+                            >
+                              Print label
+                            </ActionLink>
+                            <ActionButton
+                              icon="edit"
+                              type="button"
+                              className="button--secondary"
+                              onClick={() => {
+                                setEditor({ item, inventory });
+                              }}
+                            >
+                              Edit stored material
+                            </ActionButton>
+                            {!inventory.has_dispositions && (
+                              <button
+                                type="button"
+                                className="button--secondary"
+                                onClick={() => {
+                                  setError(null);
+                                  setRemoving(inventory);
+                                }}
+                              >
+                                Remove tracking
+                              </button>
+                            )}
+                          </OverflowMenu>
                         )}
-                      </OverflowMenu>
-                    </>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {trackedWithDispositions.length > 0 && (
+            <div className="harvest-materials-panels">
+              {trackedWithDispositions.map(({ item, inventory }) => (
+                <div key={inventory.id} className="harvest-materials-history">
+                  <div className="harvest-materials-links">
+                    <ConversionHistory
+                      kind="inventory_id"
+                      id={inventory.id}
+                      refreshKey={inventory.updated_at}
+                      triggerClassName="harvest-materials-link"
+                      onChanged={() => {
+                        setAttempt((v) => v + 1);
+                      }}
+                    />
+                    <History inventory={inventory} />
+                  </div>
+                  {trackedWithDispositions.length > 1 && (
+                    <p className="field-help">
+                      {materials.find((m) => m.id === item.material_kind)
+                        ?.label ?? "Stored material"}{" "}
+                      · Tracking is retained because this material has
+                      disposition history.
+                    </p>
                   )}
                 </div>
-                {inventory?.has_dispositions && (
-                  <ConversionHistory
-                    kind="inventory_id"
-                    id={inventory.id}
-                    refreshKey={inventory.updated_at}
-                    onChanged={() => {
-                      setAttempt((v) => v + 1);
-                    }}
-                  />
-                )}
-                {inventory?.has_dispositions && (
-                  <>
-                    <p className="field-help">
-                      Tracking is retained because this material has disposition
-                      history.
-                    </p>
-                    <History inventory={inventory} />
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+              ))}
+              {trackedWithDispositions.length === 1 && (
+                <p className="field-help">
+                  Tracking is retained because this material has disposition
+                  history.
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
       {converting && (
         <ConversionDialog

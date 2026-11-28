@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from florabase.attachments.api import _http_error as attachment_http_error
 from florabase.attachments.api import get_attachment_storage
 from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
+from florabase.auth.demo_readonly import demo_thumbnail_headers
 from florabase.auth.dependencies import (
     AuthenticatedActor,
     require_authenticated_actor,
@@ -64,6 +65,7 @@ from florabase.collection_photos.service import (
     update_local_photo,
     upload_local_photo,
 )
+from florabase.core.config import Settings, get_settings
 from florabase.db.session import get_database_session
 
 router = APIRouter(tags=["collection photos"])
@@ -168,6 +170,7 @@ def get_collection_photo_thumbnail(
     database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     if_none_match: Annotated[str | None, Header()] = None,
+    settings: Annotated[Settings | None, Depends(get_settings)] = None,
 ) -> Response:
     row = get_local_photo(database, photo_id)
     if row is None or row[1].state != "active":
@@ -178,12 +181,7 @@ def get_collection_photo_thumbnail(
     require_active(database, asset)
     attachment = row[1]
     etag = f'"collection-photo-{attachment.sha256}-320-webp-v1"'
-    headers = {
-        "Cache-Control": "private, max-age=86400, must-revalidate",
-        "ETag": etag,
-        "Vary": "Cookie",
-        "X-Content-Type-Options": "nosniff",
-    }
+    headers = demo_thumbnail_headers(etag, demo_readonly=bool(settings and settings.demo_readonly))
     try:
         storage.active_path(attachment.storage_key, attachment.byte_size)
         validators = {value.strip() for value in (if_none_match or "").split(",")}
@@ -228,6 +226,7 @@ def get_botanical_identity_cover_thumbnail(
     database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     if_none_match: Annotated[str | None, Header()] = None,
+    settings: Annotated[Settings | None, Depends(get_settings)] = None,
 ) -> Response:
     try:
         attachment = local_identity_cover_attachment(database, botanical_identity_id)
@@ -240,12 +239,9 @@ def get_botanical_identity_cover_thumbnail(
                 },
             )
         etag = f'"cover-{attachment.sha256}-320-webp-v1"'
-        headers = {
-            "Cache-Control": "private, max-age=86400, must-revalidate",
-            "ETag": etag,
-            "Vary": "Cookie",
-            "X-Content-Type-Options": "nosniff",
-        }
+        headers = demo_thumbnail_headers(
+            etag, demo_readonly=bool(settings and settings.demo_readonly)
+        )
         from sqlalchemy import select
 
         from florabase.collection_photos.model import MediaAsset

@@ -147,7 +147,7 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "New record" }));
   const actions = screen.getByRole("navigation", { name: "Create" });
-  expect(within(actions).getAllByRole("link")).toHaveLength(9);
+  expect(within(actions).getAllByRole("link")).toHaveLength(10);
   for (const [name, href] of [
     ["New seed lot", "#/seeds?action=create"],
     ["New sowing", "#/sowings?action=create"],
@@ -158,6 +158,7 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
     ["New supplier", "#/suppliers?action=create"],
     ["New location", "#/locations?action=create"],
     ["New local place", "#/geography?action=create"],
+    ["Quick add plant", "#/quick-add"],
   ]) {
     expect(within(actions).getByRole("link", { name })).toHaveAttribute(
       "href",
@@ -813,7 +814,7 @@ test("Today toolbar keeps compact controls and the Workbench New menu supports k
   });
   await user.keyboard("{End}");
   expect(
-    within(menu).getByRole("link", { name: "New local place" }),
+    within(menu).getByRole("link", { name: "Quick add plant" }),
   ).toHaveFocus();
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("group", { name: "New record menu" })).toBeNull();

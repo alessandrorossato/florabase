@@ -1,6 +1,9 @@
+import type { MouseEventHandler } from "react";
+
 export interface BreadcrumbItem {
   label: string;
   href?: string;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 export const breadcrumbGroups = new Set([
   "Collection",

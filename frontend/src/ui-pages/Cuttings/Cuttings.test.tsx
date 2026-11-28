@@ -478,10 +478,22 @@ test("cutting records use the shared record mask: header, tabs restored from and
   await user.click(screen.getByRole("tab", { name: "Lineage" }));
   expect(window.location.hash).toBe("#/cuttings/lots/lot?tab=lineage");
   expect(
-    screen.getByRole("heading", { level: 3, name: "Maternal lineage" }),
+    screen.getByRole("link", { name: "Explore material ancestry" }),
   ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Full lineage" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await user.click(screen.getByRole("tab", { name: "Overview" }));
   expect(window.location.hash).toBe("#/cuttings/lots/lot");
+  expect(screen.getByRole("region", { name: "Almanac" })).toBeVisible();
+  // Part C.1: later route change to ?tab=... on a mounted Cuttings record switches tabs.
+  window.history.replaceState(null, "", "#/cuttings/lots/lot?tab=lineage");
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  expect(await screen.findByRole("tab", { name: "Lineage" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   cleanup();
 
   window.history.replaceState(null, "", "#/cuttings/attempts/attempt");
@@ -495,6 +507,7 @@ test("cutting records use the shared record mask: header, tabs restored from and
   expect(
     screen.getByRole("heading", { level: 3, name: "Rooting overview" }),
   ).toBeVisible();
+  expect(screen.getByRole("region", { name: "Almanac" })).toBeVisible();
   await user.click(screen.getByRole("tab", { name: "Observations" }));
   expect(window.location.hash).toBe(
     "#/cuttings/attempts/attempt?tab=observations",

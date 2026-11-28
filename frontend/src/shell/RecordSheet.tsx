@@ -19,6 +19,7 @@ import { recordContext } from "./recordContext";
 
 // Recording workflows that already have their own routes (as in the Journal's Record menu).
 const workflows = [
+  { label: "Quick add plant", href: "#/quick-add", icon: "add" },
   {
     label: "Record harvest",
     href: "#/harvests?action=create",

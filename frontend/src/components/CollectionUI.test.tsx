@@ -6,8 +6,11 @@ import {
   DetailLoading,
   DetailPage,
   DetailSummary,
+  DetailTabs,
+  SpecimenPlate,
   WorkspaceIntro,
 } from "./CollectionUI";
+import { RecordVisual } from "../photos/RecordVisual";
 import { OverflowMenu } from "./ReferenceUI";
 
 afterEach(cleanup);
@@ -181,4 +184,98 @@ test("Details loading uses the canonical record shell", () => {
     "ui-detail-page",
     "detail-loading",
   );
+});
+
+test("UI-POLISH-006 B2: key facts sit under the action bar and unknown values read as unknown", () => {
+  render(
+    <DetailHeader
+      eyebrow="Seed lot"
+      title="Basil"
+      onEdit={() => undefined}
+      keyFacts={[
+        { label: "remaining", value: "261 seeds" },
+        { label: "sowings", value: "2" },
+        { label: "viable until", value: "Not recorded" },
+      ]}
+      lineage={<p>Lineage</p>}
+    />,
+  );
+  const facts = screen.getByLabelText("Key facts");
+  expect(facts).toHaveAccessibleName("Key facts");
+  expect(
+    within(facts)
+      .getAllByRole("term")
+      .map((term) => term.textContent),
+  ).toEqual(["remaining", "sowings", "viable until"]);
+  expect(within(facts).getByText("Not recorded")).toHaveClass(
+    "detail-key-facts__unknown",
+  );
+  // Order: actions, then key facts, then lineage.
+  const actions = screen.getByRole("group", { name: "Record actions" });
+  expect(
+    actions.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    facts.compareDocumentPosition(screen.getByText("Lineage")) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+test("UI-POLISH-006 B2: tab counts are visible badges and the tab keeps its name", async () => {
+  const onSelect = vi.fn();
+  render(
+    <DetailTabs
+      tabs={[
+        { id: "overview", label: "Overview" },
+        { id: "sowings", label: "Sowings", count: 2 },
+        { id: "photos", label: "Photos", count: 0 },
+        { id: "lineage", label: "Lineage", count: null },
+      ]}
+      selected="overview"
+      onSelect={onSelect}
+    />,
+  );
+  const sowings = screen.getByRole("tab", { name: "Sowings" });
+  expect(sowings.querySelector(".detail-tab__count")).toHaveTextContent("2");
+  expect(
+    screen
+      .getByRole("tab", { name: "Photos" })
+      .querySelector(".detail-tab__count"),
+  ).toHaveTextContent("0");
+  expect(
+    screen
+      .getByRole("tab", { name: "Lineage" })
+      .querySelector(".detail-tab__count"),
+  ).toBeNull();
+  await userEvent.click(sowings);
+  expect(onSelect).toHaveBeenCalledWith("sowings");
+});
+
+test("UI-POLISH-006 B2: an empty plate offers Add photo, which opens the Photos tab in place", async () => {
+  window.history.replaceState(null, "", "#/seeds/lot");
+  const before = window.history.length;
+  const onSelect = vi.fn();
+  render(
+    <>
+      <SpecimenPlate addPhoto={{ href: "#/seeds/lot?tab=photos", onSelect }}>
+        <RecordVisual kind="seed" label="Basil" />
+      </SpecimenPlate>
+      <button type="button" id="tab-photos" role="tab">
+        Photos
+      </button>
+    </>,
+  );
+  expect(document.querySelector(".record-visual")).toHaveAttribute(
+    "data-empty",
+  );
+  const add = screen.getByRole("link", { name: "Add photo" });
+  expect(add).toHaveAttribute("href", "#/seeds/lot?tab=photos");
+  await userEvent.click(add);
+  expect(onSelect).toHaveBeenCalledOnce();
+  // Like a tab click: the route is replaced, not pushed, and focus lands on the tab.
+  expect(window.location.hash).toBe("#/seeds/lot?tab=photos");
+  expect(window.history.length).toBe(before);
+  await vi.waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Photos" })).toHaveFocus();
+  });
 });

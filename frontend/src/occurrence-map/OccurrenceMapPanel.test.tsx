@@ -303,6 +303,7 @@ test("logout-failed retains mounted occurrence density map and suspends protecte
         display_name: "Alice",
         owner: true,
         canonical_origin: "http://localhost:15174",
+        demo_readonly: false,
       },
       csrfToken: "stale-csrf",
       message: "Sign out failed.",

@@ -609,6 +609,62 @@ test("Sowing detail consumes the stored propagation summary without converting u
         approximate_plant_group_count: 1,
         unknown_plant_group_count: 0,
       });
+    if (path === `/api/v1/seed-lots/${lotId}/lineage`)
+      return json({
+        subject: {
+          kind: "seed_lot",
+          id: lotId,
+          label: "Blue packet",
+          lifecycle: "active",
+        },
+        ancestors: [],
+        descendants: [],
+      });
+    if (path.startsWith(`/api/v1/lineage/sowing/${sowingId}/children`))
+      return json({
+        items: [
+          {
+            record: {
+              kind: "plant",
+              id: plantId,
+              label: "Plant A",
+              lifecycle: "active",
+            },
+            descendant_count: 0,
+          },
+          {
+            record: {
+              kind: "plant_group",
+              id: "group",
+              label: "Community pot",
+              lifecycle: "active",
+            },
+            descendant_count: 0,
+          },
+        ],
+        total: 2,
+        limit: 25,
+        offset: 0,
+      });
+    if (path === `/api/v1/sowings/${sowingId}/germination`)
+      return json({
+        sowing_id: sowingId,
+        germinated_count: 13,
+        observed_cumulative_count: 13,
+        last_observation_on: null,
+        days_to_first_germination: null,
+        observations: [],
+      });
+    if (path.startsWith("/api/v1/schedule"))
+      return json({
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 3,
+        today: "2026-09-05",
+        overdue_count: 0,
+        today_count: 0,
+      });
     if (path === "/api/v1/seed-lots") return json([lot()]);
     if (path === "/api/v1/locations") return json([]);
     return undefined;
@@ -616,13 +672,17 @@ test("Sowing detail consumes the stored propagation summary without converting u
   window.location.hash = `/sowings/${sowingId}`;
   const user = userEvent.setup();
   render(<App />);
-  expect(await screen.findByText("1 exact individual")).toBeInTheDocument();
-  expect(screen.getByText("+ 1 approximate Plant group")).toBeInTheDocument();
-  await user.click(screen.getByRole("link", { name: "View lineage →" }));
-  await screen.findByRole("heading", { name: "Recorded lineage" });
-  expect(screen.getByRole("link", { name: /Plant A/ })).toHaveAttribute(
+  expect(await screen.findByText("1 plant")).toBeInTheDocument();
+  expect(screen.getByText("1 plant group")).toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "View lineage" }));
+  await screen.findByRole("heading", { name: "Recorded from this record" });
+  expect(await screen.findByRole("link", { name: /Plant A/ })).toHaveAttribute(
     "href",
-    `#/plants/${plantId}`,
+    `#/plants/${plantId}?tab=lineage`,
+  );
+  expect(screen.getByRole("link", { name: /Community pot/ })).toHaveAttribute(
+    "href",
+    "#/plant-groups/group?tab=lineage",
   );
   expect(screen.getByRole("link", { name: "Create Plant" })).toHaveAttribute(
     "href",

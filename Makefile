@@ -630,8 +630,7 @@ mobile-assets: ## Deterministically regenerate Android launcher icons, adaptive 
 
 mobile-sync: ## Build frontend assets and sync Capacitor Android shell
 	$(DEV_COMPOSE) run --rm --no-deps -T -e VITE_MOBILE_ALLOW_DEBUG_HTTP=$(MOBILE_DEBUG_HTTP) frontend pnpm build
-	pnpm --dir mobile install --frozen-lockfile
-	pnpm --dir mobile exec cap sync android
+	cd mobile && pnpm install --frozen-lockfile && pnpm exec cap sync android
 
 mobile-android-debug: ## Build a debug Android APK into mobile/android/app/build/outputs/apk/debug/
 	@$(MAKE) mobile-sync MOBILE_DEBUG_HTTP=true

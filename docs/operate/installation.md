@@ -106,6 +106,7 @@ Generate the database password with `openssl rand -hex 32`:
 | `FLORABASE_CANONICAL_ORIGIN` | yes | The exact HTTPS origin, for example `https://florabase.example.org`, without a trailing slash or path. `backend` refuses to start while it is still the placeholder `https://florabase.example.org`. |
 | `frontend` port | no | Loopback port of the frontend, default `127.0.0.1:8080:8080`. Keep the `127.0.0.1:` prefix. |
 | `TZ` | no | IANA timezone for container logs, default `Europe/Rome` (database storage and sessions always stay in UTC). |
+| `FLORABASE_WORKERS` | no | Uvicorn worker processes (`1`–`8`), default `1`. Keep `1` on single-owner NAS hosts: each extra worker adds ~150–200 MiB RAM and runs its own `ReferenceSetupCoordinator` (serialized by the build file lock). |
 | `FLORABASE_OWNER_LOGIN` | once | Uncomment on first deploy to create the first owner: 3 to 64 lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit. |
 | `FLORABASE_OWNER_PASSWORD` | once | Uncomment on first deploy: password of the first owner, at least 12 characters. |
 

@@ -4,7 +4,7 @@
 
 Florabase's Progressive Web App (PWA) remains a first-class channel. The Android app under `mobile/` wraps the **same** React/TypeScript production bundle from `frontend/` using Capacitor — there is no forked UI codebase.
 
-> **Status (`MOBILE-003`):** The Android app ships with Florabase branding (launcher, adaptive icon, splash), native file export/sharing via `@capacitor/filesystem` + `@capacitor/share` (scoped `FileProvider` cache), a full-screen original-photo viewer with share/save, Android `PrintManager` label printing, server-driven map runtime configuration (`GET /api/v1/system/info`), a native update banner pointing to Obtainium / GitHub Releases, deterministic SemVer-derived `versionCode`, and signed release APK builds (`make mobile-android-release` + opt-in GitHub Release workflow). See [ADR 0011](../decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
+> **Status (`MOBILE-004`):** The Android app ships with Florabase branding (launcher, adaptive icon, splash, monochrome notification small icon), native file export/sharing via `@capacitor/filesystem` + `@capacitor/share` (scoped `FileProvider` cache), a full-screen original-photo viewer with share/save, Android `PrintManager` label printing, server-driven map runtime configuration (`GET /api/v1/system/info`), opt-in daily Schedule reminders via `@capacitor/local-notifications` (F-Droid-clean, zero push/Google Play Services), a native update banner pointing to Obtainium / GitHub Releases, deterministic SemVer-derived `versionCode`, and signed release APK builds (`make mobile-android-release` + opt-in GitHub Release workflow). See [ADR 0011](../decisions/0011-mobile-device-sessions.md) for the device-session transport and security design.
 
 ## Prerequisites
 
@@ -51,8 +51,7 @@ What this target runs:
 
 1. `make mobile-sync MOBILE_DEBUG_HTTP=true`:
    - Builds `frontend/dist` inside the repository's quality frontend container with `VITE_MOBILE_ALLOW_DEBUG_HTTP=true` (enabling local debug HTTP URLs such as `http://10.0.2.2:5173`).
-   - Runs `pnpm --dir mobile install --frozen-lockfile`.
-   - Runs `pnpm --dir mobile exec cap sync android` to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/filesystem`, `@capacitor/preferences`, `@capacitor/share`).
+   - Runs `cd mobile && pnpm install --frozen-lockfile && pnpm exec cap sync android` from the `mobile/` package directory (so Corepack resolves the pinned `pnpm@11.19.0` from `mobile/package.json`) to copy `frontend/dist` and register Capacitor plugins (`@capacitor/app`, `@capacitor/filesystem`, `@capacitor/local-notifications`, `@capacitor/preferences`, `@capacitor/share`).
 2. Runs `./gradlew assembleDebug` inside `mobile/android/`.
 
 Output APK path (gitignored):
@@ -69,7 +68,7 @@ make mobile-sync
 
 ## Branding assets (`make mobile-assets`)
 
-Android launcher icons, adaptive icons (`#f8f5e7` background matching the PWA maskable icon), splash screens (`#153a2c` background matching `manifest.webmanifest`), and theme colors are derived deterministically from `frontend/public/icons/florabase-maskable-512.png` and `frontend/public/icons/florabase-512.png` by `scripts/generate-mobile-assets.py`.
+Android launcher icons, adaptive icons (`#f8f5e7` background matching the PWA maskable icon), monochrome status-bar notification small icons (`drawable-*/ic_stat_florabase.png`), splash screens (`#153a2c` background matching `manifest.webmanifest`), and theme colors are derived deterministically from `frontend/public/icons/florabase-maskable-512.png` and `frontend/public/icons/florabase-512.png` by `scripts/generate-mobile-assets.py`.
 
 To regenerate them reproducibly using the pinned Pillow toolchain:
 
@@ -191,6 +190,38 @@ When your Florabase server is upgraded to a version newer than the installed APK
 - **CSV exports & attachments:** Downloads are fetched with Bearer auth, written exclusively inside the app's private cache subfolder (`cache/shared/`, the only path exposed by `file_paths.xml`), and handed to the Android share sheet so you can save or send them. Ephemeral shared files are wiped automatically on the next app start.
 - **Original photos:** Tapping **Open original image** in Media opens a full-screen in-app viewer (revoking the blob URL on close, auth invalidation, and unmount) with a **Share / Save** button that reuses the already-fetched bytes without re-downloading.
 - **Label printing:** Tapping **Print** on the Labels screen invokes Android's built-in `PrintManager` (`WebPrintPlugin.java`) to open Android's Print / Save-as-PDF preview using Florabase's print stylesheet.
+
+## Reminders (local Schedule notifications)
+
+The Android app can schedule **local** daily digest reminders for planned Schedule activities using `@capacitor/local-notifications` with zero server push, zero Firebase/FCM, and zero Google Play Services (fully F-Droid-compatible). The web/PWA experience is completely unchanged (no permission prompts and no Reminders panel).
+
+### Behaviour and controls
+
+- **Opt-in per device:** Located in **Settings → Account → Reminders** (directly below **Connected devices**, shown only in the Android app). Defaults: **off**, daily time **08:00** (device local wall-clock time), **Include overdue activities** **on**.
+- **One daily digest (next 14 days):** Rather than firing one alarm per activity, Florabase schedules at most one digest per day over the next 14 local calendar days (`[today, today+13]`) that has planned work due:
+  - Multiple items due: `"3 activities due today · 1 overdue"` → tapping opens `#/schedule?window=today`.
+  - Single item due (with no overdue shown): `"1 activity due today"` → tapping opens `#/schedule/<id>` directly.
+  - Overdue-only today (when *Include overdue* is on and `today_count === 0`): `"2 overdue activities"` → tapping opens `#/schedule?window=overdue`.
+  - Days with nothing due receive no notification; if today's chosen time has already passed, today is skipped so opening the app never triggers an immediate catch-up alarm.
+- **When reminders update (and staleness):** There is no background network service. The pending set (IDs `41000..41099`, never touching other notification IDs) is recomputed serially whenever you open the app while signed in, resume it to the foreground, create/edit/complete/cancel a Schedule activity in the app, or change Reminders settings. The settings panel explicitly states *"Reminders update when you open the app · Last updated <time>"*.
+- **Inexact alarms & Doze:** All reminders are scheduled with `isExactNotification: false` and `allowWhileIdle: true` (`AlarmManager.setAndAllowWhileIdle`). `SCHEDULE_EXACT_ALARM` is explicitly stripped from the merged manifest (`tools:node="remove"`), so Android never prompts for "Alarms & reminders" exact-alarm access. Under Android 14–16 Doze, delivery may be batched by a few minutes (typically 0–15 min in deep Doze).
+- **DST and time zones:** Each day's trigger is computed from that calendar day's local wall-clock time (never `today + n × 24h`). On a DST spring-forward day when the chosen time does not exist (e.g. `02:30` on the last Sunday of March in `Europe/Rome`), Florabase schedules the next valid instant immediately after the gap (`03:00`). On a fall-back day when the chosen time occurs twice (e.g. `02:30` on the last Sunday of October), Florabase picks the first valid occurrence. Changing the device time zone triggers a recompute on next resume.
+- **Reboot and app updates:** Pending reminders survive both device reboots (`BOOT_COMPLETED` / `QUICKBOOT_POWERON`) and APK updates from Obtainium or sideloading (`MY_PACKAGE_REPLACED` on `LocalNotificationRestoreReceiver`, `android:exported="false"`).
+
+### Permissions and revocation
+
+- **Merged permissions:** `INTERNET`, `POST_NOTIFICATIONS` (Android 13+ runtime permission), `RECEIVE_BOOT_COMPLETED`, and `WAKE_LOCK` (no `SCHEDULE_EXACT_ALARM` or `USE_EXACT_ALARM`).
+- **When asked:** `POST_NOTIFICATIONS` is requested **only** when you toggle Reminders on — never at startup or during background recomputes.
+- **If denied or revoked later:** If you deny the prompt or later disable notifications in Android Settings, the Reminders panel displays the disabled state with step-by-step instructions (**Android Settings → Apps → Florabase → Notifications**), clears pending reminders, and stops attempting to schedule until you re-enable notifications.
+
+### Privacy and loss of trust
+
+- **Lock screen:** Channel `schedule-reminders` (`IMPORTANCE_DEFAULT`) is created with `VISIBILITY_PRIVATE`. The collapsed notification contains **only the count** (title `"3 activities due today · 1 overdue"`, body `"Open Schedule to review today's work"`), while up to 5 plain-text activity titles (control characters stripped, ≤60 characters each) appear only in the expanded `InboxStyle` view:
+  - **With Android's *"Hide sensitive content"* enabled on the lock screen:** Android redacts the notification to its system placeholder (*"Sensitive notification content hidden"*) until unlocked.
+  - **With Android's *"Show all notification content"* enabled on the lock screen:** the collapsed lock-screen card shows counts only; titles appear only when expanded.
+- **No sensitive fields:** Notification titles, bodies, and `extra` payloads (`{ route, v: 1 }`) never contain target names, locations, activity notes, server URLs, or authentication tokens. The cached plan summary in Capacitor Preferences (`florabase.reminders.plan`) stores only `updatedAt`, `timeZone`, and per-day counts — never activity titles.
+- **Cleared on loss of trust or switch-off:** Signing out, session revocation (`401`), changing or forgetting the server URL, failing the server's `min_client_version` check, or switching Reminders off immediately cancels all pending **and** removes all delivered Florabase reminders in ID range `41000..41099` and wipes `florabase.reminders.plan`. Pending reminders are preserved across transient offline (`unreachable`) launches.
+- **Deep links across expired sessions:** Tapping a reminder opens `#/schedule?window=today` (or `#/schedule/<id>` / `#/schedule?window=overdue`) on both cold and warm start. If your device session expired in the meantime, Florabase lands on the sign-in screen and continues straight to the target Schedule view as soon as you sign back in.
 
 > **Generated files:** Never commit `mobile/android/local.properties`, `*.apk`, `*.aab`, `*.keystore`, `*.jks`, or Gradle `build/` outputs. Gradle resolves the SDK via `ANDROID_HOME` without needing a checked-in `local.properties`.
 

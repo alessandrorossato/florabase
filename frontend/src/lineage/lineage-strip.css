@@ -1,15 +1,20 @@
-/* Recorded lineage strip (record header). Tokens only; the path reads oldest to newest and
-   each step is one explicitly recorded source. */
+/* Recorded lineage strip (record header). Tokens only; the path reads oldest to newest,
+   each step is one explicitly recorded source, and "Full lineage" stays pinned at the right
+   end on every tab so the strip never shifts height. */
 .lineage-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
+  display: grid;
+  gap: var(--space-2);
   min-inline-size: 0;
-  padding: var(--space-2) var(--space-3);
-  background: var(--lineage-subtle);
-  border-inline-start: 3px solid var(--lineage);
-  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  padding: var(--space-3) 0 var(--space-4);
+  background: transparent;
+  border-block: 1px solid var(--border);
+}
+.lineage-strip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-block-size: 1.5rem;
 }
 .lineage-strip__label {
   margin: 0;
@@ -18,29 +23,75 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.lineage-strip__full {
+  margin-inline-start: auto;
+  color: var(--lineage);
+  font: var(--type-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lineage-strip__full[aria-current="page"] {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* Wrapping horizontal stem line: long chains wrap cleanly onto additional rows without
+   clipping; each connector sits inside its own step's inline-start padding so wrapped rows
+   never overflow left. */
 .lineage-strip__path {
   display: flex;
-  flex: 1 1 auto;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-1) 0;
+  align-items: flex-end;
+  row-gap: var(--space-6);
+  column-gap: 0;
   min-inline-size: 0;
   margin: 0;
-  padding: 0;
+  padding: var(--space-2) 0 var(--space-1);
   list-style: none;
 }
 .lineage-strip__path > li {
+  position: relative;
   display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 var(--space-2);
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-inline-size: 14rem;
   min-inline-size: 0;
+  padding: 0;
 }
+.lineage-strip__path > li + li {
+  padding-inline-start: 5.75rem;
+  max-inline-size: 19.75rem;
+}
+/* Connector: a hairline with an arrowhead inside the inline-start padding of each step. */
 .lineage-strip__path > li + li::before {
-  /* Decorative: the ordered list already conveys the sequence. */
-  content: "→" / "";
-  margin-inline: var(--space-2);
+  content: "" / "";
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  inset-block-end: 0.7em;
+  inline-size: 4.5rem;
+  margin: 0;
+  border-block-start: 1px solid var(--lineage);
+}
+.lineage-strip__path > li + li::after {
+  content: "" / "";
+  position: absolute;
+  inset-inline-start: 4.85rem;
+  inset-block-end: calc(0.7em - 4px);
+  border-block: 4px solid transparent;
+  border-inline-start: 6px solid var(--lineage);
+}
+.lineage-strip__verb {
+  position: absolute;
+  inset-inline-start: 0.25rem;
+  inset-block-end: calc(0.7em + 4px);
+  inline-size: 5rem;
   color: var(--lineage);
+  font: var(--type-label);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.15;
 }
 .lineage-strip__kind {
   color: var(--text-muted);
@@ -62,103 +113,11 @@
   font: var(--type-small);
 }
 .lineage-strip__current .lineage-strip__kind {
-  color: var(--text);
-  font: var(--type-strong);
-}
-.lineage-strip__note {
-  flex: 1 1 auto;
-  margin: 0;
-  color: var(--text-muted);
-  font: var(--type-small);
-}
-.lineage-strip__note button {
-  min-block-size: var(--control-height-compact);
-  margin-inline-start: var(--space-2);
-}
-.lineage-strip__full {
-  margin-inline-start: auto;
-  font: var(--type-small);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* M8 stem line: no tinted band and no cards. The path reads as one quiet line under a ruled
-   rule; each relationship is written on its connector ("sown as", "grown into"). The ordered
-   list still conveys the sequence; the connectors are decorative. */
-.lineage-strip {
-  padding: var(--space-3) 0 var(--space-4);
-  background: transparent;
-  border-inline-start: 0;
-  border-block: 1px solid var(--border);
-  border-radius: 0;
-}
-.lineage-strip__label {
-  order: -2;
-}
-.lineage-strip__full {
-  order: -1;
-  color: var(--lineage);
-}
-.lineage-strip__path {
-  flex-basis: 100%;
-  flex-wrap: nowrap;
-  align-items: flex-end;
-  gap: 0;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scrollbar-width: thin;
-  padding-block: var(--space-1);
-}
-.lineage-strip__path > li {
-  position: relative;
-  flex: none;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  max-inline-size: 14rem;
-  padding: 0;
-  scroll-snap-align: start;
-}
-.lineage-strip__path > li + li {
-  margin-inline-start: 6rem;
-}
-/* Connector: a hairline with an arrowhead in the gap before each later step. */
-.lineage-strip__path > li + li::before {
-  content: "" / "";
-  position: absolute;
-  inset-inline-start: -5.25rem;
-  inset-block-end: 0.7em;
-  inline-size: 4.5rem;
-  margin: 0;
-  border-block-start: 1px solid var(--lineage);
-  transform: none;
-}
-.lineage-strip__path > li + li::after {
-  content: "" / "";
-  position: absolute;
-  inset-inline-start: -0.9rem;
-  inset-block-end: calc(0.7em - 4px);
-  border-block: 4px solid transparent;
-  border-inline-start: 6px solid var(--lineage);
-}
-.lineage-strip__verb {
-  position: absolute;
-  inset-inline-start: -5.5rem;
-  inset-block-end: calc(0.7em + 4px);
-  inline-size: 5rem;
-  color: var(--lineage);
-  font: var(--type-label);
-  font-weight: 500;
-  text-align: center;
-}
-.lineage-strip__path a {
-  overflow-wrap: anywhere;
-}
-.lineage-strip__current .lineage-strip__kind {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   color: var(--lineage);
+  font: var(--type-strong);
 }
 .lineage-strip__current .lineage-strip__kind::before {
   content: "" / "";
@@ -167,6 +126,41 @@
   background: var(--lineage);
   border-radius: 50%;
 }
+/* Compact descendants summary at the end of the path (shorter connector, no verb). */
+.lineage-strip__path > li.lineage-strip__descendants {
+  padding-inline-start: 2.5rem;
+}
+.lineage-strip__path > li.lineage-strip__descendants::before {
+  inline-size: 1.35rem;
+}
+.lineage-strip__path > li.lineage-strip__descendants::after {
+  inset-inline-start: 1.7rem;
+}
+.lineage-strip__path > li.lineage-strip__descendants a,
+.lineage-strip__path > li.lineage-strip__descendants span {
+  font: var(--type-small);
+  font-weight: 600;
+  color: var(--lineage);
+}
+.lineage-strip__note {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.lineage-strip__note button {
+  min-block-size: var(--control-height-compact);
+  margin-inline-start: var(--space-2);
+}
+.lineage-strip__descendants-inline {
+  color: var(--lineage);
+  font-weight: 600;
+}
+.lineage-strip__descendants-inline a {
+  color: var(--lineage);
+  text-decoration-color: var(--lineage);
+  text-underline-offset: 0.2em;
+}
+
 /* The phone toggle exists only at phone width. */
 .lineage-strip__toggle {
   display: none;
@@ -174,7 +168,7 @@
 
 /* Phones: one disclosure row; expanded, a vertical sequence read top to bottom. */
 @media (max-width: 40rem) {
-  .lineage-strip:has(.lineage-strip__toggle) > .lineage-strip__label {
+  .lineage-strip:has(.lineage-strip__toggle) > .lineage-strip__header {
     display: none;
   }
   .lineage-strip__toggle {
@@ -218,11 +212,20 @@
     text-overflow: ellipsis;
   }
   .lineage-strip:not([data-expanded]):has(.lineage-strip__toggle)
-    > :is(.lineage-strip__path, .lineage-strip__full) {
+    > .lineage-strip__path {
+    display: none;
+  }
+  .lineage-strip[data-expanded]:has(.lineage-strip__toggle)
+    > .lineage-strip__header {
+    display: flex;
+    order: 2;
+  }
+  .lineage-strip[data-expanded]:has(.lineage-strip__toggle)
+    > .lineage-strip__header
+    > .lineage-strip__label {
     display: none;
   }
   .lineage-strip__full {
-    order: 0;
     margin-inline-start: 0;
     min-block-size: var(--control-height-touch, 2.75rem);
     display: inline-flex;
@@ -232,15 +235,14 @@
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-4);
-    overflow-x: visible;
     padding-inline-start: var(--space-3);
     border-inline-start: 1px solid var(--lineage);
   }
-  .lineage-strip__path > li {
+  .lineage-strip__path > li,
+  .lineage-strip__path > li + li,
+  .lineage-strip__path > li.lineage-strip__descendants {
     max-inline-size: none;
-  }
-  .lineage-strip__path > li + li {
-    margin-inline-start: 0;
+    padding-inline-start: 0;
   }
   .lineage-strip__path > li + li::before,
   .lineage-strip__path > li + li::after {

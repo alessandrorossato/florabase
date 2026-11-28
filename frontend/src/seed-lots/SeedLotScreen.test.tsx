@@ -2526,7 +2526,8 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   ).toBeVisible();
   expect(
     within(timeline).getByRole("region", { name: "Recorded" }),
-  ).toHaveTextContent("Seed lots have no Journal.");
+  ).toHaveTextContent("1 sowing started from this lot.");
+  expect(timeline).not.toHaveTextContent("Seed lots have no Journal.");
   await user.click(screen.getByRole("tab", { name: "Sowings" }));
   expect(await screen.findByRole("link", { name: /Tray A/ })).toHaveAttribute(
     "href",

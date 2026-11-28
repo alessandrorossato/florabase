@@ -36,6 +36,7 @@ class UATPreview(Environment):
     ROLE_LABEL = "uat"
     WORKFLOW_MODE = "uat"
     LABEL = "UAT Preview"
+    MAKE_PREFIX = "uat-preview"
     CONFIRM_RESET = "CONFIRM_RESET_UAT_PREVIEW"
     CONFIRM_REMOVE = "CONFIRM_REMOVE_UAT_PREVIEW"
 
@@ -64,7 +65,7 @@ class UATPreview(Environment):
             raise WorkflowError("origin is not the expected Florabase repository")
         if not retiring:
             if self.repository.identity()["branch"] == "detached":
-                delivered(self.repository)
+                delivered(self.repository, make_prefix=self.MAKE_PREFIX)
                 volumes = self.resource_volumes()
                 if {item["Name"] for item in volumes} != {
                     f"{self.project}_{key}" for key in VOLUMES
@@ -86,7 +87,27 @@ class UATPreview(Environment):
             for name in names
         ]
 
-    def require_identity(self, *, running: bool = False, retiring: bool = False) -> None:
+    def verify_launched_sha(
+        self,
+        launched: str,
+        *,
+        stale_ok: bool = False,
+        allow_expired_sha: bool = False,
+    ) -> None:
+        if not ancestor(self.repository, launched, "HEAD"):
+            delivered(self.repository, launched, make_prefix=self.MAKE_PREFIX)
+
+    def check_upgradeable(self, current: list[str], graph: dict[str, list[str]]) -> None:
+        require_upgradeable(current, graph)
+
+    def require_identity(
+        self,
+        *,
+        running: bool = False,
+        retiring: bool = False,
+        stale_ok: bool = False,
+        allow_expired_sha: bool = False,
+    ) -> None:
         self.require_context(retiring=retiring)
         self.validate()
         self.require_owner()
@@ -101,6 +122,7 @@ class UATPreview(Environment):
             ):
                 raise WorkflowError("ambiguous UAT volume identity; refused")
         services: set[str] = set()
+        launched_shas: list[str] = []
         for container in self.containers():
             labels = container["Config"].get("Labels", {})
             service = labels.get("com.docker.compose.service")
@@ -117,8 +139,8 @@ class UATPreview(Environment):
             launched = labels.get("io.florabase.sha", "")
             if not re.fullmatch(r"[0-9a-f]{40}", launched):
                 raise WorkflowError("missing/unknown UAT launched Git identity; refused")
-            if not ancestor(self.repository, launched, "HEAD"):
-                delivered(self.repository, launched)
+            if launched not in launched_shas:
+                launched_shas.append(launched)
             if (
                 container["State"].get("Paused")
                 or container["State"].get("Restarting")
@@ -211,6 +233,10 @@ class UATPreview(Environment):
             ):
                 raise WorkflowError("UAT is stopped; run make uat-preview-up")
         self.require_resource_users()
+        for launched in launched_shas:
+            self.verify_launched_sha(
+                launched, stale_ok=stale_ok, allow_expired_sha=allow_expired_sha
+            )
         if not retiring and self.repository.identity()["branch"] == "detached":
             self.require_marker()
         if running and not {"db", "backend", "frontend"}.issubset(services):
@@ -362,13 +388,13 @@ class UATPreview(Environment):
             key=lambda item: item["name"],
         )
 
-    def stop_writers(self) -> None:
+    def stop_writers(self, *, stale_ok: bool = False) -> None:
         for item in self.containers():
             if item["Config"]["Labels"].get("com.docker.compose.service") != "db" and item[
                 "State"
             ].get("Running"):
                 run(["docker", "container", "stop", item["Id"]])
-        self.require_identity()
+        self.require_identity(stale_ok=stale_ok)
         if any(
             item["State"].get("Running")
             and item["Config"]["Labels"].get("com.docker.compose.service") != "db"
@@ -475,14 +501,14 @@ class UATPreview(Environment):
 
     def up(self) -> None:
         self.require_idle()
-        self.require_identity()
+        self.require_identity(stale_ok=True)
         self.compose("build")
         self.start_database()
         current = self.current()
         if not current and self.repository.identity()["branch"] == "detached":
             raise WorkflowError("established UAT database is unversioned; startup refused")
-        require_upgradeable(current, migration_graph(self.source))
-        self.stop_writers()
+        self.check_upgradeable(current, migration_graph(self.source))
+        self.stop_writers(stale_ok=True)
         self.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
         self.upgrade()
         self.compose("up", "-d", "--wait", "--wait-timeout", "180")
@@ -560,17 +586,19 @@ class UATPreview(Environment):
     def stop(self, *, remove: bool = False, confirm: str = "") -> None:
         if remove:
             raise WorkflowError("use guarded uat-preview-remove or uat-preview-reset")
-        self.require_identity()
+        self.require_identity(stale_ok=True)
         containers = [item["Id"] for item in self.containers()]
         if containers:
             run(["docker", "container", "stop", *containers])
-        self.require_identity()
+        self.require_identity(stale_ok=True)
         print(
             f"{self.LABEL} stopped; containers, network, database, media and dependencies preserved"
         )
 
-    def retirement_resources(self) -> tuple[list[str], list[dict[str, Any]], list[str]]:
-        self.require_identity(retiring=True)
+    def retirement_resources(
+        self, *, allow_expired_sha: bool = False
+    ) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+        self.require_identity(retiring=True, stale_ok=True, allow_expired_sha=allow_expired_sha)
         containers = [item["Id"] for item in self.containers()]
         volumes = self.resource_volumes()
         networks: list[str] = []
@@ -603,23 +631,23 @@ class UATPreview(Environment):
             raise WorkflowError(
                 f"remove deletes ONLY UAT state; set {self.CONFIRM_REMOVE}={self.project}"
             )
-        containers, volumes, networks = self.retirement_resources()
+        containers, volumes, networks = self.retirement_resources(allow_expired_sha=True)
         print("Retiring UAT owned by: " + str(self.source))
         print("Removing ONLY volumes: " + ", ".join(item["Name"] for item in volumes))
         # Stop every proved UAT writer before removing any container, network or volume.
         if containers:
             run(["docker", "container", "stop", *containers])
-        if self.retirement_resources() != (containers, volumes, networks):
+        if self.retirement_resources(allow_expired_sha=True) != (containers, volumes, networks):
             raise WorkflowError("UAT resources changed during retirement; refused")
         if any(item["State"].get("Running") for item in self.containers()):
             raise WorkflowError("UAT writers are still running; refused")
         if containers:
             run(["docker", "container", "rm", *containers])
-        if self.retirement_resources() != ([], volumes, networks):
+        if self.retirement_resources(allow_expired_sha=True) != ([], volumes, networks):
             raise WorkflowError("UAT resources changed after stopping writers; refused")
         for network in networks:
             run(["docker", "network", "rm", network])
-        if self.retirement_resources() != ([], volumes, []):
+        if self.retirement_resources(allow_expired_sha=True) != ([], volumes, []):
             raise WorkflowError("UAT resources changed before volume removal; refused")
         for volume in volumes:
             run(["docker", "volume", "rm", volume["Name"]])
@@ -635,12 +663,12 @@ class UATPreview(Environment):
                 "reset requires an attached feature owner; detached delivered owners use preserving sync "
                 "or deliberate guarded remove"
             )
-        self.require_identity()
+        self.require_identity(stale_ok=True, allow_expired_sha=True)
         volumes = self.resource_volumes()
         print("Resetting ONLY: " + ", ".join(item["Name"] for item in volumes))
         self.compose("down", "--remove-orphans")
         # Names and Docker ownership are proved individually before deletion. Never down -v.
-        self.require_identity()
+        self.require_identity(stale_ok=True, allow_expired_sha=True)
         for volume in volumes:
             run(["docker", "volume", "rm", volume["Name"]])
         self.up()

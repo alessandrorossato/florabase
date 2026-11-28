@@ -674,3 +674,18 @@ test("session expiry keeps loaded map and directory intact, ignores lock cancell
     await screen.findByText(/Could not load represented identities/),
   ).toBeVisible();
 });
+
+test("Species chooser heading keeps only its title without duplicating overview counts (UI-POLISH-006)", async () => {
+  show();
+  const browser = await screen.findByRole("region", { name: "Species" });
+  await within(browser).findByRole("button", { name: /Ocimum basilicum/ });
+  const heading = within(browser).getByRole("heading", {
+    level: 3,
+    name: "Species",
+  });
+  expect(heading).toBeVisible();
+  expect(heading.parentElement?.textContent).toBe("Species");
+  expect(
+    within(browser).queryByText(/\d+\s+represented/i),
+  ).not.toBeInTheDocument();
+});

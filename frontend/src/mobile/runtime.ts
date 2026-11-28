@@ -63,13 +63,88 @@ export interface CapacitorWebPrintBridge {
   print(options?: { jobName?: string }): Promise<void>;
 }
 
+export interface CapacitorPluginListenerHandle {
+  remove(): Promise<void>;
+}
+
+export interface CapacitorAppState {
+  isActive: boolean;
+}
+
+export interface CapacitorAppBridge {
+  addListener(
+    eventName: "appStateChange",
+    listenerFunc: (state: CapacitorAppState) => void,
+  ): Promise<CapacitorPluginListenerHandle> | CapacitorPluginListenerHandle;
+}
+
+export type LocalNotificationPermissionState =
+  "prompt" | "prompt-with-rationale" | "granted" | "denied";
+
+export interface CapacitorLocalNotificationPayload {
+  id: number;
+  title: string;
+  body: string;
+  inboxList?: string[];
+  channelId?: string;
+  group?: string;
+  autoCancel?: boolean;
+  smallIcon?: string;
+  iconColor?: string;
+  isExactNotification?: boolean;
+  schedule?: {
+    at?: string | Date;
+    allowWhileIdle?: boolean;
+  };
+  extra?: Record<string, unknown>;
+}
+
+export interface CapacitorLocalNotificationActionPerformed {
+  actionId: string;
+  notification?: {
+    id?: number;
+    extra?: unknown;
+  };
+}
+
+export interface CapacitorLocalNotificationsBridge {
+  checkPermissions(): Promise<{ display: LocalNotificationPermissionState }>;
+  requestPermissions(): Promise<{ display: LocalNotificationPermissionState }>;
+  createChannel(channel: {
+    id: string;
+    name: string;
+    description?: string;
+    importance?: number;
+    visibility?: number;
+    vibration?: boolean;
+  }): Promise<void>;
+  getPending(): Promise<{ notifications?: { id: number }[] }>;
+  schedule(options: {
+    notifications: CapacitorLocalNotificationPayload[];
+  }): Promise<{ notifications: { id: number }[] }>;
+  cancel(options: { notifications: { id: number }[] }): Promise<void>;
+  getDeliveredNotifications(): Promise<{
+    notifications?: { id: number; tag?: string }[];
+  }>;
+  removeDeliveredNotificationsById?(options: { ids: number[] }): Promise<void>;
+  removeDeliveredNotifications?(options: {
+    notifications: { id: number; tag?: string }[];
+  }): Promise<void>;
+  addListener(
+    eventName: "localNotificationActionPerformed",
+    listenerFunc: (action: CapacitorLocalNotificationActionPerformed) => void,
+  ): Promise<CapacitorPluginListenerHandle> | CapacitorPluginListenerHandle;
+}
+
 export interface CapacitorGlobal {
   isNativePlatform?: () => boolean;
   getPlatform?: () => string;
   Plugins?: {
+    App?: CapacitorAppBridge;
     Preferences?: CapacitorPreferencesBridge;
     CapacitorHttp?: CapacitorHttpBridge;
     Filesystem?: CapacitorFilesystemBridge;
+    LocalNotifications?: CapacitorLocalNotificationsBridge;
     Share?: CapacitorShareBridge;
     WebPrint?: CapacitorWebPrintBridge;
   };
@@ -78,6 +153,11 @@ export interface CapacitorGlobal {
     methodName: string,
     options?: Record<string, unknown>,
   ) => Promise<T>;
+  addListener?: (
+    pluginName: string,
+    eventName: string,
+    callback: (event: unknown) => void,
+  ) => CapacitorPluginListenerHandle;
 }
 
 export function getCapacitorGlobal(

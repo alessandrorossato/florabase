@@ -27,4 +27,5 @@ export const navigationIcons = {
   "data-sources": "layers",
   help: "document",
   about: "monitor",
+  "quick-add": "add",
 } as const satisfies Record<string, IconName>;
