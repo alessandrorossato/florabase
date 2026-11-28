@@ -126,6 +126,8 @@ export function TaskDialog({
       }}
       onCancel={(event) => {
         event.preventDefault();
+        // React re-dispatches a nested (portalled) dialog's cancel through this one.
+        if (event.target !== event.currentTarget) return;
         if (!dismissDialogControlLayer(event.currentTarget)) onClose();
       }}
       onKeyDown={(event) => {

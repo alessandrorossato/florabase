@@ -98,10 +98,6 @@
 }
 
 /* Full-width dashboard detail. */
-.app-content .orders-workspace .detail-tabs [role="tab"]:hover {
-  background: var(--primary-subtle);
-  color: var(--primary);
-}
 .app-content .orders-workspace .order-detail .detail-header {
   align-items: center;
 }

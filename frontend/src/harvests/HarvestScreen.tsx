@@ -10,12 +10,15 @@ import {
   Breadcrumbs,
   DetailTabs,
   DetailHeader,
+  RecordDescendants,
+  RecordOverview,
   WorkspaceIntro,
   DetailLoading,
   DetailPage,
   SpecimenLabel,
   SpecimenPlate,
 } from "../components/CollectionUI";
+import { LifecycleStatus } from "../components/WorkspaceUI";
 import {
   DirectoryRecordActions,
   DirectoryRecordContent,
@@ -46,12 +49,20 @@ import { DirectorySortSelect } from "../components/DirectorySort";
 import { sortDirectory } from "../components/directorySort";
 import { useEditRoute } from "../components/useEditRoute";
 import { formatPartialDate } from "../events/eventData";
+import { LineagePanel } from "../lineage/LineagePanel";
 import { LineageStrip } from "../lineage/LineageStrip";
+import {
+  ancestryHref,
+  type AncestryChildren,
+} from "../lineage/useRecordedLineage";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
+import { usePhotoCount } from "../photos/usePhotoCount";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
+import { defaultState, scheduleHash } from "../schedule/state";
 import type { ReferenceChoice } from "../seed-lots/ReferencePicker";
+import { RecordAlmanac } from "../timeline/RecordAlmanac";
 import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
 import { HarvestForm } from "./HarvestForm";
 import {
@@ -65,12 +76,18 @@ import {
   listHarvests,
   materialSummary,
   materials,
-  quantityLabel,
   type Harvest,
 } from "./api";
+import { listConversions, type Conversion } from "./conversionApi";
+import { countedConversions, uniqueConversions } from "./harvestConversions";
 import "./collection-visual.css";
 import "./directory.css";
-import { inventoryError } from "./inventoryApi";
+import {
+  inventoryError,
+  inventoryList,
+  remainingLabel,
+  type Inventory,
+} from "./inventoryApi";
 
 function directoryMaterialSummary(harvest: Harvest): string {
   const labels = materialSummary(harvest).split(" · ");
@@ -97,29 +114,6 @@ function Visual({
       compact={compact}
       showSource
     />
-  );
-}
-function Items({ harvest }: { harvest: Harvest }) {
-  return (
-    <ol className="harvest-items collected-material-items">
-      {harvest.items.map((item) => (
-        <li key={item.id}>
-          <strong>
-            {
-              materials.find((material) => material.id === item.material_kind)
-                ?.label
-            }
-          </strong>
-          <span className="collected-material-quantity">
-            <span className="sr-only">Collected: </span>
-            {quantityLabel(item)}
-          </span>
-          {item.description && (
-            <p className="preserve-lines">{item.description}</p>
-          )}
-        </li>
-      ))}
-    </ol>
   );
 }
 export function HarvestScreen({
@@ -273,8 +267,15 @@ export function HarvestScreen({
     }
   }
   const displayId = editor && edit.modal ? backgroundId : initialId;
-  const routeTab = initialTab === "photos" ? "photos" : "overview";
-  const [detailTab, setDetailTab] = useState<"overview" | "photos">(routeTab);
+  const routeTab: "overview" | "photos" | "lineage" =
+    initialTab === "photos"
+      ? "photos"
+      : initialTab === "lineage"
+        ? "lineage"
+        : "overview";
+  const [detailTab, setDetailTab] = useState<"overview" | "photos" | "lineage">(
+    routeTab,
+  );
   // Each record opens on the tab its route names (a new record or a later ?tab= change).
   const tabRoute = `${initialId ?? ""}:${routeTab}`;
   const [lastTabRoute, setLastTabRoute] = useState(tabRoute);
@@ -282,6 +283,122 @@ export function HarvestScreen({
     setLastTabRoute(tabRoute);
     setDetailTab(routeTab);
   }
+  const [inventoriesState, setInventoriesState] = useState<{
+    harvestId: string;
+    rows: Inventory[];
+  } | null>(null);
+  const [conversionsState, setConversionsState] = useState<{
+    key: string;
+    rows: Conversion[];
+  } | null>(null);
+  const [dispositionRequest, setDispositionRequest] = useState<{
+    seq: number;
+    inventoryId: string;
+  } | null>(null);
+
+  const activeDetail = detail && detail.id === displayId ? detail : null;
+  const detailId = activeDetail?.id ?? null;
+  const detailUpdatedAt = activeDetail?.updated_at ?? null;
+  useEffect(() => {
+    if (!authorized || !detailId) return;
+    const controller = new AbortController();
+    void inventoryList(capability, controller.signal, detailId)
+      .then((rows) => {
+        if (!controller.signal.aborted && Array.isArray(rows)) {
+          setInventoriesState({ harvestId: detailId, rows });
+        }
+      })
+      .catch((failure: unknown) => {
+        if (controller.signal.aborted || isExpectedAuthCancellation(failure))
+          return;
+        if (failure instanceof ApiError && failure.status === 401)
+          sessionExpired();
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [authorized, capability, detailId, detailUpdatedAt, sessionExpired]);
+
+  const harvestInventories =
+    detailId && inventoriesState?.harvestId === detailId
+      ? inventoriesState.rows
+      : null;
+  const conversionKey = harvestInventories
+    ? `${detailId ?? ""}:${harvestInventories
+        .filter((inv) => inv.has_dispositions)
+        .map((inv) => `${inv.id}:${inv.updated_at}`)
+        .join(",")}`
+    : "";
+  useEffect(() => {
+    if (!authorized || !harvestInventories) return;
+    const withDispositions = harvestInventories.filter(
+      (inv) => inv.has_dispositions,
+    );
+    if (!withDispositions.length) return;
+    const controller = new AbortController();
+    void Promise.all(
+      withDispositions.map((inv) =>
+        listConversions("inventory_id", inv.id, capability, controller.signal)
+          .then((list) => (Array.isArray(list) ? list : []))
+          .catch(() => [] as Conversion[]),
+      ),
+    ).then((batches) => {
+      if (!controller.signal.aborted) {
+        setConversionsState({
+          key: conversionKey,
+          rows: uniqueConversions(batches.flat()),
+        });
+      }
+    });
+    return () => {
+      controller.abort();
+    };
+  }, [authorized, capability, conversionKey, harvestInventories]);
+
+  const harvestConversions =
+    conversionKey && conversionsState?.key === conversionKey
+      ? conversionsState.rows
+      : [];
+  const harvestDescendants: AncestryChildren = {
+    total: harvestConversions.length,
+    offset: 0,
+    limit: 25,
+    items: harvestConversions.map((conv) => ({
+      record: {
+        kind: "seed_lot" as const,
+        id: conv.seed_lot_id,
+        label: conv.seed_lot_label ?? null,
+        lifecycle: conv.status === "reversed" ? "reversed" : "active",
+        botanical_identity: activeDetail?.source.botanical_identity ?? {
+          id: "",
+          display_label: "",
+        },
+      },
+      origin: null,
+      harvest_conversion: null,
+      descendant_count: 0,
+    })),
+  };
+  // Reversed conversions stay visible in the Lineage tab but are not counted as descendants.
+  const activeConversions = countedConversions(harvestConversions);
+  // Conversions load after the stored material; until then the count is not known.
+  const conversionsReady =
+    harvestInventories !== null &&
+    (!harvestInventories.some((inv) => inv.has_dispositions) ||
+      conversionsState?.key === conversionKey);
+  const harvestDescendantsSummary = activeConversions.length
+    ? `${String(activeConversions.length)} ${activeConversions.length === 1 ? "seed lot" : "seed lots"}`
+    : null;
+  const activeInventories =
+    harvestInventories?.filter((inv) => inv.state === "active") ?? null;
+  const harvestPhotoCount = usePhotoCount("harvest", detailId, detailTab);
+  const firstActiveInventory =
+    harvestInventories?.find((inv) => inv.state === "active") ?? null;
+  const harvestStatus = firstActiveInventory
+    ? { state: "active", label: "Active" }
+    : harvestInventories && harvestInventories.length > 0
+      ? { state: "depleted", label: "Depleted" }
+      : { state: "completed", label: "Recorded" };
   useRecordDetailFocus({
     recordKey: displayId ?? null,
     detailReady: Boolean(detail && detail.id === displayId),
@@ -601,8 +718,44 @@ export function HarvestScreen({
               headingRef={detailHeading}
               eyebrow="Harvest"
               title={detail.display_title}
+              keyFacts={[
+                {
+                  label: "held",
+                  value:
+                    activeInventories === null
+                      ? "…"
+                      : activeInventories.length === 1
+                        ? remainingLabel(activeInventories[0])
+                        : activeInventories.length === 0
+                          ? "Nothing held"
+                          : `${String(activeInventories.length)} materials`,
+                },
+                {
+                  label:
+                    detail.items.length === 1
+                      ? "material collected"
+                      : "materials collected",
+                  value: String(detail.items.length),
+                },
+                {
+                  label:
+                    activeConversions.length === 1
+                      ? "seed lot converted"
+                      : "seed lots converted",
+                  value: conversionsReady
+                    ? String(activeConversions.length)
+                    : "…",
+                },
+              ]}
               plate={
-                <SpecimenPlate>
+                <SpecimenPlate
+                  addPhoto={{
+                    href: `#/harvests/${detail.id}?tab=photos`,
+                    onSelect: () => {
+                      setDetailTab("photos");
+                    },
+                  }}
+                >
                   <Visual harvest={detail} />
                 </SpecimenPlate>
               }
@@ -619,6 +772,11 @@ export function HarvestScreen({
                   />
                 </a>
               }
+              status={
+                <LifecycleStatus state={harvestStatus.state}>
+                  {harvestStatus.label}
+                </LifecycleStatus>
+              }
               lineage={
                 <LineageStrip
                   key={detail.updated_at}
@@ -628,7 +786,36 @@ export function HarvestScreen({
                   id={detail.source.id}
                   includeSubject
                   current="This Harvest"
+                  currentKind="harvest"
+                  descendantsSummary={harvestDescendantsSummary}
+                  fullHref={`#/harvests/${detail.id}?tab=lineage`}
+                  onLineageTab={detailTab === "lineage"}
+                  onFull={(event) => {
+                    event.preventDefault();
+                    setDetailTab("lineage");
+                    window.history.replaceState(
+                      null,
+                      "",
+                      `#/harvests/${detail.id}?tab=lineage`,
+                    );
+                  }}
                 />
+              }
+              primaryActions={
+                firstActiveInventory ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailTab("overview");
+                      setDispositionRequest((current) => ({
+                        seq: (current?.seq ?? 0) + 1,
+                        inventoryId: firstActiveInventory.id,
+                      }));
+                    }}
+                  >
+                    Record disposition
+                  </button>
+                ) : undefined
               }
               onEdit={() => {
                 openEditor(detail);
@@ -654,7 +841,8 @@ export function HarvestScreen({
             <DetailTabs
               tabs={[
                 { id: "overview", label: "Overview" },
-                { id: "photos", label: "Photos" },
+                { id: "photos", label: "Photos", count: harvestPhotoCount },
+                { id: "lineage", label: "Lineage" },
               ]}
               selected={detailTab}
               onSelect={(next) => {
@@ -673,40 +861,68 @@ export function HarvestScreen({
                 aria-labelledby="tab-overview"
                 className="detail-tab-panel"
               >
-                <section
-                  className="record-section"
-                  aria-label="Materials collected"
-                >
-                  <h4>Materials collected</h4>
-                  <Items harvest={detail} />
-                </section>
-                <StoredMaterialSection harvest={detail} />
-                <div className="record-detail-grid harvest-context-grid">
-                  <section className="record-section">
-                    <h4>Notes</h4>
-                    <p
-                      className={
-                        detail.notes ? "preserve-lines" : "detail-empty-state"
-                      }
-                    >
-                      {detail.notes ?? "No notes recorded."}
-                    </p>
-                  </section>
-                  <section className="record-section">
-                    <h4>Related history</h4>
-                    <p>
-                      <a
-                        href={`${sourceHref(detail)}?tab=events&event=${detail.event_id}`}
-                      >
-                        View owned harvest Event in source history
-                      </a>
-                    </p>
-                    <p>
-                      <a href="#/events">Journal</a> ·{" "}
-                      <a href="#/history">History</a>
-                    </p>
-                  </section>
-                </div>
+                <RecordOverview
+                  facts={
+                    <>
+                      <StoredMaterialSection
+                        harvest={detail}
+                        dispositionRequest={dispositionRequest}
+                        onInventoriesLoaded={(rows) => {
+                          setInventoriesState({ harvestId: detail.id, rows });
+                        }}
+                      />
+                      <RecordDescendants
+                        headingId="harvest-descendants-title"
+                        items={[
+                          {
+                            label: `${String(activeConversions.length)} ${activeConversions.length === 1 ? "seed lot" : "seed lots"}`,
+                            href: `#/harvests/${detail.id}?tab=lineage`,
+                            onClick: (event) => {
+                              event.preventDefault();
+                              setDetailTab("lineage");
+                              window.history.replaceState(
+                                null,
+                                "",
+                                `#/harvests/${detail.id}?tab=lineage`,
+                              );
+                            },
+                          },
+                        ]}
+                        lineageHref={`#/harvests/${detail.id}?tab=lineage`}
+                        onOpenLineage={(event) => {
+                          event.preventDefault();
+                          setDetailTab("lineage");
+                          window.history.replaceState(
+                            null,
+                            "",
+                            `#/harvests/${detail.id}?tab=lineage`,
+                          );
+                        }}
+                      />
+                      {detail.notes && (
+                        <section className="record-section">
+                          <h4>Notes</h4>
+                          <p className="preserve-lines">{detail.notes}</p>
+                        </section>
+                      )}
+                    </>
+                  }
+                  almanac={
+                    <RecordAlmanac
+                      kind="harvest"
+                      id={detail.id}
+                      occurredOn={detail.occurred_on}
+                      eventId={detail.event_id}
+                      sourceHref={sourceHref(detail)}
+                      sourceLabel={detail.source.display_name}
+                      sourceScheduleHref={scheduleHash({
+                        ...defaultState,
+                        target_kind: [detail.source.type],
+                        target_id: detail.source.id,
+                      })}
+                    />
+                  }
+                />
               </div>
             )}
             {detailTab === "photos" && (
@@ -727,6 +943,34 @@ export function HarvestScreen({
                       current ? { ...current, primary_photo: photo } : current,
                     );
                   }}
+                />
+              </div>
+            )}
+            {detailTab === "lineage" && (
+              <div
+                id="panel-lineage"
+                role="tabpanel"
+                aria-labelledby="tab-lineage"
+                className="detail-tab-panel"
+              >
+                <LineagePanel
+                  key={detail.updated_at}
+                  kind={
+                    detail.source.type === "plant" ? "plants" : "plant-groups"
+                  }
+                  id={detail.source.id}
+                  includeSubject
+                  subject={{
+                    kind: "harvest",
+                    id: detail.id,
+                    label: detail.display_title,
+                    lifecycle: harvestStatus.state,
+                  }}
+                  descendantsOverride={harvestDescendants}
+                  explorerHref={ancestryHref(
+                    detail.source.type,
+                    detail.source.id,
+                  )}
                 />
               </div>
             )}

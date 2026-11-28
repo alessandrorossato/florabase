@@ -144,3 +144,85 @@ test("a failed load is stated and can be retried", async () => {
   ).toBeVisible();
   expect(request).toHaveBeenCalledTimes(2);
 });
+
+test("keeps Full lineage pinned on the Lineage tab, shows Harvest verb, and appends compact descendants summary", async () => {
+  request.mockImplementation((url: string) => {
+    if (url === "/api/v1/seed-lots/lot1/lineage") {
+      return Promise.resolve({
+        subject: {
+          kind: "seed_lot",
+          id: "lot1",
+          label: "Tomato packet",
+          lifecycle: "active",
+          botanical_identity: identity,
+        },
+        ancestors: [],
+      } satisfies Response);
+    }
+    if (url.startsWith("/api/v1/lineage/seed_lot/lot1/children")) {
+      return Promise.resolve({
+        items: [
+          {
+            record: {
+              kind: "sowing",
+              id: "s1",
+              label: "Sowing 1",
+              lifecycle: "active",
+            },
+            origin: null,
+            harvest_conversion: null,
+            descendant_count: 0,
+          },
+          {
+            record: {
+              kind: "sowing",
+              id: "s2",
+              label: "Sowing 2",
+              lifecycle: "completed",
+            },
+            origin: null,
+            harvest_conversion: null,
+            descendant_count: 0,
+          },
+        ],
+        total: 2,
+        offset: 0,
+        limit: 25,
+      });
+    }
+    return Promise.resolve(plantPath);
+  });
+
+  const view = renderWithAuth(
+    <LineageStrip
+      kind="seed-lots"
+      id="lot1"
+      current="This Seed lot"
+      currentKind="seed_lot"
+      fullHref="#/seeds/lot1?tab=lineage"
+      onLineageTab
+    />,
+  );
+  const full = screen.getByRole("link", { name: "Full lineage" });
+  expect(full).toHaveAttribute("aria-current", "page");
+  expect(
+    await screen.findByRole("link", { name: "2 sowings" }),
+  ).toHaveAttribute("href", "#/seeds/lot1?tab=lineage");
+  view.unmount();
+
+  renderWithAuth(
+    <LineageStrip
+      kind="plants"
+      id="mother"
+      includeSubject
+      current="This Harvest"
+      currentKind="harvest"
+      fullHref="#/harvests/h1?tab=lineage"
+      descendantsSummary="1 seed lot"
+    />,
+  );
+  const steps = await screen.findAllByRole("listitem");
+  expect(steps.at(-2)?.textContent).toContain("harvested as");
+  expect(steps.at(-2)?.textContent).toContain("This Harvest");
+  expect(steps.at(-1)?.textContent).toContain("1 seed lot");
+});

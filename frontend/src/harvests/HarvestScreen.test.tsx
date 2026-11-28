@@ -18,6 +18,7 @@ import { HarvestScreen } from "./HarvestScreen";
 import { HarvestForm } from "./HarvestForm";
 import type { Harvest } from "./api";
 import * as api from "./api";
+import * as inventoryApi from "./inventoryApi";
 vi.mock("./api", async (original) => ({
   ...(await original<typeof import("./api")>()),
   listHarvests: vi.fn(),
@@ -896,4 +897,56 @@ it("sorts Harvests by name and harvest date before pagination with undated last 
     "newest",
   );
   expect(first()).toHaveTextContent("Harvest 25");
+});
+
+it("Harvest detail shows status chip, Record disposition primary action when held, compact table, Almanac and Lineage tab (UI-POLISH-006)", async () => {
+  vi.mocked(api.getHarvest).mockResolvedValue(harvest);
+  vi.mocked(inventoryApi.inventoryList).mockResolvedValue([
+    {
+      id: "inv-1",
+      harvest_id: harvest.id,
+      harvest_item_id: harvest.items[0].id,
+      harvest_title: harvest.display_title,
+      material_kind: harvest.items[0].material_kind,
+      description: null,
+      source: harvest.source,
+      quantity: harvest.items[0].quantity ?? null,
+      state: "active",
+      location: null,
+      has_dispositions: false,
+      created_at: harvest.created_at,
+      updated_at: harvest.updated_at,
+    },
+  ]);
+  window.history.replaceState(null, "", `#/harvests/${harvest.id}`);
+  const user = userEvent.setup();
+  wrap(<HarvestScreen initialId={harvest.id} />);
+  expect(
+    await screen.findByRole("heading", { name: harvest.display_title }),
+  ).toBeVisible();
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "Overview",
+    "Photos",
+    "Lineage",
+  ]);
+  const actionBar = screen.getByRole("group", { name: "Record actions" });
+  expect(
+    await within(actionBar).findByRole("button", {
+      name: "Record disposition",
+    }),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Full lineage" })).toHaveAttribute(
+    "href",
+    `#/harvests/${harvest.id}?tab=lineage`,
+  );
+  expect(screen.getByRole("region", { name: "Almanac" })).toBeVisible();
+  expect(screen.getByRole("table")).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Lineage" }));
+  expect(
+    await screen.findByRole("link", { name: "Explore material ancestry" }),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Full lineage" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });

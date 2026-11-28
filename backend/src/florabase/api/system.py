@@ -34,11 +34,14 @@ async def system_info(
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> SystemInfoResponse:
     response.headers["Cache-Control"] = "no-store"
+    capabilities = list(SERVER_CAPABILITIES)
+    if settings.demo_readonly:
+        capabilities.append("demo-readonly")
     return SystemInfoResponse(
         server_version=__version__,
         api_version=API_VERSION,
         min_client_version=settings.min_client_version,
-        capabilities=list(SERVER_CAPABILITIES),
+        capabilities=capabilities,
         runtime_config=RuntimeConfigResponse(
             map_online_enabled=settings.map_online_enabled,
             map_tile_url=settings.map_tile_url,

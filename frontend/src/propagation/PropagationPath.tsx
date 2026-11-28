@@ -16,11 +16,12 @@ export function PropagationPath({
   stages: PropagationPathNode[][];
   listLabel?: string;
 }) {
+  const populated = stages.filter((nodes) => nodes.length > 0);
   return (
     <section className="propagation-path material-lineage" aria-label={title}>
       <h4>{title}</h4>
       <ol aria-label={listLabel}>
-        {stages.map((nodes, index) => (
+        {populated.map((nodes, index) => (
           <li
             key={`${String(index)}:${nodes.map(({ href }) => href).join(":")}`}
           >

@@ -8,11 +8,15 @@ import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
 import { OverflowMenu } from "../components/ReferenceUI";
 import { listLocations, type LocationResponse } from "../locations/api";
+import { OccurrenceDateChoice } from "../events/OccurrenceDateChoice";
+import { localDay } from "../schedule/calendar";
+import { hasDateDraft, invalidDateControls } from "../seed-lots/dateControls";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
   applyLocation,
   previewLocation,
   type BulkPreview,
+  type BulkMoveDate,
   type BulkReference,
   type BulkResult,
 } from "./api";
@@ -255,6 +259,16 @@ function MoveDialog({
   const authorized =
     auth.state.status === "authenticated" && capability.isAuthorized();
   const errorId = useId();
+  const dateId = useId();
+  const dateForm = useRef<HTMLFormElement>(null);
+  // Only Plants and PlantGroups record a Movement Event, so only they carry a date.
+  const dated = records.some(
+    (row) => row.kind === "plant" || row.kind === "plant_group",
+  );
+  const [occurredOn, setOccurredOn] = useState<BulkMoveDate>(() => {
+    const [year, month, day] = localDay().split("-").map(Number);
+    return { precision: "day", year, month, day };
+  });
   const [locations, setLocations] = useState<LocationResponse[] | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [target, setTarget] = useState("");
@@ -346,10 +360,8 @@ function MoveDialog({
       <h2 className="bulk-move-title">Move to location</h2>
       <p>
         {records.length} selected · Review before applying.
-        {records.some(
-          (row) => row.kind === "plant" || row.kind === "plant_group",
-        ) &&
-          " Plants and groups retain an undated Movement Event for each move."}
+        {dated &&
+          " Plants and groups keep a Movement Event for each move, on the date below."}
       </p>
       <ReferencePicker
         label="Target Location"
@@ -364,6 +376,23 @@ function MoveDialog({
           setConflicts([]);
         }}
       />
+      {dated && (
+        <form
+          ref={dateForm}
+          className="bulk-move-date"
+          onSubmit={(event) => {
+            event.preventDefault();
+          }}
+        >
+          <OccurrenceDateChoice
+            id={dateId}
+            value={occurredOn}
+            disabled={busy === "apply"}
+            initialChoice="today"
+            onChange={setOccurredOn}
+          />
+        </form>
+      )}
       {!locations && !error && <p role="status">Loading Locations…</p>}
       {!locations && error && (
         <button
@@ -464,9 +493,23 @@ function MoveDialog({
           disabled={!preview?.can_apply || Boolean(busy)}
           onClick={() => {
             if (!preview) return;
+            if (dateForm.current) {
+              const invalid = invalidDateControls(dateForm.current);
+              if (invalid.length > 0 || hasDateDraft(dateForm.current)) {
+                setError("Finish or clear the date before moving.");
+                setConflicts([]);
+                invalid[0]?.focus();
+                return;
+              }
+            }
             setBusy("apply");
             setError("");
-            void applyLocation(preview, token, capability)
+            void applyLocation(
+              preview,
+              token,
+              capability,
+              dated ? occurredOn : null,
+            )
               .then(onSuccess)
               .catch(showError)
               .finally(() => {

@@ -163,7 +163,10 @@ test.each([false, true])(
       expect(
         await screen.findByRole("link", { name: /Original group/ }),
       ).toHaveAttribute("href", "#/plant-groups/original?tab=lineage");
-      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+      expect(screen.getAllByRole("listitem")).toHaveLength(2);
+      expect(
+        screen.getByRole("link", { name: /This Seed lot/ }),
+      ).toHaveAttribute("aria-current", "page");
     } else {
       expect(await screen.findByText("No recorded lineage.")).toBeVisible();
       expect(screen.queryByRole("list")).not.toBeInTheDocument();

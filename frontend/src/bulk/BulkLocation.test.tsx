@@ -13,6 +13,7 @@ import { AuthContext, type AuthContextValue } from "../auth/context";
 import { ApiError } from "../auth/api";
 import { acquireTestAuth } from "../test/auth";
 import { openDirectoryRoute } from "../components/recordNavigation";
+import { localDay } from "../schedule/calendar";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "./BulkLocation";
 import { applyLocation, previewLocation, type BulkPreview } from "./api";
@@ -231,10 +232,81 @@ test("typed mixed references survive preview, explicit apply clears selection an
       unchanged_count: 1,
     });
   });
-  expect(applyLocation).toHaveBeenCalledWith(preview, "csrf", auth.capability);
+  const [year, month, day] = localDay().split("-").map(Number);
+  expect(applyLocation).toHaveBeenCalledWith(preview, "csrf", auth.capability, {
+    precision: "day",
+    year,
+    month,
+    day,
+  });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   expect(screen.getByText("1 moved · 1 already there.")).toBeVisible();
+});
+
+test("plant moves default to today and can be recorded as Date unknown", async () => {
+  render(<Harness />);
+  const { user, dialog } = await openMove();
+  expect(
+    within(dialog).getByRole("radio", { name: `Today, ${localDay()}` }),
+  ).toBeChecked();
+  await user.click(within(dialog).getByRole("radio", { name: "Date unknown" }));
+  await user.click(
+    within(dialog).getByRole("button", { name: "Preview move" }),
+  );
+  await user.click(
+    await within(dialog).findByRole("button", { name: "Apply move (1)" }),
+  );
+  await waitFor(() => {
+    expect(applyLocation).toHaveBeenCalledWith(
+      preview,
+      "csrf",
+      auth.capability,
+      null,
+    );
+  });
+});
+
+test("an unfinished Another date blocks apply without calling the server", async () => {
+  render(<Harness />);
+  const { user, dialog } = await openMove();
+  await user.click(within(dialog).getByRole("radio", { name: "Another date" }));
+  await user.click(
+    within(dialog).getByRole("button", { name: "Preview move" }),
+  );
+  await user.click(
+    await within(dialog).findByRole("button", { name: "Apply move (1)" }),
+  );
+  expect(
+    await within(dialog).findByText("Finish or clear the date before moving."),
+  ).toBeVisible();
+  expect(applyLocation).not.toHaveBeenCalled();
+});
+
+test("seed-only moves ask no date and send none", async () => {
+  const seeds: BulkChoice[] = [
+    { kind: "seed_lot", id: "seed", label: "Seed lot · Basil", eligible: true },
+  ];
+  window.history.replaceState(null, "", "#/seed-lots");
+  render(<Harness scope="seed-lots" rows={seeds} />);
+  const { user, dialog } = await openMove();
+  expect(
+    within(dialog).queryByRole("group", { name: /When did it happen/ }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(dialog).getByRole("button", { name: "Preview move" }),
+  );
+  await user.click(
+    await within(dialog).findByRole("button", { name: "Apply move (1)" }),
+  );
+  await waitFor(() => {
+    expect(applyLocation).toHaveBeenCalledWith(
+      preview,
+      "csrf",
+      auth.capability,
+      null,
+    );
+  });
 });
 
 test("all-noop and domain conflicts cannot apply", async () => {

@@ -6,6 +6,11 @@ from uuid import UUID
 from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from florabase.auth.demo_readonly import (
+    SAFE_HTTP_METHODS,
+    raise_demo_readonly,
+    resolve_demo_actor,
+)
 from florabase.auth.model import AuthSession
 from florabase.auth.service import (
     InvalidCredentialsError,
@@ -68,6 +73,11 @@ def require_authenticated_actor(
     database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> AuthenticatedActor:
+    if settings.demo_readonly:
+        if request.method.upper() not in SAFE_HTTP_METHODS:
+            raise_demo_readonly()
+        return resolve_demo_actor(database)
+
     cookie_token = request.cookies.get(session_cookie_name(settings))
     auth_headers = request.headers.getlist("authorization")
     has_auth_header = any(header.strip() != "" for header in auth_headers)
@@ -150,6 +160,8 @@ def require_csrf(
     settings: Annotated[Settings, Depends(get_settings)],
     csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
 ) -> AuthenticatedActor:
+    if settings.demo_readonly:
+        raise_demo_readonly()
     if actor.transport == "bearer":
         # Bearer tokens are not ambient browser credentials, so CSRF and Origin checks do not apply.
         return actor

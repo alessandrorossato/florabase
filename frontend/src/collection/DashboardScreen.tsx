@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { ApiError, isExpectedAuthCancellation } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { ActionLink } from "../components/Action";
 import { PageHeader } from "../components/ReferenceUI";
 import {
   EmptyState,
@@ -460,6 +461,11 @@ export function DashboardScreen() {
         titleId="dashboard-title"
         eyebrow={dayLabel(localDay())}
         description="Planned work, recorded activity and what you hold."
+        actions={
+          <ActionLink icon="add" href="#/quick-add">
+            Quick add plant
+          </ActionLink>
+        }
         tools={
           <div
             className="dashboard-toolbar"

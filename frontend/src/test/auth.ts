@@ -15,6 +15,7 @@ export function defaultTestSession(
     display_name: "Test Grower",
     owner: true,
     canonical_origin: "http://localhost",
+    demo_readonly: false,
     ...overrides,
   };
 }

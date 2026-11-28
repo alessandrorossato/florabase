@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -22,7 +24,14 @@ import { FieldLabel } from "../components/FieldLabel";
 import { PageHeader } from "../components/ReferenceUI";
 import { Page } from "../components/WorkspaceUI";
 import { isRecordTaskNavigation } from "../components/recordNavigation";
+import { isNativeShell } from "../mobile/runtime";
 import "./settings.css";
+
+const NativeRemindersSettings = lazy(() =>
+  import("../mobile/NativeRemindersSettings").then((module) => ({
+    default: module.NativeRemindersSettings,
+  })),
+);
 
 interface BrowserNavigation extends EventTarget {
   currentEntry?: { index: number };
@@ -521,6 +530,12 @@ export function AccountScreen({
               </ul>
             )}
           </section>
+        )}
+
+        {isAuthenticated && isNativeShell() && (
+          <Suspense fallback={null}>
+            <NativeRemindersSettings />
+          </Suspense>
         )}
       </div>
     </Page>

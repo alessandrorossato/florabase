@@ -186,11 +186,14 @@
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
+  font: var(--type-small);
+  color: var(--text);
+}
+/* Monospace only for dates, quantities and codes; plain UI face for words and links. */
+.app-content .ui-detail-page .specimen-label dd.specimen-label__data {
   font: 400 0.8125rem/1.45 var(--font-data);
   font-variant-numeric: tabular-nums;
 }
-/* Recorded values (dates, counts, quantities) use the data face; links and place paths use the
-   UI face so long names do not break into narrow monospace fragments. */
 .app-content .ui-detail-page .specimen-label dd :is(a, span) {
   font: inherit;
 }
@@ -200,8 +203,8 @@
 }
 .app-content .ui-detail-page .specimen-label .specimen-label__unknown {
   color: var(--text-muted);
-  font-family: var(--font-ui);
-  font-style: italic;
+  font: var(--type-small);
+  font-style: normal;
 }
 
 /* Two columns: the plate column floats; everything after the header keeps to the right. */
@@ -246,6 +249,7 @@
     margin-block-end: var(--space-4);
   }
   .app-content .ui-detail-page .specimen-label {
+    grid-column: 1 / -1;
     order: 99;
     margin-block-start: var(--space-6);
   }
@@ -375,27 +379,6 @@
   }
 }
 
-/* M8 phones: the detail page's Back and New controls share one compact context row. */
-@media (max-width: 40rem) {
-  .app-content .collection-context-page > .workspace-context-actions {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    margin-block-end: var(--space-3);
-  }
-  .app-content
-    .collection-context-page
-    > .workspace-context-actions
-    > :first-child {
-    margin-inline-start: calc(-1 * var(--space-2));
-    padding-inline: var(--space-2);
-    background: transparent;
-    border-color: transparent;
-  }
-}
-
 /* M8 phones: actions as a tidy grid (primary full width, the rest side by side) and the
    record sections as one row of equal tabs that scrolls only if it cannot fit. */
 @media (max-width: 40rem) {
@@ -420,5 +403,65 @@
   }
   .app-content .ui-detail-page:has(> .detail-header--specimen) .detail-tab {
     padding-inline: var(--space-2);
+  }
+}
+
+/* UI-POLISH-006 B2: with no image the plate is a short placeholder that invites a photo. */
+.app-content .ui-detail-page .specimen-plate:has(.record-visual[data-empty]) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: var(--space-2);
+  aspect-ratio: 2 / 1;
+  padding-block-end: var(--space-4);
+}
+.app-content
+  .ui-detail-page
+  .specimen-plate:not(:has(.record-visual[data-empty]))
+  .specimen-plate__add {
+  display: none;
+}
+.app-content
+  .ui-detail-page
+  .specimen-plate
+  .record-visual[data-empty]
+  > .record-visual__source,
+.app-content
+  .ui-detail-page
+  .specimen-plate
+  .record-visual[data-empty]
+  > .sr-only:last-child {
+  display: none;
+}
+@media (max-width: 40rem) {
+  /* Phones: the empty plate is shorter than a photo's 4:5 frame and holds only the link. */
+  .app-content .ui-detail-page .specimen-plate:has(.record-visual[data-empty]) {
+    grid-template-rows: minmax(0, 1fr);
+    place-items: center;
+    aspect-ratio: 1 / 1;
+    padding: var(--space-1);
+  }
+  .app-content
+    .ui-detail-page
+    .specimen-plate:has(.record-visual[data-empty])
+    > .record-visual {
+    display: none;
+  }
+  .app-content .ui-detail-page .specimen-plate .specimen-plate__add {
+    min-block-size: 0;
+    padding: var(--space-1);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+  .app-content .ui-detail-page .specimen-main .detail-key-facts {
+    grid-column: 1 / -1;
+    order: -1;
+    margin-block-end: var(--space-4);
+    gap: var(--space-3) var(--space-6);
+  }
+  .app-content .ui-detail-page .detail-key-facts dd {
+    font-size: 1.125rem;
   }
 }

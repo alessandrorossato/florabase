@@ -24,6 +24,11 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from alembic import command
+from florabase.auth.demo_readonly import (
+    DEMO_STARTUP_WARNING,
+    DemoMarkerError,
+    verify_demo_marker,
+)
 from florabase.auth.model import User
 from florabase.auth.security import normalize_login_name, validate_password
 from florabase.auth.service import bootstrap_owner, lock_bootstrap
@@ -553,6 +558,33 @@ def create_first_owner(owner: tuple[str, str] | None) -> None:
     )
 
 
+def uvicorn_workers_from_environment(environ: Mapping[str, str]) -> int:
+    raw = environ.get("FLORABASE_WORKERS", "").strip()
+    if not raw:
+        return 1
+    try:
+        workers = int(raw)
+    except ValueError:
+        raise SchemaError("FLORABASE_WORKERS must be an integer between 1 and 8") from None
+    if workers < 1 or workers > 8:
+        raise SchemaError("FLORABASE_WORKERS must be an integer between 1 and 8")
+    return workers
+
+
+def demo_readonly_from_environment(environ: Mapping[str, str]) -> bool:
+    raw = environ.get("FLORABASE_DEMO_READONLY", "").strip().lower()
+    if not raw or raw in {"0", "false", "no", "off"}:
+        return False
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    raise SchemaError("FLORABASE_DEMO_READONLY must be a boolean value")
+
+
+def demo_storage_root_from_environment(environ: Mapping[str, str]) -> Path:
+    raw = environ.get("FLORABASE_ATTACHMENT_STORAGE_ROOT", "").strip()
+    return Path(raw) if raw else MEDIA_DIR
+
+
 def _format_validation_errors(error: ValidationError) -> list[str]:
     """Format Pydantic settings errors by env var name without input, ctx or url."""
     formatted: list[str] = []
@@ -577,6 +609,8 @@ def main() -> int:
     upgrade = actions.add_parser("upgrade")
     upgrade.add_argument("previous_head")
     args = parser.parse_args()
+    workers = 1
+    demo_readonly = False
     try:
         if args.action == "wait-db":
             print_startup_banner(os.environ)
@@ -586,6 +620,13 @@ def main() -> int:
         config, scripts, head = image_schema()
         if args.action == "serve":
             reject_placeholder_config(os.environ)
+            workers = uvicorn_workers_from_environment(os.environ)
+            demo_readonly = demo_readonly_from_environment(os.environ)
+            if demo_readonly:
+                try:
+                    verify_demo_marker(demo_storage_root_from_environment(os.environ))
+                except DemoMarkerError as error:
+                    raise SchemaError(str(error)) from None
             with get_readiness_engine().connect() as connection:
                 require_image_head(connection, head)
         elif args.action == "deploy":
@@ -623,19 +664,22 @@ def main() -> int:
         )
         return 1
     if args.action == "serve":
-        os.execvp(
+        if demo_readonly:
+            sys.stderr.write(f"{DEMO_STARTUP_WARNING}\n")
+            sys.stderr.flush()
+        command = [
             "uvicorn",
-            [
-                "uvicorn",
-                "florabase.main:app",
-                "--host",
-                "0.0.0.0",
-                "--port",
-                "8000",
-                "--no-server-header",
-                "--no-proxy-headers",
-            ],
-        )
+            "florabase.main:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--no-server-header",
+            "--no-proxy-headers",
+        ]
+        if workers > 1:
+            command.extend(["--workers", str(workers)])
+        os.execvp("uvicorn", command)
     sys.stdout.write(f"schema-guard: database at image head {head}\n")
     return 0
 

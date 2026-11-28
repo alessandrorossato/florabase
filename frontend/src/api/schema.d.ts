@@ -2526,6 +2526,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/quick-add/plant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quick Add Plant
+         * @description Add a Plant or PlantGroup, creating its identity and WFO link when needed, atomically.
+         */
+        post: operations["quickAddPlant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ready": {
         parameters: {
             query?: never;
@@ -3981,6 +4001,7 @@ export interface components {
              * Format: date-time
              */
             expected_target_updated_at: string;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
             /** Records */
             records: components["schemas"]["BulkPrecondition"][];
             /**
@@ -7570,6 +7591,79 @@ export interface components {
             /** Total */
             total: number;
         };
+        /**
+         * QuickAddIdentity
+         * @description Exactly one of an existing identity or a new one (reused when it already exists).
+         */
+        QuickAddIdentity: {
+            /** Existing Id */
+            existing_id?: string | null;
+            new?: components["schemas"]["QuickAddNewIdentity"] | null;
+        };
+        /** QuickAddNewIdentity */
+        QuickAddNewIdentity: {
+            /** Common Name */
+            common_name?: string | null;
+            /** Cultivar Name */
+            cultivar_name?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            wfo?: components["schemas"]["QuickAddWfoChoice"] | null;
+        };
+        /** QuickAddRequest */
+        QuickAddRequest: {
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** @default unknown */
+            direct_origin_kind: components["schemas"]["DirectOriginKind"];
+            identity: components["schemas"]["QuickAddIdentity"];
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /**
+             * Material
+             * @default plant
+             * @enum {string}
+             */
+            material: "plant" | "plant_group";
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PlantGroupQuantity"] | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+        };
+        /** QuickAddResponse */
+        QuickAddResponse: {
+            /** Identity Created */
+            identity_created: boolean;
+            /** Identity Display Label */
+            identity_display_label: string;
+            /**
+             * Identity Id
+             * Format: uuid
+             */
+            identity_id: string;
+            /**
+             * Record Id
+             * Format: uuid
+             */
+            record_id: string;
+            /**
+             * Record Kind
+             * @enum {string}
+             */
+            record_kind: "plant" | "plant_group";
+            /** Wfo Linked */
+            wfo_linked: boolean;
+        };
+        /**
+         * QuickAddWfoChoice
+         * @description A WFO name picked from the local index suggestions for a new identity.
+         */
+        QuickAddWfoChoice: {
+            /** Source Taxon Id */
+            source_taxon_id: string;
+        };
         /** RangeChoice */
         RangeChoice: {
             /** Assertions */
@@ -8339,6 +8433,11 @@ export interface components {
         SessionResponse: {
             /** Canonical Origin */
             canonical_origin: string | null;
+            /**
+             * Demo Readonly
+             * @default false
+             */
+            demo_readonly: boolean;
             /** Display Name */
             display_name: string | null;
             /** Login Name */
@@ -16872,6 +16971,60 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    quickAddPlant: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickAddRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickAddResponse"];
+                };
+            };
+            /** @description Botanical identity, Location or Supplier not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Identity, link or record changed meanwhile */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request, or the picked WFO name no longer matches */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description WFO index unavailable for a picked WFO name */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -179,10 +179,6 @@
 }
 
 /* Full-width dashboard detail: one state band, then semantic sections. */
-.app-content .suppliers-workspace .detail-tabs [role="tab"]:hover {
-  background: var(--primary-subtle);
-  color: var(--primary);
-}
 .app-content .suppliers-workspace .supplier-detail .detail-header {
   align-items: center;
 }

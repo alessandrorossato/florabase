@@ -7,10 +7,15 @@ export async function selectDirectoryFilter(
   value: string,
 ) {
   if (!screen.queryByRole("button", { name: /^Filters(?: \(\d+\))?$/ })) {
-    const back = screen.queryByRole("button", {
-      name: /Back to (seed lots|Sowings|Plants)/,
+    const breadcrumb = screen.queryByRole("navigation", {
+      name: "Breadcrumb",
     });
-    if (back) await user.click(back);
+    const crumb = breadcrumb
+      ? within(breadcrumb).queryByRole("link", {
+          name: /^(Seeds|Sowings|Plants)$/,
+        })
+      : null;
+    if (crumb) await user.click(crumb);
   }
   await user.click(
     await screen.findByRole("button", { name: /^Filters(?: \(\d+\))?$/ }),

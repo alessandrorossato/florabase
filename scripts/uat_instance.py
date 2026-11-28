@@ -18,6 +18,7 @@ from typing import Any
 
 import compose_stacks
 from uat_preview import VOLUMES, UATPreview
+from uat_source import SHA_PATTERN, ancestor, in_worktree_reflog
 from workflow_environment import (
     MEDIA_ROOT,
     Repository,
@@ -90,6 +91,7 @@ class UATInstance(UATPreview):
     ROLE_LABEL = "uat-instance"
     WORKFLOW_MODE = "uat-instance"
     LABEL = "UAT instance"
+    MAKE_PREFIX = "uat-instance"
     CONFIRM_RESET = "CONFIRM_RESET_UAT_INSTANCE"
     CONFIRM_REMOVE = "CONFIRM_REMOVE_UAT_INSTANCE"
     PORTS: range | tuple[int, ...] = PORTS
@@ -178,6 +180,44 @@ class UATInstance(UATPreview):
             overrides = compose_stacks.definitions(self.source)[0]
             extra = compose_stacks.override("uat-instance", text=overrides["uat-instance"])
         return [*super().command(), "--file", str(extra), *args]
+
+    def verify_launched_sha(
+        self,
+        launched: str,
+        *,
+        stale_ok: bool = False,
+        allow_expired_sha: bool = False,
+    ) -> None:
+        branch = self.repository.identity()["branch"]
+        if branch == "detached":
+            super().verify_launched_sha(launched)
+            return
+        if ancestor(self.repository, launched, "HEAD"):
+            return
+        if in_worktree_reflog(self.repository, launched, branch):
+            if stale_ok:
+                return
+            raise WorkflowError(
+                f"UAT instance launched HEAD {launched[:12]} is stale (not in current history); "
+                "run make uat-instance-up first"
+            )
+        if allow_expired_sha:
+            return
+        raise WorkflowError(
+            f"UAT instance launched HEAD {launched[:12]} is not in this worktree's history or "
+            f"reflog; refused (if reflog expired, run guarded make uat-instance-reset "
+            f"{self.CONFIRM_RESET}={self.project} or make uat-instance-remove "
+            f"{self.CONFIRM_REMOVE}={self.project})"
+        )
+
+    def check_upgradeable(self, current: list[str], graph: dict[str, list[str]]) -> None:
+        try:
+            require_upgradeable(current, graph)
+        except WorkflowError as error:
+            raise WorkflowError(
+                f"{error} To discard this instance and rebuild fresh from HEAD, run: "
+                f"make uat-instance-reset {self.CONFIRM_RESET}={self.project}"
+            ) from error
 
     def require_profile(self) -> None:
         """Only a confirmed reset changes the profile; up and seed refuse a different request."""
@@ -433,7 +473,8 @@ class UATInstance(UATPreview):
 
     def status(self) -> None:
         print(f"Environment: per-worktree UAT instance {self.instance}")
-        for key, value in self.repository.identity().items():
+        identity = self.repository.identity()
+        for key, value in identity.items():
             print(f"{key.title()}: {value}")
         print(f"Project: {self.project}\nProfile: {self.profile}")
         if self.port is None:
@@ -441,6 +482,8 @@ class UATInstance(UATPreview):
             return
         print(f"URL: {self.url}")
         containers = self.containers()
+        attached = identity["branch"] != "detached"
+        stale_launch = False
         for item in containers:
             labels = item["Config"].get("Labels", {})
             state = item["State"]
@@ -449,13 +492,28 @@ class UATInstance(UATPreview):
                 if state.get("Running")
                 else "stopped"
             )
+            launched = labels.get("io.florabase.sha")
+            is_stale = (
+                attached
+                and isinstance(launched, str)
+                and bool(SHA_PATTERN.fullmatch(launched))
+                and not ancestor(self.repository, launched, "HEAD")
+            )
+            if is_stale:
+                stale_launch = True
+            suffix = " (stale: not in current history)" if is_stale else ""
             print(
                 f"{labels.get('com.docker.compose.service')}: {health}; "
                 f"source: {labels.get('io.florabase.source')}; "
-                f"launched HEAD: {labels.get('io.florabase.sha')}"
+                f"launched HEAD: {launched}{suffix}"
             )
-        self.require_identity()
-        print("Owner: valid")
+        self.require_identity(stale_ok=True)
+        print("Owner: valid (stale launch)" if stale_launch else "Owner: valid")
+        if stale_launch:
+            print(
+                f"Next: make uat-instance-up to rebuild from HEAD, or "
+                f"make uat-instance-reset {self.CONFIRM_RESET}={self.project}"
+            )
         graph = migration_graph(self.source)
         print(f"Code head: {','.join(code_heads(graph))}")
         if any(
@@ -465,7 +523,7 @@ class UATInstance(UATPreview):
         ):
             revisions = self.current()
             print(f"Database current: {','.join(revisions) or 'unversioned'}")
-            require_upgradeable(revisions, graph)
+            self.check_upgradeable(revisions, graph)
         else:
             print("Database current: unavailable (database stopped; status does not start it)")
         try:

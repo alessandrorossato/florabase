@@ -22,6 +22,7 @@ import {
   dayPosition,
   partialMark,
   precisionGroups,
+  dueLabel,
 } from "./almanac";
 import "./record-timeline.css";
 
@@ -111,6 +112,66 @@ function useJournal(target: EventTargetKind | undefined, id: string) {
 }
 
 /**
+ * The Almanac's first line: the next planned activity with when it is due, or that nothing
+ * is planned, with a way to plan something.
+ */
+export function NextUp({
+  item,
+  today,
+  scheduleHref,
+  scheduleLabel = "Schedule activity",
+  emptyText = "Nothing planned",
+  loading = false,
+}: {
+  item?: {
+    id: string;
+    title: string;
+    due_on: string;
+    overdue?: boolean;
+  } | null;
+  today?: string;
+  scheduleHref?: string | null;
+  scheduleLabel?: string;
+  emptyText?: string;
+  loading?: boolean;
+}) {
+  return (
+    <p className="record-timeline__next">
+      <span className="record-timeline__next-label">Next up</span>{" "}
+      {loading ? (
+        // The Planned lane below announces loading; this line stays quiet.
+        <span>Loading…</span>
+      ) : item && today ? (
+        <>
+          {/* Plain text: the Planned list below links the same activity. */}
+          <strong>{item.title}</strong>
+          <span aria-hidden="true"> · </span>
+          <span
+            className={
+              item.overdue
+                ? "record-timeline__next-due record-timeline__next-due--overdue"
+                : "record-timeline__next-due"
+            }
+          >
+            {dueLabel(item.due_on, today)}
+          </span>
+        </>
+      ) : (
+        <>
+          {emptyText}
+          {scheduleHref && (
+            <>
+              <span aria-hidden="true"> · </span>
+              <a href={scheduleHref}>{scheduleLabel}</a>
+            </>
+          )}
+        </>
+      )}
+    </p>
+  );
+}
+
+/**
  * One record's timeline, kept honest by lane: Planned work comes from the Schedule and is
  * never shown as done; Recorded entries come from the Journal with the date precision that
  * was recorded. System history (edits, operations) stays in History.
@@ -152,9 +213,11 @@ export function RecordTimeline({
     target_id: id,
   });
   const history =
-    kind === "botanical_identity" || kind === "location"
+    kind === "botanical_identity"
       ? null
-      : historyHash({ q: "", category: [], subject_kind: [kind], year: "" });
+      : kind === "location"
+        ? "#/history"
+        : historyHash({ q: "", category: [], subject_kind: [kind], year: "" });
 
   const events = recorded.status === "ready" ? recorded.value : [];
   const shown = events.slice(0, 3);
@@ -177,6 +240,18 @@ export function RecordTimeline({
       aria-labelledby={titleId}
     >
       <h4 id={titleId}>Almanac</h4>
+      {planned.status !== "error" && (
+        <NextUp
+          loading={planned.status !== "ready"}
+          item={plans[0] ?? null}
+          today={today}
+          scheduleHref={
+            current
+              ? `${href}${href.includes("?") ? "&" : "?"}action=create`
+              : null
+          }
+        />
+      )}
       {range && showAxis && (
         // A visual summary only; the lists below carry every entry and its precision.
         <div className="almanac-axis" aria-hidden="true">
